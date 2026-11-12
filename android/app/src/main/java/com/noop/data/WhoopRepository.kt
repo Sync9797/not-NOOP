@@ -1028,6 +1028,12 @@ class WhoopRepository(
         dao.deleteSleepSession(session.deviceId, session.startTs)
     }
 
+    /** Remove an IMPORTED sleep row by key with no tombstone. Used only by the Health Connect re-import
+     *  to replace a night Health Connect itself revised or removed; a tombstone would wrongly block the
+     *  strap from ever detecting that night. */
+    suspend fun deleteImportedSleepSession(deviceId: String, startTs: Long) =
+        dao.deleteSleepSession(deviceId, startTs)
+
     /**
      * #547 one-time heal: purge rows polluted by a bad-strap-clock timestamp. pikapik's WHOOP 4.0 emitted
      * records whose `unix` decoded to garbage (far-past / a 2027 spike / a future date) which entered the

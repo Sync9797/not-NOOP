@@ -750,8 +750,19 @@ object HealthConnectImporter {
         // so without them the sparse HC backfill (recovery/strain/stages = null) shadows the computed
         // day and blanks Today / regresses Sleep stages (#112). Each read is wrapped so a missing
         // source is empty, not fatal; HC still gap-fills any day the strap did NOT cover.
+        //
+        // Rows THIS importer backfilled on an earlier run also live under "my-whoop", so counting every
+        // "my-whoop" row as strap coverage froze each backfilled day at its first import: a night the
+        // watch uploaded after that sync never arrived. [ownBackfillDays] picks those rows back out so
+        // they refresh, while real strap / WHOOP-export rows stay protected.
+        val hcOwnedDays = NoopPrefs.hcBackfillDays(context)
+        val rawWhoopRows = try { repo.days(WHOOP) } catch (e: Exception) { emptyList() }
+        val refreshableDays = ownBackfillDays(rawWhoopRows, hcOwnedDays)
         val coveredDays: Set<String> = buildSet {
-            for (id in strapSourceIds(repo)) addAll(strapDays(repo, id))
+            for (id in strapSourceIds(repo)) {
+                if (id == WHOOP) addAll(coveredDaySet(rawWhoopRows) - refreshableDays)
+                else addAll(strapDays(repo, id))
+            }
         }
 
         val appleRows = ArrayList<AppleDaily>(acc.size)
@@ -852,10 +863,22 @@ object HealthConnectImporter {
             // #983: write the collected sleep sessions under WHOOP, but ONLY for days the strap does not
             // already cover (same guard as the daily rows) so a real strap night is never shadowed.
             val sleepRows = hcSleepSessions.filter { it.first !in coveredDays }.map { it.second }
+            // Drop nights an earlier run wrote that Health Connect no longer has in that form (the source
+            // app revised the bedtime, or the strap now covers the day), so a re-import replaces the night
+            // instead of leaving a duplicate beside it.
+            val previousStarts = NoopPrefs.hcSleepStarts(context)
+            val newStarts = sleepRows.mapTo(HashSet()) { it.startTs.toString() }
+            for (stale in previousStarts - newStarts) {
+                stale.toLongOrNull()?.let { repo.deleteImportedSleepSession(WHOOP, it) }
+            }
             if (sleepRows.isNotEmpty()) {
                 repo.upsertDevice(WHOOP, name = "WHOOP")
                 repo.upsertSleepSessions(sleepRows)
             }
+            NoopPrefs.setHcSleepStarts(context, newStarts)
+            // Remember which "my-whoop" days are ours so the next import refreshes them. Keep earlier
+            // backfilled days that are still HC-shaped (a real import may since have replaced one).
+            NoopPrefs.setHcBackfillDays(context, refreshableDays + dailyRows.map { it.day })
             if (workouts.isNotEmpty()) {
                 repo.upsertWorkouts(workouts)
             }
@@ -1134,7 +1157,34 @@ object HealthConnectImporter {
      * Empty [selfPackage] (origin undeterminable) never skips, so we err toward keeping data.
      */
     internal fun isSelfWritten(originPackage: String, selfPackage: String): Boolean =
-        selfPackage.isNotEmpty() && originPackage == selfPackage
+        (selfPackage.isNotEmpty() && originPackage == selfPackage) || isNoopFamily(originPackage)
+
+    /**
+     * Any build of NOOP or Not-Noop (release, .debug, .staging, .demo). Not-Noop moved to its own app id,
+     * so the original NOOP app (com.noop.whoop) and other Not-Noop variants are no longer "self" by
+     * package name, but whatever they shared into Health Connect is still NOOP-derived strap data.
+     * Importing it would double-count the same vitals / sleep, and the demo build's synthetic data must
+     * never land in the real app.
+     */
+    internal fun isNoopFamily(originPackage: String): Boolean =
+        NOOP_FAMILY_PREFIXES.any { originPackage == it || originPackage.startsWith("$it.") }
+
+    private val NOOP_FAMILY_PREFIXES = listOf("com.noop.whoop", "com.notnoop.whoop")
+
+    /**
+     * Days whose "my-whoop" row was written by an earlier Health Connect import and still looks like one
+     * (no strap-only fields), so the next import may refresh them. A day in [hcOwnedDays] whose row has
+     * since gained recovery / strain / stages was replaced by a real WHOOP import and stays protected.
+     */
+    internal fun ownBackfillDays(rows: List<DailyMetric>, hcOwnedDays: Set<String>): Set<String> =
+        rows.filter { it.day in hcOwnedDays && isHcShaped(it) }.mapTo(HashSet()) { it.day }
+
+    /** True when a daily row carries only the fields the Health Connect backfill writes. */
+    internal fun isHcShaped(r: DailyMetric): Boolean =
+        r.efficiency == null && r.deepMin == null && r.remMin == null && r.lightMin == null &&
+            r.disturbances == null && r.recovery == null && r.strain == null &&
+            r.skinTempDevC == null && r.steps == null && r.activeKcalEst == null &&
+            r.spo2Red == null && r.spo2Ir == null && r.avgSdnn == null && r.skinTempC == null
 
     /**
      * #1002: which local civil day a record belongs to, keyed by the offset the record was RECORDED

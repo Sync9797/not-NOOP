@@ -29,12 +29,15 @@ data class ImportSummary(
      * would quietly overstate coverage.
      */
     val columnCoverageRows: Int = 0,
+    /** False when the import failed outright (source unavailable, read or save error). An empty but
+     *  successful import ("nothing new") stays true, so callers can tell "failed" from "no data". */
+    val succeeded: Boolean = true,
 ) {
     val totalRows: Int get() = counts.values.sum()
 
     companion object {
         /** A failed/empty import carrying a reason. */
         fun failure(source: String, reason: String) =
-            ImportSummary(source = source, counts = emptyMap(), message = reason)
+            ImportSummary(source = source, counts = emptyMap(), message = reason, succeeded = false)
     }
 }

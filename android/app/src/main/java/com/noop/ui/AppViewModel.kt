@@ -2578,6 +2578,9 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     val hcLastSync: StateFlow<Long> = _hcLastSync.asStateFlow()
     private val _hcWriteback = MutableStateFlow(NoopPrefs.hcWriteback(appContext))
     val hcWriteback: StateFlow<Boolean> = _hcWriteback.asStateFlow()
+    /** Set while a Health Connect import is running (see [syncHealthConnectIfStale]). Declared ABOVE the
+     *  init block that first calls it, or JVM field-init order would leave it null there. */
+    private val hcSyncRunning = java.util.concurrent.atomic.AtomicBoolean(false)
 
     // Last writeback outcome (#660). Read from prefs (the writer persists it — including on the
     // background BLE path, which never touches this VM), so Data Sources shows a failing share
@@ -2654,26 +2657,35 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         val last = _hcLastSync.value
         val now = System.currentTimeMillis()
         if (!force && last != 0L && now - last < intervalMs) return
+        // Called from init AND every resume, so guard against two imports racing on the same rows.
+        if (!hcSyncRunning.compareAndSet(false, true)) return
         viewModelScope.launch {
-            val ran = withContext(Dispatchers.IO) {
-                if (HealthConnectImporter.sdkStatus(appContext) != HealthConnectClient.SDK_AVAILABLE) {
-                    return@withContext false
+            try {
+                val ran = withContext(Dispatchers.IO) {
+                    if (HealthConnectImporter.sdkStatus(appContext) != HealthConnectClient.SDK_AVAILABLE) {
+                        return@withContext false
+                    }
+                    val granted = runCatching {
+                        HealthConnectImporter.client(appContext).permissionController.getGrantedPermissions()
+                    }.getOrDefault(emptySet())
+                    val selectedPermissions = HealthConnectImporter.permissionsFor(
+                        HealthConnectImporter.selectedCategories(appContext),
+                    )
+                    // Partial permissions are fine (#150): auto-import as long as at least one type is granted.
+                    if (granted.none { it in selectedPermissions }) return@withContext false
+                    // Pass the profile height so the importer can derive BMI (Health Connect has no BMI record).
+                    // import() reports failure in its summary rather than throwing, so check it: a failed read
+                    // must not stamp "last sync" or the retry waits a whole interval.
+                    runCatching { HealthConnectImporter.import(appContext, repository, profileStore.heightCm) }
+                        .getOrNull()?.succeeded == true
                 }
-                val granted = runCatching {
-                    HealthConnectImporter.client(appContext).permissionController.getGrantedPermissions()
-                }.getOrDefault(emptySet())
-                val selectedPermissions = HealthConnectImporter.permissionsFor(
-                    HealthConnectImporter.selectedCategories(appContext),
-                )
-                // Partial permissions are fine (#150): auto-import as long as at least one type is granted.
-                if (granted.none { it in selectedPermissions }) return@withContext false
-                // Pass the profile height so the importer can derive BMI (Health Connect has no BMI record).
-                runCatching { HealthConnectImporter.import(appContext, repository, profileStore.heightCm) }.isSuccess
-            }
-            if (ran) {
-                val t = System.currentTimeMillis()
-                NoopPrefs.setHcLastSync(appContext, t)
-                _hcLastSync.value = t
+                if (ran) {
+                    val t = System.currentTimeMillis()
+                    NoopPrefs.setHcLastSync(appContext, t)
+                    _hcLastSync.value = t
+                }
+            } finally {
+                hcSyncRunning.set(false)
             }
         }
     }
