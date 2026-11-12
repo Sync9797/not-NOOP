@@ -214,6 +214,11 @@ jobs:
             echo "::error::NOOP_RELEASE_KEYSTORE_BASE64 is not valid base64. Paste the whole contents of NOOP_RELEASE_KEYSTORE_BASE64.txt again."
             exit 1
           fi
+          # Not secret, but enough to tell a complete keystore from a truncated paste.
+          echo "Decoded keystore: $(wc -c < "$KS_FILE") bytes, sha256 $(sha256sum "$KS_FILE" | cut -c1-16)"
+          # Tolerate the usual password paste slips: surrounding whitespace / line breaks, or the whole
+          # "Store password: ..." line copied from the key-info note instead of just the value.
+          PW=$(printf '%s' "$PW" | sed -E 's/^[[:space:]]*([Ss]tore|[Kk]ey)[[:space:]]+password:[[:space:]]*//' | tr -d ' \t\r\n')
           if ! keytool -list -keystore "$KS_FILE" -storepass "$PW" -alias not-noop >/dev/null 2>&1; then
             echo "::error::The keystore did not open with NOOP_RELEASE_KEYSTORE_PASSWORD (or has no not-noop key). Check both secrets."
             exit 1
