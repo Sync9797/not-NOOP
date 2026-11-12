@@ -436,6 +436,38 @@
       "identity_sha256": "6aa52285ae46cf0ae75a690feee01765f9401825b6c9845c146163fdf5b2bb3e",
       "platform": "swift",
       "rationale": "A LOCAL binding inside the private v16 ECG decoder (#2847), not a static constant. The ledger's Swift rule treats any four-space `let` in a file-scope function as a candidate `static let`, which is how it finds file-scope constants without parsing, so a local in a top-level `private func` lands in the inventory. The Kotlin twin's equivalent is a local `val` in its own decodeWhoop5HistoricalV16, which the Kotlin rule never inventories because it matches `const val` only, and a Set-valued or object-valued local cannot be `const` in Kotlin at all. There is nothing to pair and nothing to change in either decoder."
+    },
+    {
+      "type": "platform_specific",
+      "kind": "add-unpaired-function",
+      "identity": "kotlin\u0000android/app/src/main/java/com/noop/ingest/HealthConnectImporter.kt::isHcShaped/1#1",
+      "identity_sha256": "6248819a572609be3a401f7c1baf23b7800b3b7565ed2f7ed73ecc12134b7233",
+      "platform": "kotlin",
+      "rationale": "Not-Noop Health Connect re-import: recognises a my-whoop daily row the Health Connect backfill wrote so later imports refresh it. Health Connect is Android's platform health store; the Apple apps sync through HealthKit, which has no Health Connect backfill to re-import or package-origin field to filter."
+    },
+    {
+      "type": "platform_specific",
+      "kind": "add-unpaired-function",
+      "identity": "kotlin\u0000android/app/src/main/java/com/noop/ingest/HealthConnectImporter.kt::isNoopFamily/1#1",
+      "identity_sha256": "ddb3b70862080c3cf970da238f3d0296c6c0b5e2520c8bc1c350677bf973895b",
+      "platform": "kotlin",
+      "rationale": "Not-Noop Health Connect import: skips records whose Android dataOrigin package is any NOOP or Not-Noop build. Health Connect is Android's platform health store; the Apple apps sync through HealthKit, which has no Health Connect backfill to re-import or package-origin field to filter."
+    },
+    {
+      "type": "platform_specific",
+      "kind": "add-unpaired-function",
+      "identity": "kotlin\u0000android/app/src/main/java/com/noop/ingest/HealthConnectImporter.kt::ownBackfillDays/2#1",
+      "identity_sha256": "4c3c553b9bdf093daa7f3551c30952c8edab44ed71060b17da1e7eb0f0a4f5b8",
+      "platform": "kotlin",
+      "rationale": "Not-Noop Health Connect re-import: selects the days an earlier Health Connect backfill owns so they refresh instead of freezing. Health Connect is Android's platform health store; the Apple apps sync through HealthKit, which has no Health Connect backfill to re-import or package-origin field to filter."
+    },
+    {
+      "type": "platform_specific",
+      "kind": "add-unpaired-function",
+      "identity": "kotlin\u0000android/app/src/main/java/com/noop/data/WhoopRepository.kt::deleteImportedSleepSession/2#1",
+      "identity_sha256": "e242b01ca9f6d38ed175e186e2b33355d145301024a718aae13de3d5a061f0a9",
+      "platform": "kotlin",
+      "rationale": "Not-Noop Health Connect re-import: drops a night Health Connect revised, without the dismissal tombstone a user delete writes. Health Connect is Android's platform health store; the Apple apps sync through HealthKit, which has no Health Connect backfill to re-import or package-origin field to filter."
     }
   ]
 }
