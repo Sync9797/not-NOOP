@@ -192,8 +192,19 @@ object HealthConnectWriter {
         // #1525: separate attempt on purpose. The daily records above go in ONE insertRecords call, so a
         // missing permission there loses resting HR, HRV, SpO2 and respiratory rate together. On its own,
         // an ungranted VO2 max permission costs only VO2 max and is categorized like any other failure.
-        runCatching { writeVo2Max(client, repo, deviceId, version) }
-            .fold({ total += it }, { failures += it.writebackCategory() })
+        //
+        // VO2 max is optional by design: Data Sources asks for it once and writes "regardless of the answer".
+        // So a declined VO2 max permission is the user's choice, not a failure. Attempting the insert anyway
+        // threw SecurityException on every cycle and pinned the status to PERMISSION_DENIED ("Sharing
+        // paused"), which no re-grant of the core permissions could clear. Skip it unless granted. If the
+        // grant read itself fails, fall through and attempt, so a real failure is still reported.
+        val vo2Granted = runCatching {
+            client.permissionController.getGrantedPermissions().containsAll(VO2MAX_PERMISSIONS)
+        }.getOrElse { if (it is kotlin.coroutines.cancellation.CancellationException) throw it; true }
+        if (vo2Granted) {
+            runCatching { writeVo2Max(client, repo, deviceId, version) }
+                .fold({ total += it }, { failures += it.writebackCategory() })
+        }
         val result = WritebackResult(total, failures.distinct())
         recordStatus(context, result)
         return result

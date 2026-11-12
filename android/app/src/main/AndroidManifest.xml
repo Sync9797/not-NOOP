@@ -122,10 +122,18 @@
     <uses-permission android:name="android.permission.health.WRITE_EXERCISE" />
     <uses-permission android:name="android.permission.health.WRITE_DISTANCE" />
     <uses-permission android:name="android.permission.health.READ_VO2_MAX" />
+    <!-- VO2 max writeback (#1525). HealthConnectWriter.writeVo2Max inserts Vo2MaxRecord, and Health
+         Connect can only grant a permission the manifest declares: without this line the request was
+         silently dropped, every insert threw SecurityException, and writeback showed "Sharing paused"
+         forever with no way to re-grant. -->
+    <uses-permission android:name="android.permission.health.WRITE_VO2_MAX" />
     <uses-permission android:name="android.permission.health.READ_WEIGHT" />
     <uses-permission android:name="android.permission.health.READ_BODY_FAT" />
     <uses-permission android:name="android.permission.health.READ_LEAN_BODY_MASS" />
     <uses-permission android:name="android.permission.health.READ_EXERCISE" />
+    <!-- Workout distance import (#215). HealthConnectImporter requests READ_DISTANCE to fill each imported
+         session's distance; undeclared, Health Connect never granted it and imported distance stayed 0. -->
+    <uses-permission android:name="android.permission.health.READ_DISTANCE" />
     <!-- #1205: GPS route data attached to an exercise session. This permission CANNOT be granted via
          the standard Health Connect permission dialog — it is granted in Settings or via the
          ExerciseRouteRequestContract dialog. Declaring it here lets a user who has granted it in
