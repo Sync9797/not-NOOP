@@ -92,6 +92,7 @@ object WidgetSnapshotStore {
         // Saving even with no widget placed means a widget added later renders fresh data instantly.
         save(app, snap)
         PushGate.markPushed(snap)
+        WidgetShare.ping(app)
 
         val standardIds = runCatching {
             GlanceAppWidgetManager(app).getGlanceIds(NoopGlanceWidget::class.java)
