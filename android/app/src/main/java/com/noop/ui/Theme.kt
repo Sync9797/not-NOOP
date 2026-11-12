@@ -426,6 +426,11 @@ object Metrics {
     // rhythm instead of a bare `20.dp` literal repeated per scaffold (and Today no longer injects ad-hoc
     // Spacer rows that broke that rhythm). One token = uniform, consistent gaps across the screens.
     val screenRowSpacing = 20.dp
+
+    /** Widest a screen's content column grows on a large screen (tablet / unfolded foldable). Wider
+     *  windows get bigger side margins instead of cards stretched edge to edge. A phone never reaches
+     *  it, so the phone layout is unchanged. See [readableSidePadding]. */
+    val readableContentMaxWidth = 720.dp
     val screenPadding = 24.dp
     val tileHeight = 108.dp   // every metric tile is this tall
     val chartHeight = 220.dp

@@ -18,6 +18,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
@@ -1308,11 +1309,12 @@ fun ScreenScaffold(
                 // backdrop paints behind and around the glass, while the scrolling content still stops
                 // clear of the bar. Zero when the overlay is off, so the slot layout is untouched.
                 .padding(
-                    start = 28.dp,
-                    end = 28.dp,
                     top = topPadding,
                     bottom = 28.dp + BottomBarStyleStore.barHeightForContent(),
-                ),
+                )
+                // The 28dp screen inset, widened on a large screen so content stays a readable width.
+                // Inside the scroll, so the margins still scroll the screen. Exactly 28dp on a phone.
+                .readableHorizontalPadding(28.dp),
             // #765: one shared inter-card spacing token (was a bare `20.dp`), so the eager + lazy scaffolds
             // and every screen through them keep the SAME uniform gap between top-level cards.
             verticalArrangement = Arrangement.spacedBy(Metrics.screenRowSpacing),
@@ -1471,19 +1473,26 @@ fun LazyScreenScaffold(
             Modifier.fillMaxWidth()
         }
     val list: @Composable () -> Unit = {
-        LazyColumn(
-            modifier = listModifier,
-            state = listState,
-            contentPadding = PaddingValues(start = 28.dp, top = topPadding, end = 28.dp, bottom = 28.dp),
-            // #765: the shared inter-card spacing token by default (Today/Explore + the eager screens share
-            // one uniform card rhythm); a caller may pass a tighter [rowSpacing] (the liquid Today does, for
-            // the iOS-compact section rhythm).
-            verticalArrangement = Arrangement.spacedBy(rowSpacing),
-        ) {
-            if (header != null) {
-                item { header() }
+        // The 28dp screen inset, widened on a large screen so rows stay a readable width (exactly 28dp on a
+        // phone). Measured from the width the list is actually given, so a navigation rail is accounted for.
+        // The caller's modifier moves to this wrapper, the list's root node, so parent-data modifiers such
+        // as weight() still reach the parent layout.
+        BoxWithConstraints(modifier = listModifier) {
+            val side = readableSidePadding(maxWidth)
+            LazyColumn(
+                modifier = Modifier.fillMaxWidth(),
+                state = listState,
+                contentPadding = PaddingValues(start = side, top = topPadding, end = side, bottom = 28.dp),
+                // #765: the shared inter-card spacing token by default (Today/Explore + the eager screens share
+                // one uniform card rhythm); a caller may pass a tighter [rowSpacing] (the liquid Today does, for
+                // the iOS-compact section rhythm).
+                verticalArrangement = Arrangement.spacedBy(rowSpacing),
+            ) {
+                if (header != null) {
+                    item { header() }
+                }
+                content()
             }
-            content()
         }
     }
 
