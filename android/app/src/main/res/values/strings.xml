@@ -2132,6 +2132,8 @@
     <string name="l10n_settings_screen_ecg_gate_turn_on">Turn gate on (write \'1\')</string>
     <string name="l10n_settings_screen_ecg_gate_turn_off">Turn gate off (write \'0\')</string>
     <string name="l10n_settings_screen_accent">Accent</string>
+    <string name="settings_accent_material_you_title">Use wallpaper colours</string>
+    <string name="settings_accent_material_you_detail">Material You: buttons and highlights follow your wallpaper.</string>
     <string name="l10n_settings_screen_preset">Preset</string>
     <string name="settings_language">Language</string>
     <string name="settings_choose_language">Choose language</string>

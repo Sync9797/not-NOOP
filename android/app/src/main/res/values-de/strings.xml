@@ -2025,6 +2025,8 @@
     <string name="l10n_settings_screen_ecg_gate_turn_on">Sperre einschalten (\'1\' schreiben)</string>
     <string name="l10n_settings_screen_ecg_gate_turn_off">Sperre ausschalten (\'0\' schreiben)</string>
     <string name="l10n_settings_screen_accent">Akzent</string>
+    <string name="settings_accent_material_you_title">Farben des Hintergrundbilds</string>
+    <string name="settings_accent_material_you_detail">Material You: Schaltflächen und Hervorhebungen folgen deinem Hintergrundbild.</string>
     <string name="l10n_settings_screen_preset">Vorlage</string>
     <string name="settings_language">Sprache</string>
     <string name="settings_choose_language">Sprache auswählen</string>

@@ -2080,6 +2080,8 @@
     <string name="l10n_settings_screen_ecg_gate_turn_on">Attiva blocco (scrivi \'1\')</string>
     <string name="l10n_settings_screen_ecg_gate_turn_off">Disattiva blocco (scrivi \'0\')</string>
     <string name="l10n_settings_screen_accent">Accento</string>
+    <string name="settings_accent_material_you_title">Usa i colori dello sfondo</string>
+    <string name="settings_accent_material_you_detail">Material You: pulsanti ed evidenziazioni seguono lo sfondo.</string>
     <string name="l10n_settings_screen_preset">Preset</string>
     <string name="settings_language">Lingua</string>
     <string name="settings_choose_language">Scegli la lingua</string>

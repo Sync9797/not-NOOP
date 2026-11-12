@@ -11,6 +11,8 @@ import androidx.compose.material3.Shapes
 import androidx.compose.material3.Typography
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.dynamicDarkColorScheme
+import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import android.app.Activity
 import androidx.compose.runtime.Composable
@@ -19,6 +21,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 import androidx.compose.ui.graphics.Color
@@ -86,18 +89,23 @@ object Palette {
         AccentColor.MINT -> active.accent
         AccentColor.WHOOP_BLUE -> if (isLight) Color(0xFF234F9E) else Color(0xFF60A0E0)
         AccentColor.CUSTOM -> AccentColor.parseHex(AccentPrefs.customHex, active.accent)
+        AccentColor.MATERIAL_YOU -> MaterialYouAccent.primary ?: active.accent
     }
     val accentHover get() = when (AccentPrefs.color) {
         AccentColor.MINT -> active.accentHover
         AccentColor.WHOOP_BLUE -> if (isLight) Color(0xFF3A6FC0) else Color(0xFF8FBEEC)
         AccentColor.CUSTOM -> AccentColor.lighten(AccentPrefs.customHex)
+        AccentColor.MATERIAL_YOU -> MaterialYouAccent.primary?.let { AccentColor.lighten(it) } ?: active.accentHover
     }
     val accentMuted get() = when (AccentPrefs.color) {
         AccentColor.MINT -> active.accentMuted
         AccentColor.WHOOP_BLUE -> (if (isLight) Color(0xFF234F9E) else Color(0xFF60A0E0)).copy(alpha = 0.18f)
         AccentColor.CUSTOM -> AccentColor.parseHex(AccentPrefs.customHex, active.accent).copy(alpha = 0.18f)
+        AccentColor.MATERIAL_YOU -> MaterialYouAccent.primary?.copy(alpha = 0.18f) ?: active.accentMuted
     }
-    val focusRing get() = if (AccentPrefs.color == AccentColor.MINT) active.focusRing else accent
+    // Mint keeps its own focus ring; so does Material You while it has no dynamic colour (it IS mint then).
+    val focusRing get() = if (AccentPrefs.color == AccentColor.MINT ||
+        (AccentPrefs.color == AccentColor.MATERIAL_YOU && MaterialYouAccent.primary == null)) active.focusRing else accent
     const val disabledOpacity = 0.45f
 
     // Recovery / Charge gradient.
@@ -584,6 +592,15 @@ fun NoopTheme(content: @Composable () -> Unit) {
     }
     val tokens = if (dark) DarkTokens else LightTokens
     if (Palette.active !== tokens) Palette.active = tokens
+
+    // Material You accent: resolve the wallpaper's primary for the current mode before children compose,
+    // guarded + idempotent like the Palette.active write above. A wallpaper change recreates the activity,
+    // so this re-resolves then too.
+    val context = LocalContext.current
+    if (AccentPrefs.color == AccentColor.MATERIAL_YOU && MaterialYouAccent.isSupported) {
+        val primary = (if (dark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)).primary
+        if (MaterialYouAccent.primary != primary) MaterialYouAccent.primary = primary
+    }
 
     // Status-/nav-bar icon appearance: light icons on the dark theme, dark icons on the warm-paper
     // light theme (otherwise the icons are invisible). Edge-to-edge keeps the bars transparent.

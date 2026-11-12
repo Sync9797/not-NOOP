@@ -1986,6 +1986,8 @@
     <string name="l10n_settings_screen_ecg_gate_turn_on">Włącz bramę (wpisz \'1\')</string>
     <string name="l10n_settings_screen_ecg_gate_turn_off">Wyłącz bramę (wpisz \'0\')</string>
     <string name="l10n_settings_screen_accent">Akcent</string>
+    <string name="settings_accent_material_you_title">Użyj kolorów tapety</string>
+    <string name="settings_accent_material_you_detail">Material You: przyciski i wyróżnienia dopasowują się do tapety.</string>
     <string name="l10n_settings_screen_preset">Wstępnie ustawione</string>
     <string name="settings_language">Język</string>
     <string name="settings_choose_language">Wybierz język</string>

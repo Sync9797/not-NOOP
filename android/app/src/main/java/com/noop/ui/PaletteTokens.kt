@@ -330,7 +330,12 @@ object AppearancePrefs {
 enum class AccentColor(val storageValue: String, val label: String) {
     MINT("mint", "Mint"),
     WHOOP_BLUE("whoopBlue", "WHOOP Blue"),
-    CUSTOM("custom", "Custom");
+    CUSTOM("custom", "Custom"),
+    // Android-only (Not-Noop): the accent follows the wallpaper via Material You dynamic colour on
+    // Android 12+. Not part of the .noopbak whitelist, so it never crosses to the Swift apps; a device
+    // without dynamic colour falls back to mint. Not offered in the segmented picker, which has no room
+    // for a fourth label on a phone; Settings exposes it as its own switch.
+    MATERIAL_YOU("materialYou", "Material You");
 
     companion object {
         /** Seeds the custom picker (mint) so a fresh Custom selection is not black. */
@@ -348,6 +353,12 @@ enum class AccentColor(val storageValue: String, val label: String) {
             return Color(("FF" + rgb).toLong(16))
         }
 
+        /** Blend [c] toward white by [amount] (0..1), the hover for a dynamic (Material You) accent. */
+        fun lighten(c: Color, amount: Float = 0.24f): Color {
+            fun up(x: Float) = (x + (1 - x) * amount).coerceIn(0f, 1f)
+            return Color(up(c.red), up(c.green), up(c.blue), 1f)
+        }
+
         /** Blend a hex toward white by [amount] (0..1) — the deterministic hover for a custom accent. */
         fun lighten(hex: String, amount: Float = 0.24f): Color {
             val c = parseHex(hex, Color(0xFF149A78))
@@ -355,6 +366,18 @@ enum class AccentColor(val storageValue: String, val label: String) {
             return Color(up(c.red), up(c.green), up(c.blue), 1f)
         }
     }
+}
+
+/**
+ * The wallpaper-derived primary colour for [AccentColor.MATERIAL_YOU], resolved by NoopTheme from the
+ * system's dynamic colour scheme for the current light/dark mode. Null when dynamic colour is
+ * unavailable (Android 11 and earlier) or not yet resolved, in which case the accent falls back to mint.
+ */
+object MaterialYouAccent {
+    var primary by mutableStateOf<Color?>(null)
+
+    /** Dynamic colour exists from Android 12 (API 31). */
+    val isSupported: Boolean get() = android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S
 }
 
 /** Chrome-accent preference, persisted in `noop_prefs` + snapshot state so the picker is live. [load] is

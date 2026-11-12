@@ -770,6 +770,9 @@ fun SettingsScreen(
     // Chrome accent (Mint / WHOOP Blue / Custom) — chrome only; AccentPrefs mirrors it in snapshot state.
     var accentColor by remember { mutableStateOf(AccentPrefs.color) }
     var accentCustomHex by remember { mutableStateOf(AccentPrefs.customHex) }
+    var accentBeforeMaterialYou by remember {
+        mutableStateOf(AccentPrefs.color.takeIf { it != AccentColor.MATERIAL_YOU } ?: AccentColor.MINT)
+    }
     // Trend charts (Line / Bar) — flips the Trends tab between the gradient line and value-ramp bars.
     // Display-only; SharedPreferences isn't reactive, so mirror into local state and persist on select.
     var trendChartStyle by remember { mutableStateOf(UnitPrefs.trendChartStyle(context)) }
@@ -1603,16 +1606,39 @@ fun SettingsScreen(
             SettingsRowDivider()
             // Chrome accent colour — links/buttons/selection tint only. The recovery/strain/sleep DATA
             // colours follow "Chart colours", never this. Custom reveals RGB sliders.
-            SettingsFormRow(label = uiString(R.string.l10n_settings_screen_accent)) {
-                SegmentedPillControl(
-                    items = listOf(AccentColor.MINT, AccentColor.WHOOP_BLUE, AccentColor.CUSTOM),
-                    selection = accentColor,
-                    label = { it.label },
-                    onSelect = { c ->
-                        accentColor = c
-                        AccentPrefs.setColor(context, c)
+            // Material You (Android 12+): the accent follows the wallpaper. A switch rather than a fourth
+            // pill, which would not fit beside the label on a phone. Turning it off restores the accent
+            // chosen before it was turned on (mint if none was).
+            if (MaterialYouAccent.isSupported) {
+                SettingsToggleRow(
+                    title = uiString(R.string.settings_accent_material_you_title),
+                    detail = uiString(R.string.settings_accent_material_you_detail),
+                    checked = accentColor == AccentColor.MATERIAL_YOU,
+                    onCheckedChange = { on ->
+                        val next = if (on) {
+                            accentBeforeMaterialYou = accentColor
+                            AccentColor.MATERIAL_YOU
+                        } else {
+                            accentBeforeMaterialYou
+                        }
+                        accentColor = next
+                        AccentPrefs.setColor(context, next)
                     },
                 )
+            }
+            if (accentColor != AccentColor.MATERIAL_YOU) {
+                if (MaterialYouAccent.isSupported) SettingsRowDivider()
+                SettingsFormRow(label = uiString(R.string.l10n_settings_screen_accent)) {
+                    SegmentedPillControl(
+                        items = listOf(AccentColor.MINT, AccentColor.WHOOP_BLUE, AccentColor.CUSTOM),
+                        selection = accentColor,
+                        label = { it.label },
+                        onSelect = { c ->
+                            accentColor = c
+                            AccentPrefs.setColor(context, c)
+                        },
+                    )
+                }
             }
             if (accentColor == AccentColor.CUSTOM) {
                 SettingsRowDivider()

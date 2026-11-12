@@ -1983,6 +1983,8 @@
     <string name="l10n_settings_screen_ecg_gate_turn_on">Включить шлюз (записать «1»)</string>
     <string name="l10n_settings_screen_ecg_gate_turn_off">Выключить шлюз (записать «0»)</string>
     <string name="l10n_settings_screen_accent">Акцент</string>
+    <string name="settings_accent_material_you_title">Цвета обоев</string>
+    <string name="settings_accent_material_you_detail">Material You: кнопки и выделения подстраиваются под обои.</string>
     <string name="l10n_settings_screen_preset">Пресет</string>
     <string name="settings_language">Язык</string>
     <string name="settings_choose_language">Выбрать язык</string>
