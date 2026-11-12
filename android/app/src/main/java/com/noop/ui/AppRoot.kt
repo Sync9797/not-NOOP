@@ -1,5 +1,6 @@
 package com.noop.ui
 
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.windowInsetsPadding
@@ -1338,7 +1339,18 @@ private fun ShellBackdrop(refreshKey: Any?) {
     val fullBleed = screenBackdropFullBleed(showDayCycle, skyBehindCards)
     Box(Modifier.fillMaxSize().background(Palette.surfaceBase)) {
         if (slot != null) {
-            Box(if (fullBleed) Modifier.fillMaxSize() else Modifier.fillMaxWidth().align(Alignment.TopCenter)) {
+            Box(
+                if (fullBleed) {
+                    // A full-bleed screen backdrop starts BELOW the status bar (the Scaffold insets the
+                    // screen), leaving the canvas behind the status bar. Start this one there too, or the
+                    // status bar shows sky above the rail and canvas above the screen, split at the rail.
+                    Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.statusBars)
+                } else {
+                    // A band backdrop bleeds up behind the status bar on the screen, so it starts at the
+                    // window top here as well.
+                    Modifier.fillMaxWidth().align(Alignment.TopCenter)
+                },
+            ) {
                 slot()
             }
         }
