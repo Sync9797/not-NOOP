@@ -867,8 +867,6 @@ object NoopPrefs {
             .apply()
     }
 
-    /** #528, last HR sample epoch-second exported to Health Connect (0 = nothing exported yet). The
-     *  HR share-back only emits samples newer than this, so each writeback is incremental. */
     /** Days ("yyyy-MM-dd") whose "my-whoop" daily row was written by the Health Connect backfill, so a
      *  later import can tell its OWN earlier rows from real strap/WHOOP-export rows and refresh them
      *  instead of treating the day as strap-covered forever. */
@@ -893,6 +891,8 @@ object NoopPrefs {
         of(context).edit().putStringSet(KEY_HC_SLEEP_STARTS, HashSet(starts)).apply()
     }
 
+    /** #528, last HR sample epoch-second exported to Health Connect (0 = nothing exported yet). The
+     *  HR share-back only emits samples newer than this, so each writeback is incremental. */
     const val KEY_HC_HR_FRONTIER = "noop.hcHrFrontierTs"
 
     fun hcHrFrontier(context: Context): Long =
