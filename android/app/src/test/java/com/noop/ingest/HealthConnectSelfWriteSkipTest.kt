@@ -12,7 +12,7 @@ import org.junit.Test
  */
 class HealthConnectSelfWriteSkipTest {
 
-    private val self = "com.notnoop.whoop"
+    private val self = "com.not.noop.oop"
 
     @Test fun skipsRecordsNoopWroteItself() {
         assertTrue(HealthConnectImporter.isSelfWritten(self, self))
@@ -28,7 +28,8 @@ class HealthConnectSelfWriteSkipTest {
         // variants are no longer "self", but their Health Connect writes are still NOOP strap data.
         for (pkg in listOf(
             "com.noop.whoop", "com.noop.whoop.debug", "com.noop.whoop.staging", "com.noop.whoop.demo",
-            "com.notnoop.whoop.debug", "com.notnoop.whoop.staging", "com.notnoop.whoop.demo",
+            "com.notnoop.whoop", "com.notnoop.whoop.debug",
+            "com.not.noop.oop.debug", "com.not.noop.oop.staging", "com.not.noop.oop.demo",
         )) {
             assertTrue(pkg, HealthConnectImporter.isSelfWritten(pkg, self))
         }
@@ -37,6 +38,7 @@ class HealthConnectSelfWriteSkipTest {
     @Test fun doesNotSkipLookalikePackages() {
         assertFalse(HealthConnectImporter.isSelfWritten("com.noop.whoopsie", self))
         assertFalse(HealthConnectImporter.isSelfWritten("com.notnoop", self))
+        assertFalse(HealthConnectImporter.isSelfWritten("com.not.noop.oopsie", self))
     }
 
     @Test fun keepsWhenOriginUnknownOrSelfBlank() {

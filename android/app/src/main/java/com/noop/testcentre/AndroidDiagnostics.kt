@@ -23,7 +23,7 @@ object AndroidDiagnostics {
      * `App:     <version> (<tier>) build <code> <applicationId>` for every export header.
      *
      * The applicationId was missing (#2553, Apple twin in `LiveState.appIdentityLine`). It is not decoration
-     * here: the id varies across the four builds this project ships (`com.notnoop.whoop`, plus `.debug`,
+     * here: the id varies across the four builds this project ships (`com.not.noop.oop`, plus `.debug`,
      * `.staging` and `.demo` suffixes), and `.staging` is a SIDE-INSTALL, so a wearer can be running prod and
      * staging at once. Two exports from that phone otherwise differ only by tier, and the id is what says
      * which install produced the log.

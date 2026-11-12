@@ -1169,7 +1169,7 @@ object HealthConnectImporter {
     internal fun isNoopFamily(originPackage: String): Boolean =
         NOOP_FAMILY_PREFIXES.any { originPackage == it || originPackage.startsWith("$it.") }
 
-    private val NOOP_FAMILY_PREFIXES = listOf("com.noop.whoop", "com.notnoop.whoop")
+    private val NOOP_FAMILY_PREFIXES = listOf("com.noop.whoop", "com.notnoop.whoop", "com.not.noop.oop")
 
     /**
      * Days whose "my-whoop" row was written by an earlier Health Connect import and still looks like one
