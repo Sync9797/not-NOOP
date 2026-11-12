@@ -79,6 +79,17 @@ object Palette {
     // theme-aware hero no longer uses this; kept for any always-dark chrome.
     val onDarkSecondary = Color(0xFFC8CFD8)
 
+    /** Primary text over a scenic backdrop (the day-cycle sky or a custom image), in either theme: the
+     *  scaffold titles use it with [backdropTextShadow], as the Today header always has. */
+    val onDarkPrimary = Color(0xFFFFFFFF)
+
+    /** The soft shadow that keeps light text legible on a bright patch of sky or photo. */
+    val backdropTextShadow = androidx.compose.ui.graphics.Shadow(
+        color = Color.Black.copy(alpha = 0.4f),
+        offset = androidx.compose.ui.geometry.Offset(0f, 1f),
+        blurRadius = 10f,
+    )
+
     // Glow.
     val glowAmbient get() = active.glowAmbient
 

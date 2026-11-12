@@ -1259,6 +1259,23 @@ fun ScenicHeroBackground(
     }
 }
 
+/**
+ * The backdrop a scaffold paints: the caller's own when it supplies one, otherwise the user's chosen one
+ * ([screenBackdropSlot] / [screenBackdropFullBleed]: the custom image, else the day-cycle sky, else flat
+ * canvas). Read once per screen visit, like the screens that already pass these in.
+ */
+@Composable
+private fun resolveScreenBackdrop(
+    explicit: (@Composable () -> Unit)?,
+    explicitFullBleed: Boolean,
+): Pair<(@Composable () -> Unit)?, Boolean> {
+    if (explicit != null) return explicit to explicitFullBleed
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val showDayCycle = remember { NoopPrefs.showDayCycleBackground(context) }
+    val skyBehindCards = remember { NoopPrefs.skyBehindCards(context) }
+    return screenBackdropSlot(showDayCycle, skyBehindCards) to screenBackdropFullBleed(showDayCycle, skyBehindCards)
+}
+
 // MARK: - ScreenScaffold (ported from Strand/Screens/ScreenScaffold.swift)
 //
 // Standard scrollable screen container: a title + optional subtitle header over the
@@ -1289,13 +1306,16 @@ fun ScreenScaffold(
     fullBleedBackground: Boolean = false,
     content: @Composable ColumnScope.() -> Unit,
 ) {
+    // Not-Noop: a screen that supplies no backdrop gets the user's own (day-cycle sky or custom image),
+    // so every standard screen shares the wallpaper instead of some sitting on flat canvas beside it.
+    val (backdrop, backdropFullBleed) = resolveScreenBackdrop(topBackground, fullBleedBackground)
     // The scrolling content column. Its OUTER modifier differs by path: with no topBackground it is the
     // original root Column (the caller's `modifier` + an opaque-canvas background — byte-for-byte the old
     // layout); with a topBackground the canvas + scene paint in the wrapping Box's background (below) and
     // the column stays TRANSPARENT so the scene shows through behind the scroll content. Pulled out so the
     // two paths share one body.
     val columnModifier: Modifier =
-        if (topBackground == null) {
+        if (backdrop == null) {
             modifier.fillMaxWidth().background(Palette.surfaceBase)
         } else {
             Modifier.fillMaxWidth()
@@ -1336,10 +1356,19 @@ fun ScreenScaffold(
                         verticalArrangement = Arrangement.spacedBy(2.dp),
                     ) {
                         if (title != null) {
-                            Text(title, style = NoopType.title1, color = Palette.textPrimary)
+                            Text(
+                                title,
+                                // Over a backdrop the title reads light with a soft shadow, like the Today header.
+                                style = if (backdrop != null) NoopType.title1.copy(shadow = Palette.backdropTextShadow) else NoopType.title1,
+                                color = if (backdrop != null) Palette.onDarkPrimary else Palette.textPrimary,
+                            )
                         }
                         if (subtitle != null) {
-                            Text(subtitle, style = NoopType.subhead, color = Palette.textSecondary)
+                            Text(
+                                subtitle,
+                                style = if (backdrop != null) NoopType.subhead.copy(shadow = Palette.backdropTextShadow) else NoopType.subhead,
+                                color = if (backdrop != null) Palette.onDarkSecondary else Palette.textSecondary,
+                            )
                         }
                     }
                     if (trailing != null) trailing()
@@ -1349,7 +1378,7 @@ fun ScreenScaffold(
         }
     }
 
-    if (topBackground == null) {
+    if (backdrop == null) {
         // Unchanged path: the column IS the root, with the caller's `modifier` + opaque canvas background
         // applied to it directly — byte-for-byte the previous layout (no wrapping Box).
         column()
@@ -1364,7 +1393,7 @@ fun ScreenScaffold(
         Box(modifier = modifier.fillMaxSize().background(Palette.surfaceBase)) {
             Box(
                 modifier = (
-                    if (fullBleedBackground) {
+                    if (backdropFullBleed) {
                         // Sky-behind-cards: the backdrop fills the whole viewport (no band offset), so
                         // the transparent content scrolls OVER a full-height sky. Identical to the lazy
                         // twin's fullBleedBackground container.
@@ -1384,7 +1413,7 @@ fun ScreenScaffold(
                     // appearance-identical. Mirrors keeping the iOS scene as a static screen-level backdrop.
                     .graphicsLayer { },
             ) {
-                topBackground()
+                backdrop()
             }
             column()
         }
@@ -1433,6 +1462,9 @@ fun LazyScreenScaffold(
     listState: LazyListState = rememberLazyListState(),
     content: LazyListScope.() -> Unit,
 ) {
+    // Not-Noop: a screen that supplies no backdrop gets the user's own (day-cycle sky or custom image),
+    // so every standard screen shares the wallpaper instead of some sitting on flat canvas beside it.
+    val (backdrop, backdropFullBleed) = resolveScreenBackdrop(topBackground, fullBleedBackground)
     // The header row: optional leading action, the title/subtitle, optional trailing action. Omitted
     // entirely when both title and subtitle are null (a screen supplying its own custom header). Matches
     // ScreenScaffold's header block so the eager + lazy scaffolds read identically.
@@ -1449,10 +1481,19 @@ fun LazyScreenScaffold(
                         verticalArrangement = Arrangement.spacedBy(2.dp),
                     ) {
                         if (title != null) {
-                            Text(title, style = NoopType.title1, color = Palette.textPrimary)
+                            Text(
+                                title,
+                                // Over a backdrop the title reads light with a soft shadow, like the Today header.
+                                style = if (backdrop != null) NoopType.title1.copy(shadow = Palette.backdropTextShadow) else NoopType.title1,
+                                color = if (backdrop != null) Palette.onDarkPrimary else Palette.textPrimary,
+                            )
                         }
                         if (subtitle != null) {
-                            Text(subtitle, style = NoopType.subhead, color = Palette.textSecondary)
+                            Text(
+                                subtitle,
+                                style = if (backdrop != null) NoopType.subhead.copy(shadow = Palette.backdropTextShadow) else NoopType.subhead,
+                                color = if (backdrop != null) Palette.onDarkSecondary else Palette.textSecondary,
+                            )
                         }
                     }
                     if (trailing != null) trailing()
@@ -1467,7 +1508,7 @@ fun LazyScreenScaffold(
     // the eager ScreenScaffold. The top inset honours [topPadding] (so a custom-header screen can tighten
     // the gap above the first row, exactly like ScreenScaffold's `padding(top = topPadding)`).
     val listModifier: Modifier =
-        if (topBackground == null) {
+        if (backdrop == null) {
             modifier.fillMaxWidth().background(Palette.surfaceBase)
         } else {
             Modifier.fillMaxWidth()
@@ -1496,7 +1537,7 @@ fun LazyScreenScaffold(
         }
     }
 
-    if (topBackground == null) {
+    if (backdrop == null) {
         list()
     } else {
         // Scene-backed path: the wrapping Box paints the flat canvas + the screen-level scene backdrop
@@ -1508,7 +1549,7 @@ fun LazyScreenScaffold(
         Box(modifier = modifier.fillMaxSize().background(Palette.surfaceBase)) {
             Box(
                 modifier = (
-                    if (fullBleedBackground) {
+                    if (backdropFullBleed) {
                         // Sky-behind-cards: the backdrop fills the whole viewport (covers under the status
                         // bar already), so the transparent rows scroll OVER a full-height sky.
                         Modifier.fillMaxSize()
@@ -1518,7 +1559,7 @@ fun LazyScreenScaffold(
                     }
                     ).graphicsLayer { },
             ) {
-                topBackground()
+                backdrop()
             }
             list()
         }
