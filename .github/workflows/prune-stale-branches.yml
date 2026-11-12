@@ -19,10 +19,8 @@
 name: Prune stale branches
 
 on:
-  schedule:
-    # Mondays, 04:17 UTC. Off the hour because everything else on GitHub runs on the hour and
-    # scheduled jobs are queued, not guaranteed, when the minute is busy.
-    - cron: '17 4 * * 1'
+  # Not-Noop: manual only. Upstream ran this weekly to tidy its many contributors' branches; in a
+  # personal fork, branches deleting themselves on a schedule would be a surprise.
   workflow_dispatch:
     inputs:
       dry_run:
