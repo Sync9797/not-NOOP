@@ -1,5 +1,6 @@
 # Not-Noop: Android-only signed release. Builds the full release APK with the Not-Noop release key
-# (repository secrets NOOP_RELEASE_KEYSTORE_BASE64 + NOOP_RELEASE_KEYSTORE_PASSWORD), checks the APK is
+# (committed encrypted as android/signing/not-noop-release.jks.enc, decrypted with the
+# NOOP_RELEASE_KEYSTORE_PASSWORD repository secret), checks the APK is
 # signed by that key's certificate, and attaches it to a normal GitHub release. The macOS / iOS / AltStore
 # jobs inherited from upstream were removed: they built the original NOOP's app ids, and this fork ships
 # Android only.
@@ -52,11 +53,10 @@ jobs:
     steps:
       - name: Check the release signing secrets exist
         env:
-          KS: ${{ secrets.NOOP_RELEASE_KEYSTORE_BASE64 }}
           PW: ${{ secrets.NOOP_RELEASE_KEYSTORE_PASSWORD }}
         run: |
-          if [ -z "$KS" ] || [ -z "$PW" ]; then
-            echo "::error::Add the NOOP_RELEASE_KEYSTORE_BASE64 and NOOP_RELEASE_KEYSTORE_PASSWORD repository secrets first."
+          if [ -z "$PW" ]; then
+            echo "::error::Add the NOOP_RELEASE_KEYSTORE_PASSWORD repository secret first."
             exit 1
           fi
 
@@ -203,24 +203,23 @@ jobs:
       # removed again in the always() step below.
       - name: Write the release signing config
         env:
-          KS: ${{ secrets.NOOP_RELEASE_KEYSTORE_BASE64 }}
           PW: ${{ secrets.NOOP_RELEASE_KEYSTORE_PASSWORD }}
         run: |
           set -euo pipefail
           KS_FILE="$RUNNER_TEMP/not-noop-release.jks"
-          # Strip whitespace first: pasting the long base64 value into the secrets form (on a phone
-          # especially) can add spaces or line breaks, which base64 -d rejects.
-          if ! printf '%s' "$KS" | tr -d ' \t\r\n' | base64 -d > "$KS_FILE" 2>/dev/null; then
-            echo "::error::NOOP_RELEASE_KEYSTORE_BASE64 is not valid base64. Paste the whole contents of NOOP_RELEASE_KEYSTORE_BASE64.txt again."
-            exit 1
-          fi
-          # Not secret, but enough to tell a complete keystore from a truncated paste.
-          echo "Decoded keystore: $(wc -c < "$KS_FILE") bytes, sha256 $(sha256sum "$KS_FILE" | cut -c1-16)"
           # Tolerate the usual password paste slips: surrounding whitespace / line breaks, or the whole
           # "Store password: ..." line copied from the key-info note instead of just the value.
           PW=$(printf '%s' "$PW" | sed -E 's/^[[:space:]]*([Ss]tore|[Kk]ey)[[:space:]]+password:[[:space:]]*//' | tr -d ' \t\r\n')
+          # The keystore is committed ENCRYPTED (AES-256-CBC, PBKDF2 with 600k iterations) under
+          # android/signing/, keyed by the same 32-character random password, so the only secret GitHub
+          # needs is that password. (A base64 keystore secret proved impractical to paste from a phone.)
+          if ! openssl enc -d -aes-256-cbc -pbkdf2 -iter 600000 \
+              -in signing/not-noop-release.jks.enc -out "$KS_FILE" -pass env:PW 2>/dev/null; then
+            echo "::error::NOOP_RELEASE_KEYSTORE_PASSWORD did not decrypt android/signing/not-noop-release.jks.enc. Check the secret holds only the Store password."
+            exit 1
+          fi
           if ! keytool -list -keystore "$KS_FILE" -storepass "$PW" -alias not-noop >/dev/null 2>&1; then
-            echo "::error::The keystore did not open with NOOP_RELEASE_KEYSTORE_PASSWORD (or has no not-noop key). Check both secrets."
+            echo "::error::The decrypted keystore did not open with NOOP_RELEASE_KEYSTORE_PASSWORD."
             exit 1
           fi
           umask 077
