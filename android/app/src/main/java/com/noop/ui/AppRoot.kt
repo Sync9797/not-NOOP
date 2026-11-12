@@ -629,7 +629,6 @@ fun AppRoot(viewModel: AppViewModel = viewModel()) {
         // it on entry.
         if (shellNav != ShellNavigation.BOTTOM_BAR) ShellBackdrop(refreshKey = currentRoute)
         Row(Modifier.fillMaxSize()) {
-            if (shellNav == ShellNavigation.RAIL) GlassNavRail(current = current, onTabSelected = onShellTabSelected)
             Column(Modifier.weight(1f).fillMaxHeight()) {
                 Box(
                     if (shellNav == ShellNavigation.TABLETOP && hinge != null) {
@@ -639,7 +638,7 @@ fun AppRoot(viewModel: AppViewModel = viewModel()) {
                     },
                 ) {
                     Scaffold(
-                        // The rail owns the start inset; the tabletop top half ends at the hinge, not a system bar.
+                        // The rail owns the end inset; the tabletop top half ends at the hinge, not a system bar.
                         contentWindowInsets = shellContentInsets(shellNav),
                         containerColor = Palette.surfaceBase,
                         bottomBar = {
@@ -887,6 +886,9 @@ fun AppRoot(viewModel: AppViewModel = viewModel()) {
                     }
                 }
             }
+            // The rail sits on the END edge (right in left-to-right languages), under a right thumb, like the
+            // iPad dock. Mirrors automatically in right-to-left layouts.
+            if (shellNav == ShellNavigation.RAIL) GlassNavRail(current = current, onTabSelected = onShellTabSelected)
         }
 
         // Quick-actions sheet, opened by the raised gold centre FAB. Each row routes to an
@@ -1313,9 +1315,9 @@ private fun GlassBottomBar(
 @Composable
 private fun shellContentInsets(shellNav: ShellNavigation): WindowInsets = when (shellNav) {
     ShellNavigation.BOTTOM_BAR -> ScaffoldDefaults.contentWindowInsets
-    // The rail beside the screens owns the start inset.
+    // The rail beside the screens owns the end inset.
     ShellNavigation.RAIL -> ScaffoldDefaults.contentWindowInsets
-        .only(WindowInsetsSides.Top + WindowInsetsSides.Bottom + WindowInsetsSides.End)
+        .only(WindowInsetsSides.Top + WindowInsetsSides.Bottom + WindowInsetsSides.Start)
     // The top half ends at the hinge, so it has no bottom system bar to clear.
     ShellNavigation.TABLETOP -> ScaffoldDefaults.contentWindowInsets
         .only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal)
@@ -1346,7 +1348,7 @@ private fun ShellBackdrop(refreshKey: Any?) {
 // MARK: - Glass navigation rail (large screens)
 //
 // The bottom bar's twin for wide windows (tablets, unfolded foldables, landscape): the same glass island,
-// slots and routing, stood on end along the start edge, where it costs width the screen has to spare
+// slots and routing, stood on end along the end (right) edge, where it costs width the screen has to spare
 // instead of height it does not. Same tab list and active rule as the bar (shellTabsFor /
 // isShellTabActive), so the two cannot drift.
 
@@ -1361,13 +1363,13 @@ private fun GlassNavRail(
     Box(
         modifier = modifier
             .fillMaxHeight()
-            // The rail owns the start inset (a landscape navigation bar or cutout on that side) and the
-            // top/bottom system bars it spans; the Scaffold beside it excludes the start side.
+            // The rail owns the end inset (a landscape navigation bar or cutout on that side) and the
+            // top/bottom system bars it spans; the Scaffold beside it excludes the end side.
             .windowInsetsPadding(
                 WindowInsets.systemBars.union(WindowInsets.displayCutout)
-                    .only(WindowInsetsSides.Start + WindowInsetsSides.Vertical),
+                    .only(WindowInsetsSides.End + WindowInsetsSides.Vertical),
             )
-            .padding(start = Metrics.space12, top = Metrics.space12, bottom = Metrics.space12),
+            .padding(end = Metrics.space12, top = Metrics.space12, bottom = Metrics.space12),
         contentAlignment = Alignment.Center,
     ) {
         Surface(

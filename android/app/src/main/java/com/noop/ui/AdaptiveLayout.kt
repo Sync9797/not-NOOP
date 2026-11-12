@@ -43,7 +43,7 @@ enum class ShellNavigation {
     /** The floating glass bar along the bottom: phones, and anything compact. */
     BOTTOM_BAR,
 
-    /** A glass rail down the start edge: wide windows, where a bottom bar wastes height. */
+    /** A glass rail down the end (right) edge: wide windows, where a bottom bar wastes height. */
     RAIL,
 
     /** Half-folded with a horizontal hinge: screens above the hinge, the bar below it. */
