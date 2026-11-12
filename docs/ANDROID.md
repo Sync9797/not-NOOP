@@ -87,7 +87,7 @@ android/
 ├── gradlew / gradlew.bat        # committed wrapper scripts
 ├── gradle/wrapper/              # gradle-wrapper.{jar,properties} (committed)
 └── app/
-    ├── build.gradle.kts         # namespace com.noop, applicationId com.noop.whoop, Compose + Room
+    ├── build.gradle.kts         # namespace com.noop, applicationId com.notnoop.whoop, Compose + Room
     ├── proguard-rules.pro       # R8 release rules
     └── src/
         ├── main/
@@ -120,7 +120,7 @@ bump forces matching KSP and Compose-compiler bumps:
 | `compileSdk` / `targetSdk` | `34` | |
 | `minSdk` | `26` | Android 8.0 — the floor for the current BLE permission split |
 | `sourceCompatibility` / `jvmTarget` | `17` | JDK 17 |
-| `applicationId` | `com.noop.whoop` | `.debug` suffix on debug builds |
+| `applicationId` | `com.notnoop.whoop` | `.debug` suffix on debug builds |
 
 The app declares **no `INTERNET` permission** by design (see
 [Permissions](#permissions-and-the-no-internet-posture)) and sets `android:allowBackup="false"`.
@@ -203,11 +203,11 @@ cd android
 
 # Assemble a debug APK.
 ./gradlew assembleDebug
-# → app/build/outputs/apk/debug/app-debug.apk  (applicationId com.noop.whoop.debug)
+# → app/build/outputs/apk/debug/app-debug.apk  (applicationId com.notnoop.whoop.debug)
 
 # Install onto a connected device and launch.
 ./gradlew installDebug
-adb shell am start -n com.noop.whoop.debug/com.noop.ui.MainActivity
+adb shell am start -n com.notnoop.whoop.debug/com.noop.ui.MainActivity
 
 # Release builds — the two shipped flavours (R8 full mode + resource shrink are enabled).
 ./gradlew assembleFullRelease    # → NOOP-full.apk
