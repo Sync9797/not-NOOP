@@ -148,6 +148,8 @@
     <!-- Resolve the Health Connect provider on Android 14+ (platform) and earlier (app). -->
     <queries>
         <package android:name="com.google.android.apps.healthdata" />
+        <!-- AI Widget Maker: the one companion the widget snapshot is shared with (WidgetShare). -->
+        <package android:name="com.sidequest.widgetmaker" />
         <!-- So the connection helper can detect the official WHOOP app and deep-link to its
              info screen (a strap only pairs with one app at a time). Android 11+ visibility. -->
         <package android:name="com.whoop.android" />
@@ -390,6 +392,12 @@
                 android:resource="@xml/file_paths" />
         </provider>
 
+        <!-- Read-only widget snapshot for AI Widget Maker only (WidgetShare checks the caller).
+             On-device; nothing leaves the phone. -->
+        <provider
+            android:name="com.noop.widget.WidgetShareProvider"
+            android:authorities="${applicationId}.share"
+            android:exported="true" />
     </application>
 
 </manifest>
