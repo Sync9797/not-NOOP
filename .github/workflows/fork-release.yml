@@ -208,7 +208,16 @@ jobs:
         run: |
           set -euo pipefail
           KS_FILE="$RUNNER_TEMP/not-noop-release.jks"
-          printf '%s' "$KS" | base64 -d > "$KS_FILE"
+          # Strip whitespace first: pasting the long base64 value into the secrets form (on a phone
+          # especially) can add spaces or line breaks, which base64 -d rejects.
+          if ! printf '%s' "$KS" | tr -d ' \t\r\n' | base64 -d > "$KS_FILE" 2>/dev/null; then
+            echo "::error::NOOP_RELEASE_KEYSTORE_BASE64 is not valid base64. Paste the whole contents of NOOP_RELEASE_KEYSTORE_BASE64.txt again."
+            exit 1
+          fi
+          if ! keytool -list -keystore "$KS_FILE" -storepass "$PW" -alias not-noop >/dev/null 2>&1; then
+            echo "::error::The keystore did not open with NOOP_RELEASE_KEYSTORE_PASSWORD (or has no not-noop key). Check both secrets."
+            exit 1
+          fi
           umask 077
           printf 'storeFile=%s\nstorePassword=%s\nkeyAlias=not-noop\nkeyPassword=%s\n' \
             "$KS_FILE" "$PW" "$PW" > keystore.properties
