@@ -97,8 +97,8 @@ android {
     }
 
     // Two clearly-distinct apps that install side-by-side:
-    //   • full → "Not-Noop"  (com.not.noop.oop)  — the real app, starts empty, pair a strap / import.
-    //   • demo → "Not-Noop Demo" (com.not.noop.oop.demo) — preloaded with 120 days of synthetic data and
+    //   • full → "NOOP"      (com.not.noop.oop)  — the real app, starts empty, pair a strap / import.
+    //   • demo → "NOOP Demo"  (com.not.noop.oop.demo) — preloaded with 120 days of synthetic data and
     //                          a visible DEMO badge, so anyone can explore every screen with no strap.
     // Build e.g. ./gradlew assembleFullRelease assembleDemoRelease.
     flavorDimensions += "tier"

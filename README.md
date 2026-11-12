@@ -27,8 +27,8 @@ There is no support promise, no release schedule and no roadmap beyond "make it 
 
 ## How it differs from NOOP
 
-- **Its own app id, `com.not.noop.oop`, and the name "Not-Noop".** It installs beside the original
-  NOOP app instead of replacing it, with its own separate data.
+- **Its own app id, `com.not.noop.oop`.** It installs beside the original NOOP app instead of
+  replacing it, with its own separate data. On the launcher it is still called "NOOP".
 - **Update checks look at this repository's releases**, not upstream's, so Not-Noop never offers to
   "update" you to a different app.
 - **Bug fixes**, listed in the commit history. Highlights:
