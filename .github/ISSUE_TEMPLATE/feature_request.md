@@ -1,6 +1,6 @@
 ---
-name: Feature request
-about: Suggest an idea or improvement for NOOP
+name: Feature request / question
+about: Suggest an idea or improvement, or ask a question
 labels: enhancement
 ---
 
