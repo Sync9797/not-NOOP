@@ -3810,11 +3810,11 @@ fun SettingsScreen(
                             interactionSource = projectHomeInteraction,
                             indication = null,
                         ) {
-                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/Sync9797/Not-Noop"))
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/Sync9797/not-NOOP"))
                             try {
                                 context.startActivity(intent)
                             } catch (_: ActivityNotFoundException) {
-                                Toast.makeText(context, "github.com/Sync9797/Not-Noop", Toast.LENGTH_LONG).show()
+                                Toast.makeText(context, "github.com/Sync9797/not-NOOP", Toast.LENGTH_LONG).show()
                             }
                         }
                         .padding(horizontal = 14.dp, vertical = 12.dp)
