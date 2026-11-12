@@ -331,6 +331,30 @@ object NoopPrefs {
         of(context).edit().putBoolean(KEY_HC_WRITEBACK, enabled).apply()
     }
 
+    /** Days ("yyyy-MM-dd") whose "my-whoop" daily row was written by the Health Connect backfill, so a
+     *  later import can tell its OWN earlier rows from real strap/WHOOP-export rows and refresh them
+     *  instead of treating the day as strap-covered forever. */
+    const val KEY_HC_BACKFILL_DAYS = "noop.hcBackfillDays"
+
+    fun hcBackfillDays(context: Context): Set<String> =
+        of(context).getStringSet(KEY_HC_BACKFILL_DAYS, emptySet())?.toSet() ?: emptySet()
+
+    fun setHcBackfillDays(context: Context, days: Set<String>) {
+        of(context).edit().putStringSet(KEY_HC_BACKFILL_DAYS, HashSet(days)).apply()
+    }
+
+    /** startTs (epoch seconds, as strings) of the sleep sessions the Health Connect import wrote under
+     *  "my-whoop", so a re-import can drop a night Health Connect revised or removed instead of keeping
+     *  a duplicate beside the new one. */
+    const val KEY_HC_SLEEP_STARTS = "noop.hcSleepStarts"
+
+    fun hcSleepStarts(context: Context): Set<String> =
+        of(context).getStringSet(KEY_HC_SLEEP_STARTS, emptySet())?.toSet() ?: emptySet()
+
+    fun setHcSleepStarts(context: Context, starts: Set<String>) {
+        of(context).edit().putStringSet(KEY_HC_SLEEP_STARTS, HashSet(starts)).apply()
+    }
+
     /** #528, last HR sample epoch-second exported to Health Connect (0 = nothing exported yet). The
      *  HR share-back only emits samples newer than this, so each writeback is incremental. */
     const val KEY_HC_HR_FRONTIER = "noop.hcHrFrontierTs"
@@ -707,6 +731,18 @@ fun NoopRoot() {
     val context = LocalContext.current
     val prefs = remember { NoopPrefs.of(context) }
     val appViewModel: AppViewModel = viewModel()
+
+    // Health Connect catch-up on EVERY return to the app, not just when the view model is first created.
+    // The view model outlives a trip to the background, so with only the init-time call, a user who kept
+    // the app in recents never synced again. The call no-ops cheaply when auto-sync is off or not yet due.
+    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+    androidx.compose.runtime.DisposableEffect(lifecycleOwner, appViewModel) {
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) appViewModel.syncHealthConnectIfStale()
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
 
     var onboarded by remember {
         mutableStateOf(prefs.getBoolean(NoopPrefs.KEY_ONBOARDED, false))

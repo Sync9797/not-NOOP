@@ -21,12 +21,27 @@ class HealthConnectSelfWriteSkipTest {
     @Test fun keepsRecordsFromOtherSources() {
         assertFalse(HealthConnectImporter.isSelfWritten("com.google.android.apps.fitness", self))
         assertFalse(HealthConnectImporter.isSelfWritten("com.sec.android.app.shealth", self))
-        assertFalse(HealthConnectImporter.isSelfWritten("com.notnoop.whoop.demo", self)) // different pkg
+    }
+
+    @Test fun skipsEveryNoopAndNotNoopBuild() {
+        // Not-Noop moved off the original app id, so the original NOOP app and the other Not-Noop
+        // variants are no longer "self", but their Health Connect writes are still NOOP strap data.
+        for (pkg in listOf(
+            "com.noop.whoop", "com.noop.whoop.debug", "com.noop.whoop.demo",
+            "com.notnoop.whoop.debug", "com.notnoop.whoop.demo",
+        )) {
+            assertTrue(pkg, HealthConnectImporter.isSelfWritten(pkg, self))
+        }
+    }
+
+    @Test fun doesNotSkipLookalikePackages() {
+        assertFalse(HealthConnectImporter.isSelfWritten("com.noop.whoopsie", self))
+        assertFalse(HealthConnectImporter.isSelfWritten("com.notnoop", self))
     }
 
     @Test fun keepsWhenOriginUnknownOrSelfBlank() {
         // Err toward keeping data: if we can't determine self, skip nothing.
         assertFalse(HealthConnectImporter.isSelfWritten("", self))
-        assertFalse(HealthConnectImporter.isSelfWritten(self, ""))
+        assertFalse(HealthConnectImporter.isSelfWritten("com.google.android.apps.fitness", ""))
     }
 }

@@ -268,6 +268,12 @@ class WhoopRepository(private val dao: WhoopDao) {
         )
     }
 
+    /** Remove an IMPORTED sleep row by key with no tombstone. Used only by the Health Connect re-import
+     *  to replace a night Health Connect itself revised or removed; a tombstone would wrongly block the
+     *  strap from ever detecting that night. */
+    suspend fun deleteImportedSleepSession(deviceId: String, startTs: Long) =
+        dao.deleteSleepSession(deviceId, startTs)
+
     /** Remove a sleep session entirely , the delete half of [updateSleepSessionTimes] with no
      *  re-insert. (deviceId, startTs) is the primary key, so it uniquely identifies the row, letting
      *  the user clear a misread or spurious night so the day recomputes without it (#281).
