@@ -598,6 +598,9 @@ class WhoopBleClient(
          */
         private const val LOG_BUFFER_MAX = 5000
 
+        /** Longest a Haptic Clock pulse waits for the strap's HAPTICS_TERMINATED event before moving on. */
+        internal const val HAPTIC_CLOCK_BUZZ_TIMEOUT_MS = 1800L
+
         /** Where the #1263 ring kept the log in SharedPreferences, read once to carry it over to disk
          *  ([com.noop.ui.StrapLogArchive]). The same keys as iOS's UserDefaults ring: the tail newline-joined,
          *  the runs a JSON array of newline-joined blocks, each beginning with its header. */
@@ -4681,40 +4684,58 @@ class WhoopBleClient(
     }
 
     /**
-     * Haptic Clock (#460): buzz the current wall-clock time out on the strap so the user can read it
-     * off their wrist without a screen. The pure, unit-tested [HapticClock] encoder turns now into an
-     * ordered pulse list (long = a "ten", short = a "unit", in HH-tens / HH-units / MM-tens / MM-units
-     * order); we then schedule each pulse with [handler].postDelayed, firing the EXISTING maverick
-     * notification buzz ([buzz] → RUN_HAPTICS_PATTERN, remapped to cmd-0x13 on a 5/MG) at each pulse's
-     * start. Only the SCHEDULE is new — the buzz itself is the hardware-confirmed one.
+     * Haptic Clock (#460): buzz the current time out on the strap so it can be read off the wrist without
+     * a screen. Two readings, chosen in Settings ([NoopPrefs.hapticClockDigits]): the default quarter-hour
+     * reading ([HapticClock.terse]: one buzz per hour on a 12-hour dial, a pause, then one per completed
+     * quarter hour, so 3:25 = three, pause, one), or the original digit reading ([HapticClock.pulses]).
      *
-     * [is24h] controls 12- vs 24-hour reading; a Settings toggle should supply it (default 12h). Public
-     * so a Settings button can trigger it. Long-press / double-tap strap input is hardware-dependent and
-     * not wired (no tap event is parsed yet — see the macOS hardwareUnverifiable note).
+     * Both used to fire on a fixed start-to-start schedule, and a buzz on the WHOOP 4.0 preset can outlast
+     * that spacing, so the buzzes ran together into one long vibration nobody could count. This version
+     * PACES on the strap instead: after each
+     * buzz it waits for the strap's HAPTICS_TERMINATED event (100), then leaves the pulse's gap of
+     * silence. That event is in the legacy vocabulary but not yet confirmed to follow every buzz, so the
+     * wait is capped at [HAPTIC_CLOCK_BUZZ_TIMEOUT_MS]; each pulse logs which of the two released it, so
+     * a strap log shows whether the event arrives on that strap.
      *
-     * Each WHOOP notification buzz is a fixed-length motor pulse, so we can't vary the on-time per pulse
-     * from the app; instead a LONG pulse fires two stacked loops and a SHORT pulse one, which the wrist
-     * feels as "longer vs shorter". Pulse-feel timing can only be confirmed on a real strap motor.
+     * The buzz itself is unchanged: the existing [buzz] (RUN_HAPTICS_PATTERN, one loop; the maverick
+     * 0x13 buzz on a 5/MG). No new command. A second trigger while one is running replaces it. The digit
+     * reading keeps its long-versus-short pulses (a long one fires two loops). [is24h] applies to the
+     * digit reading only; the quarter reading is always 12-hour.
      */
     fun buzzTimeNow(is24h: Boolean = false, nowMs: Long = System.currentTimeMillis()) {
         val cal = java.util.Calendar.getInstance().apply { timeInMillis = nowMs }
         val hour = cal.get(java.util.Calendar.HOUR_OF_DAY)
         val minute = cal.get(java.util.Calendar.MINUTE)
-        val pulses = HapticClock.pulses(hour, minute, is24h)
+        val digits = NoopPrefs.hapticClockDigits(context)
+        val pulses = if (digits) HapticClock.pulses(hour, minute, is24h) else HapticClock.terse(hour, minute)
         if (pulses.isEmpty()) {
-            log("Haptic Clock: nothing to buzz (00:00 in 24h form).")
+            log("Haptic Clock: nothing to buzz (00:00 in 24h digit form).")
             return
         }
-        log("Haptic Clock: buzzing ${pulses.size} pulses for the current time (${if (is24h) "24h" else "12h"}).")
-        // Walk the encoder's pulse list, converting each (durationMs,gapMs) into a scheduled buzz.
-        // A long pulse is felt as a heavier buzz (2 stacked loops); a short pulse as a light one (1).
-        var offsetMs = 0L
-        for (pulse in pulses) {
-            val loops = if (pulse.isLong) 2 else 1
-            handler.postDelayed({ buzz(loops) }, offsetMs)
-            offsetMs += (pulse.durationMs + pulse.gapMs).toLong()
+        log("Haptic Clock: ${if (digits) "digit" else "quarter-hour"} reading, ${pulses.size} pulses, " +
+            "paced on HAPTICS_TERMINATED or ${HAPTIC_CLOCK_BUZZ_TIMEOUT_MS}ms.")
+        hapticClockJob?.cancel()
+        hapticClockJob = ioScope.launch {
+            for ((i, pulse) in pulses.withIndex()) {
+                val ended = kotlinx.coroutines.CompletableDeferred<Unit>()
+                hapticEnded = ended
+                val loops = if (pulse.isLong) 2 else 1
+                handler.post { buzz(loops) }
+                val byEvent = kotlinx.coroutines.withTimeoutOrNull(HAPTIC_CLOCK_BUZZ_TIMEOUT_MS) { ended.await() } != null
+                hapticEnded = null
+                log("Haptic Clock: pulse ${i + 1}/${pulses.size} released by " +
+                    if (byEvent) "HAPTICS_TERMINATED" else "timeout (no end event)")
+                if (pulse.gapMs > 0) kotlinx.coroutines.delay(pulse.gapMs.toLong())
+            }
         }
     }
+
+    /** The Haptic Clock run in progress, if any; a new trigger cancels it. */
+    private var hapticClockJob: kotlinx.coroutines.Job? = null
+
+    /** Completed when a live HAPTICS_TERMINATED event arrives while a Haptic Clock pulse waits on it. */
+    @Volatile
+    private var hapticEnded: kotlinx.coroutines.CompletableDeferred<Unit>? = null
 
     /**
      * Inactivity reminder (#419): on each natural offload completion, run the shipped, unit-tested
@@ -9148,6 +9169,9 @@ class WhoopBleClient(
                                 }
                             }
                         }
+                        // Haptic Clock pacing: the strap reports a buzz finished (HAPTICS_TERMINATED, event
+                        // 100). Live only, so a replayed historical event cannot release a pulse early.
+                        if (!replayedOffload && ev.startsWith("HAPTICS_TERMINATED")) hapticEnded?.complete(Unit)
                         // PR #577: the strap fired its firmware smart alarm (STRAP_DRIVEN_ALARM_EXECUTED,
                         // event 57) → re-arm the next day's instant (single absolute time, no recurrence).
                         // This is NOT a gesture, so it MUST dispatch from here — the gesture branch never

@@ -2875,4 +2875,8 @@
     <string name="raw_diag_ecg_probe_running">Auf diesem Strap läuft möglicherweise noch eine Aufzeichnung. Das Ergebnis steht im Strap-Log.</string>
     <string name="today_customize_live_session_availability">Erscheint heute, wenn Live Sessions in den Einstellungen aktiviert sind oder eine Session aktiv ist.</string>
     <string name="l10n_app_changelog_today_your_way_heart_rate_any_5e1308b3">Today nach Ihren Wünschen, Herzfrequenz für jede App und Italienisch</string>
+    <string name="settings_haptic_clock_reading">Zeitansage per Vibration</string>
+    <string name="settings_haptic_clock_quarters">Viertel</string>
+    <string name="settings_haptic_clock_digits">Ziffern</string>
+    <string name="settings_haptic_clock_reading_detail">Viertel: eine Vibration pro Stunde, dann eine pro Viertelstunde (3:25 ist 3, Pause, 1). Ziffern: jede Ziffer der Uhrzeit.</string>
 </resources>

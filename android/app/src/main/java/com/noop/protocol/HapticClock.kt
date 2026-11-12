@@ -81,6 +81,35 @@ object HapticClock {
         return out
     }
 
+    // Quarter-hour ("terse") timing (ms). Here gapMs is the silence AFTER a buzz has finished: the
+    // trigger waits for the strap to report the buzz ended before counting it, so the motor's own
+    // length (unknown for the WHOOP 4.0 preset) cannot run two buzzes together.
+    const val TERSE_GAP_MS = 600         // silence between two buzzes in one group
+    const val TERSE_GROUP_GAP_MS = 2000  // silence between the hours and the quarters
+
+    /**
+     * Encode [hour]:[minute] as a quarter-hour reading, the easy-to-count form: one buzz per hour on a
+     * 12-hour dial (1..12), a pause, then one buzz per COMPLETED quarter hour (0..3). 3:25 reads as
+     * three buzzes, a pause, one buzz; 12:00 as twelve buzzes and nothing after. At most 15 buzzes,
+     * every one the same, so there is no long-versus-short to tell apart. AM/PM is not signalled, and
+     * the reading is always 12-hour (a 24-hour count would reach 23 buzzes).
+     *
+     * @param hour hour of day, 0..23; @param minute minute of hour, 0..59 (both clamped).
+     * @return never empty (the hour count is at least 1); the last pulse has gapMs 0.
+     */
+    fun terse(hour: Int, minute: Int): List<Pulse> {
+        val dialHour = twelveHour(hour.coerceIn(0, 23))
+        val quarters = minute.coerceIn(0, 59) / 15
+        val out = ArrayList<Pulse>()
+        repeat(dialHour) { out.add(Pulse(SHORT_MS, TERSE_GAP_MS)) }
+        if (quarters > 0) {
+            out[out.size - 1] = out[out.size - 1].copy(gapMs = TERSE_GROUP_GAP_MS)
+            repeat(quarters) { out.add(Pulse(SHORT_MS, TERSE_GAP_MS)) }
+        }
+        out[out.size - 1] = out[out.size - 1].copy(gapMs = 0)
+        return out
+    }
+
     /** 24-hour hour → 12-hour dial reading (0→12, 13→1 … 23→11). Noon stays 12. */
     fun twelveHour(h24: Int): Int {
         val h = h24 % 12

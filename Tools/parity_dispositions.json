@@ -468,6 +468,30 @@
       "identity_sha256": "e242b01ca9f6d38ed175e186e2b33355d145301024a718aae13de3d5a061f0a9",
       "platform": "kotlin",
       "rationale": "Not-Noop Health Connect re-import: drops a night Health Connect revised, without the dismissal tombstone a user delete writes. Health Connect is Android's platform health store; the Apple apps sync through HealthKit, which has no Health Connect backfill to re-import or package-origin field to filter."
+    },
+    {
+      "type": "platform_specific",
+      "kind": "add-unpaired-function",
+      "identity": "kotlin\u0000android/app/src/main/java/com/noop/protocol/HapticClock.kt::terse/2#1",
+      "identity_sha256": "d21be9c7e1a403d429d80248857801b2879dd6f8ea534deab39879087b1b839f",
+      "platform": "kotlin",
+      "rationale": "Not-Noop's Android quarter-hour Haptic Clock reading, paced on the WHOOP 4.0 HAPTICS_TERMINATED event in WhoopBleClient.buzzTimeNow. The Apple apps keep the digit reading (HapticClock.pulses, still a shared twin); their app targets cannot be built in this fork's environment, so the reading is Android-only for now."
+    },
+    {
+      "type": "platform_specific",
+      "kind": "add-unpaired-constant",
+      "identity": "kotlin\u0000android/app/src/main/java/com/noop/protocol/HapticClock.kt::TERSE_GAP_MS",
+      "identity_sha256": "86cd5a0537fdc9d92f6932e9dac64e73b843dc1e4d020866e9cd3498ce095fc6",
+      "platform": "kotlin",
+      "rationale": "Not-Noop's Android quarter-hour Haptic Clock reading, paced on the WHOOP 4.0 HAPTICS_TERMINATED event in WhoopBleClient.buzzTimeNow. The Apple apps keep the digit reading (HapticClock.pulses, still a shared twin); their app targets cannot be built in this fork's environment, so the reading is Android-only for now."
+    },
+    {
+      "type": "platform_specific",
+      "kind": "add-unpaired-constant",
+      "identity": "kotlin\u0000android/app/src/main/java/com/noop/protocol/HapticClock.kt::TERSE_GROUP_GAP_MS",
+      "identity_sha256": "c80a8ae87cf2322b7cea56cdfb34c2a0d924e0d58f4ae410d7b486b570c7dd7e",
+      "platform": "kotlin",
+      "rationale": "Not-Noop's Android quarter-hour Haptic Clock reading, paced on the WHOOP 4.0 HAPTICS_TERMINATED event in WhoopBleClient.buzzTimeNow. The Apple apps keep the digit reading (HapticClock.pulses, still a shared twin); their app targets cannot be built in this fork's environment, so the reading is Android-only for now."
     }
   ]
 }

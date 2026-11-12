@@ -89,4 +89,42 @@ class HapticClockTest {
             HapticClock.pulses(-5, -5, is24h = true),
         )
     }
+
+    // MARK: Quarter-hour ("terse") reading — the Swift `HapticClockTests.swift` pins the same lists.
+
+    private fun terseBuzz(gap: Int) = HapticClock.Pulse(HapticClock.SHORT_MS, gap)
+
+    /** 3:25 → three hour buzzes, the group pause, one quarter buzz. */
+    @Test
+    fun terse_0325() {
+        val g = HapticClock.TERSE_GAP_MS
+        assertEquals(
+            listOf(terseBuzz(g), terseBuzz(g), terseBuzz(HapticClock.TERSE_GROUP_GAP_MS), terseBuzz(0)),
+            HapticClock.terse(3, 25),
+        )
+    }
+
+    /** Afternoon reads on the 12-hour dial, and 15:25 equals 3:25. */
+    @Test
+    fun terse_afternoonMatchesMorning() {
+        assertEquals(HapticClock.terse(3, 25), HapticClock.terse(15, 25))
+    }
+
+    /** On the hour there is no quarter group and no group pause. */
+    @Test
+    fun terse_onTheHour() {
+        val g = HapticClock.TERSE_GAP_MS
+        assertEquals(listOf(terseBuzz(g), terseBuzz(0)), HapticClock.terse(14, 0))
+    }
+
+    /** Midnight and noon both read twelve; 0:59 is three quarters; the longest reading is 15 buzzes. */
+    @Test
+    fun terse_bounds() {
+        assertEquals(12, HapticClock.terse(0, 0).size)
+        assertEquals(12, HapticClock.terse(12, 14).size)
+        assertEquals(15, HapticClock.terse(0, 59).size)
+        assertEquals(4, HapticClock.terse(1, 45).size)
+        // Every buzz is the same length: there is no long-versus-short to tell apart.
+        assertEquals(setOf(HapticClock.SHORT_MS), HapticClock.terse(11, 59).map { it.durationMs }.toSet())
+    }
 }

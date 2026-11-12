@@ -2757,4 +2757,8 @@
     <string name="raw_diag_ecg_probe_running">На этом ремешке запись может всё ещё идти. Результат попадёт в strap log.</string>
     <string name="today_customize_live_session_availability">Появляется сегодня, если сессии в реальном времени включены в Настройках или сеанс уже активен.</string>
     <string name="l10n_app_changelog_today_your_way_heart_rate_any_5e1308b3">«Сегодня» на ваш вкус, пульс для любого приложения и итальянский язык</string>
+    <string name="settings_haptic_clock_reading">Время вибрацией</string>
+    <string name="settings_haptic_clock_quarters">Четверти</string>
+    <string name="settings_haptic_clock_digits">Цифры</string>
+    <string name="settings_haptic_clock_reading_detail">Четверти: одна вибрация на каждый час, затем по одной на четверть часа (3:25 — это 3, пауза, 1). Цифры: каждая цифра времени.</string>
 </resources>

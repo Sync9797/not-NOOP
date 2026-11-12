@@ -3307,6 +3307,29 @@ fun SettingsScreen(
                     color = Palette.textTertiary,
                 )
 
+                // Haptic clock reading: quarter-hour (default, easy to count) or the original digits.
+                // Shared by this button and the strap double-tap action.
+                var hapticClockDigits by remember { mutableStateOf(NoopPrefs.hapticClockDigits(context)) }
+                SettingsFormRow(label = uiString(R.string.settings_haptic_clock_reading)) {
+                    SegmentedPillControl(
+                        items = listOf(false, true),
+                        selection = hapticClockDigits,
+                        label = {
+                            if (it) uiString(R.string.settings_haptic_clock_digits)
+                            else uiString(R.string.settings_haptic_clock_quarters)
+                        },
+                        onSelect = { digits ->
+                            hapticClockDigits = digits
+                            NoopPrefs.setHapticClockDigits(context, digits)
+                        },
+                    )
+                }
+                Text(
+                    uiString(R.string.settings_haptic_clock_reading_detail),
+                    style = NoopType.caption,
+                    color = Palette.textTertiary,
+                )
+
                 // Haptic clock (#460): buzz the current time on the strap as a sequence of buzzes. No-ops
                 // safely when disconnected, so it stays enabled regardless of connection (matches the
                 // "Share strap log" row above, which also doesn't gate on a live strap). 12/24h follows the

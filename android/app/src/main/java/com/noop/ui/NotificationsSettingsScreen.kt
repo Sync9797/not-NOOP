@@ -93,16 +93,24 @@ internal enum class BuzzPattern(val label: String, val loops: Int) {
     Long("Long", 5),
 }
 
-/** Grouping for the settings screen, with its header icon + default pattern. */
+/**
+ * Grouping for the settings screen, with its header icon + default pattern.
+ *
+ * Not-Noop defaults every category to a single buzz: a notification is a tap on the wrist, and on a
+ * WHOOP 4.0 each "loop" is the full preset alarm buzz, so the old Double/Triple defaults felt like a
+ * harsh burst for every message. Calls default to Long instead (see [NotifPrefs.callPattern]), so a
+ * call is unmistakable. Android-only defaults: an explicit per-app choice is kept, and nothing here is
+ * in the .noopbak whitelist.
+ */
 internal enum class NotifCategory(
     val title: String,
     val icon: ImageVector,
     val defaultPattern: BuzzPattern,
 ) {
-    Email("Email", Icons.Filled.Email, BuzzPattern.Double),
+    Email("Email", Icons.Filled.Email, BuzzPattern.Single),
     Messaging("Messaging", Icons.AutoMirrored.Filled.Chat, BuzzPattern.Single),
-    Meetings("Meetings", Icons.Filled.Videocam, BuzzPattern.Triple),
-    Calendar("Calendar & Reminders", Icons.Filled.CalendarMonth, BuzzPattern.Double),
+    Meetings("Meetings", Icons.Filled.Videocam, BuzzPattern.Single),
+    Calendar("Calendar & Reminders", Icons.Filled.CalendarMonth, BuzzPattern.Single),
 }
 
 /** A notification-capable app NOOP can mirror to the wrist. `id` is the persistence key. */
@@ -194,15 +202,16 @@ internal object NotifPrefs {
         prefs(ctx).edit().putString("app.$id.pattern", pattern.name).apply()
 
     /** Buzz loop-count for [pkg] (for the notification listener; no NotifApp needed). Defaults to
-     *  Double if no per-app pattern was chosen. */
+     *  Single if no per-app pattern was chosen (this also covers the "all other apps" catch-all). */
     fun appLoops(ctx: Context, pkg: String): Int {
         val name = prefs(ctx).getString("app.$pkg.pattern", null)
-        return BuzzPattern.entries.firstOrNull { it.name == name }?.loops ?: BuzzPattern.Double.loops
+        return BuzzPattern.entries.firstOrNull { it.name == name }?.loops ?: BuzzPattern.Single.loops
     }
 
     fun callPattern(ctx: Context): BuzzPattern {
         val name = prefs(ctx).getString(CALLS_PATTERN, null)
-        return BuzzPattern.entries.firstOrNull { it.name == name } ?: BuzzPattern.Triple
+        // Calls default to Long, so a ringing call is distinct from a single-buzz notification.
+        return BuzzPattern.entries.firstOrNull { it.name == name } ?: BuzzPattern.Long
     }
 
     fun setCallPattern(ctx: Context, pattern: BuzzPattern) =

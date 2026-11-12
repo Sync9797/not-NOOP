@@ -867,6 +867,16 @@ object NoopPrefs {
             .apply()
     }
 
+    /** Haptic Clock reading: false (default) = quarter-hour reading, true = the digit-by-digit reading. */
+    const val KEY_HAPTIC_CLOCK_DIGITS = "noop.hapticClockDigits"
+
+    fun hapticClockDigits(context: Context): Boolean =
+        of(context).getBoolean(KEY_HAPTIC_CLOCK_DIGITS, false)
+
+    fun setHapticClockDigits(context: Context, digits: Boolean) {
+        of(context).edit().putBoolean(KEY_HAPTIC_CLOCK_DIGITS, digits).apply()
+    }
+
     /** Days ("yyyy-MM-dd") whose "my-whoop" daily row was written by the Health Connect backfill, so a
      *  later import can tell its OWN earlier rows from real strap/WHOOP-export rows and refresh them
      *  instead of treating the day as strap-covered forever. */

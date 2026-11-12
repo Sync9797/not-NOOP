@@ -2891,4 +2891,8 @@
     <string name="raw_diag_ecg_probe_running">A capture may still be running on this strap. The verdict goes to the strap log.</string>
     <string name="today_customize_live_session_availability">Appears today when Live Sessions is enabled in Settings or a session is active.</string>
     <string name="l10n_app_changelog_today_your_way_heart_rate_any_5e1308b3">Today your way, heart rate any app can read, and Italian</string>
+    <string name="settings_haptic_clock_reading">Tap for time reading</string>
+    <string name="settings_haptic_clock_quarters">Quarters</string>
+    <string name="settings_haptic_clock_digits">Digits</string>
+    <string name="settings_haptic_clock_reading_detail">Quarters: one buzz per hour, then one per quarter hour (3:25 is 3, a pause, then 1). Digits: each digit of the time.</string>
 </resources>
