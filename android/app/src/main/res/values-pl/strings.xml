@@ -2882,4 +2882,5 @@
     <string name="settings_haptic_clock_quarters">Kwadranse</string>
     <string name="settings_haptic_clock_digits">Cyfry</string>
     <string name="settings_haptic_clock_reading_detail">Kwadranse: jedna wibracja na każdą godzinę, potem jedna na kwadrans (3:25 to 3, pauza, 1). Cyfry: każda cyfra godziny.</string>
+    <string name="l10n_app_changelog_not_noop_health_connect_sharing_that_a91ce609">Not-Noop: działające udostępnianie do Health Connect, układy dla tabletów i składanych telefonów oraz łagodniejsze wibracje</string>
 </resources>

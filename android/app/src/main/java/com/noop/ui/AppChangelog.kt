@@ -26,7 +26,7 @@ object AppChangelog {
      * Bump this when you add a release below. The "What's New" sheet shows automatically when the
      * stored last-seen version is behind this. (Decoupled from the bundle version on purpose.)
      */
-    const val CURRENT_VERSION = "12.0.0"
+    const val CURRENT_VERSION = "12.2.0"
 
     data class Release(
         val version: String,
@@ -37,6 +37,19 @@ object AppChangelog {
 
     /** Newest first. */
     val releases: List<Release> = listOf(
+        Release(
+            version = "12.2.0",
+            title = uiString(R.string.l10n_app_changelog_not_noop_health_connect_sharing_that_a91ce609),
+            date = "November 2026",
+            items = listOf(
+                "**Health Connect sharing no longer stuck on \"Sharing paused\".** The app asked for VO2 max write access without declaring it, so Health Connect could never grant it. It is declared now, and a declined VO2 max permission no longer pauses everything else.",
+                "**Imported workouts get their distance.** Distance read access was never declared either, so workouts from Samsung Health, Garmin and others always showed 0.",
+                "**Health Connect days keep updating.** A day synced once used to freeze, so sleep that arrived later never showed. Sync also retries after a failure and runs every time you return to the app.",
+                "**Tablets, foldables and landscape.** A glass sidebar on the right replaces the bottom bar on wide screens, content stays a readable width, and a half-folded phone puts the screen above the hinge.",
+                "**Gentler buzzes on the strap.** Notifications default to a single buzz and calls to a long one. Tap for time now reads hours, then quarter hours, and waits for each buzz to finish.",
+                "**Material You and one wallpaper everywhere.** An optional accent from your wallpaper colours, and every standard screen now shows your chosen sky or background image.",
+            ),
+        ),
         Release(
             version = "12.0.0",
             title = uiString(R.string.l10n_app_changelog_today_your_way_heart_rate_any_5e1308b3),

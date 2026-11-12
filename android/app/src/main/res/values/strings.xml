@@ -2895,4 +2895,5 @@
     <string name="settings_haptic_clock_quarters">Quarters</string>
     <string name="settings_haptic_clock_digits">Digits</string>
     <string name="settings_haptic_clock_reading_detail">Quarters: one buzz per hour, then one per quarter hour (3:25 is 3, a pause, then 1). Digits: each digit of the time.</string>
+    <string name="l10n_app_changelog_not_noop_health_connect_sharing_that_a91ce609">Not-Noop: Health Connect sharing that works, tablet and foldable layouts, and gentler buzzes</string>
 </resources>

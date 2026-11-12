@@ -2834,4 +2834,5 @@
     <string name="settings_haptic_clock_quarters">Quarti</string>
     <string name="settings_haptic_clock_digits">Cifre</string>
     <string name="settings_haptic_clock_reading_detail">Quarti: una vibrazione per ogni ora, poi una per ogni quarto d\'ora (3:25 è 3, una pausa, poi 1). Cifre: ogni cifra dell\'ora.</string>
+    <string name="l10n_app_changelog_not_noop_health_connect_sharing_that_a91ce609">Not-Noop: condivisione con Health Connect che funziona, layout per tablet e pieghevoli e vibrazioni più delicate</string>
 </resources>
