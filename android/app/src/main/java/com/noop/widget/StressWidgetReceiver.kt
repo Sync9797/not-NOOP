@@ -37,9 +37,10 @@ class StressWidgetReceiver : GlanceAppWidgetReceiver() {
         StressWidgetRefresh.ensureScheduled(context)
     }
 
-    /** Last widget removed: stop paying for a rescore nothing will render. */
+    /** Last widget removed: stop paying for a rescore nothing will render, unless the companion app
+     *  (AI Widget Maker) is installed, whose Stress widget still renders the shared curve. */
     override fun onDisabled(context: Context) {
         super.onDisabled(context)
-        StressWidgetRefresh.cancel(context)
+        if (!WidgetShare.companionInstalled(context)) StressWidgetRefresh.cancel(context)
     }
 }

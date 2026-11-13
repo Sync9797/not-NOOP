@@ -163,6 +163,8 @@ object CoachBriefScheduler {
         writeBriefToWidgetPrefs(context, text)
         if (text != null) {
             runCatching { com.noop.widget.CoachBriefGlanceWidget().updateAll(context.applicationContext) }
+            // The companion's Coach brief widget reads the same brief from the shared snapshot.
+            com.noop.widget.WidgetShare.ping(context, force = true)
         }
     }
 

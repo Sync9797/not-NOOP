@@ -165,10 +165,16 @@ object WidgetSnapshotStore {
      * caller's early stamp exists to keep off a hot collector, so the two decisions are entangled and
      * the uncertainty has to survive the call to be acted on.
      */
-    suspend fun stressWidgetPlacement(context: Context): Boolean? = runCatching {
-        GlanceAppWidgetManager(context.applicationContext)
-            .getGlanceIds(StressGlanceWidget::class.java).isNotEmpty()
-    }.getOrNull()
+    suspend fun stressWidgetPlacement(context: Context): Boolean? {
+        // The companion (AI Widget Maker) draws a Stress widget from the shared snapshot, so its
+        // presence counts as a placed stress widget: without this, a wearer using only the
+        // companion's Stress widget would never have a curve scored to share.
+        if (WidgetShare.companionInstalled(context)) return true
+        return runCatching {
+            GlanceAppWidgetManager(context.applicationContext)
+                .getGlanceIds(StressGlanceWidget::class.java).isNotEmpty()
+        }.getOrNull()
+    }
 
     /**
      * When stress was last scored for the widget, by EITHER path (#2185).
