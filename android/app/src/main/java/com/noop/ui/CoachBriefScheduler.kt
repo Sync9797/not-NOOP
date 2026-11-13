@@ -163,6 +163,7 @@ object CoachBriefScheduler {
         writeBriefToWidgetPrefs(context, text)
         if (text != null) {
             runCatching { com.noop.widget.CoachBriefGlanceWidget().updateAll(context.applicationContext) }
+            com.noop.widget.WidgetShare.ping(context.applicationContext, now = true)
         }
     }
 
