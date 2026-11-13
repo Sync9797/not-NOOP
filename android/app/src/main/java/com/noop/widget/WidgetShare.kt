@@ -32,10 +32,23 @@ object WidgetShare {
 
     val COLUMNS = arrayOf(
         "recovery", "rest", "effort", "hr", "hr_stale", "battery", "connected", "updated_at", "hr_series",
+        "stress_series", "coach_brief", "coach_brief_at",
     )
 
-    /** One row of [COLUMNS] for [snap]; -1 marks a value NOOP has not got yet. Pure, for tests. */
-    fun row(snap: WidgetSnapshot): Array<Any> = arrayOf(
+    /** The Coach brief as the Coach Brief widget shows it, and when it was written (0 when there is none). */
+    data class Brief(val text: String = "", val atMs: Long = 0L)
+
+    /** The brief the Coach Brief widget reads, from the same prefs. */
+    fun brief(context: Context): Brief {
+        val p = context.getSharedPreferences("noop_widget", Context.MODE_PRIVATE)
+        return Brief(p.getString("coachBriefText", null).orEmpty(), p.getLong("coachBriefDateMs", 0L))
+    }
+
+    /**
+     * One row of [COLUMNS] for [snap] and [brief]; -1 marks a value NOOP has not got yet. The stress
+     * curve is today's only ([WidgetSnapshotStore.load] drops any other day's). Pure, for tests.
+     */
+    fun row(snap: WidgetSnapshot, brief: Brief = Brief()): Array<Any> = arrayOf(
         snap.recoveryPct ?: -1,
         snap.restPct ?: -1,
         snap.effortPct ?: -1,
@@ -45,14 +58,20 @@ object WidgetShare {
         if (snap.connected) 1 else 0,
         snap.updatedAtMs,
         HrTrace.encode(snap.hrSeries),
+        StressTrace.encode(snap.stressSeries),
+        brief.text,
+        brief.atMs,
     )
 
     /** Whether [caller] may read the snapshot. */
     fun allowed(caller: String?): Boolean = caller == COMPANION
 
-    /** Tells the companion the snapshot changed (at most once a minute). */
-    fun ping(context: Context, nowMs: Long = System.currentTimeMillis()) {
-        if (nowMs - lastPingMs < PING_GAP_MS) return
+    /**
+     * Tells the companion the snapshot changed: at most once a minute for heart rate, or right away
+     * with [now] for the rare changes (a scored stress hour, a new brief) a minute's gap could swallow.
+     */
+    fun ping(context: Context, nowMs: Long = System.currentTimeMillis(), now: Boolean = false) {
+        if (!now && nowMs - lastPingMs < PING_GAP_MS) return
         lastPingMs = nowMs
         runCatching { context.sendBroadcast(Intent(ACTION_CHANGED).setPackage(COMPANION)) }
     }
@@ -71,7 +90,7 @@ class WidgetShareProvider : ContentProvider() {
     ): Cursor? {
         if (!WidgetShare.allowed(callingPackage)) return null
         val context = context ?: return null
-        return MatrixCursor(WidgetShare.COLUMNS, 1).apply { addRow(WidgetShare.row(WidgetSnapshotStore.load(context))) }
+        return MatrixCursor(WidgetShare.COLUMNS, 1).apply { addRow(WidgetShare.row(WidgetSnapshotStore.load(context), WidgetShare.brief(context))) }
     }
 
     override fun getType(uri: Uri): String? = null
