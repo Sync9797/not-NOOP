@@ -32,8 +32,27 @@ object WidgetShare {
 
     val COLUMNS = arrayOf(
         "recovery", "rest", "effort", "hr", "hr_stale", "battery", "connected", "updated_at", "hr_series",
-        "stress_series", "coach_brief", "coach_brief_at",
+        "stress_series", "coach_brief", "coach_brief_at", "hr_day",
     )
+
+    /** How far back [dayTrace] reaches, and the width of each averaged point in it. */
+    const val DAY_SEC = 24 * 3600L
+    const val DAY_BUCKET_SEC = 300L
+
+    /**
+     * The last [DAY_SEC] of heart rate from NOOP's own history, one averaged point per
+     * [DAY_BUCKET_SEC], as the Today chart draws it. Unlike the snapshot's 3-hour trace, which only
+     * grows while live heart rate streams, this includes everything offloaded from the strap.
+     */
+    suspend fun dayTrace(context: Context, nowSec: Long = System.currentTimeMillis() / 1000): List<HrPoint> {
+        val app = context.applicationContext
+        val active = (app as? com.noop.NoopApplication)?.activeDeviceId?.takeIf { it.isNotBlank() }
+            ?: com.noop.data.WhoopRepository.WHOOP_SOURCE
+        val repo = com.noop.data.WhoopRepository(com.noop.data.WhoopDatabase.get(app))
+        return repo.hrBucketsUnion(active, nowSec - DAY_SEC, nowSec, DAY_BUCKET_SEC)
+            .filter { it.avgBpm > 0 }
+            .map { HrPoint(it.bucket, Math.round(it.avgBpm).toInt()) }
+    }
 
     /** The Coach brief as the Coach Brief widget shows it, and when it was written (0 when there is none). */
     data class Brief(val text: String = "", val atMs: Long = 0L)
@@ -48,7 +67,7 @@ object WidgetShare {
      * One row of [COLUMNS] for [snap] and [brief]; -1 marks a value NOOP has not got yet. The stress
      * curve is today's only ([WidgetSnapshotStore.load] drops any other day's). Pure, for tests.
      */
-    fun row(snap: WidgetSnapshot, brief: Brief = Brief()): Array<Any> = arrayOf(
+    fun row(snap: WidgetSnapshot, brief: Brief = Brief(), day: List<HrPoint> = emptyList()): Array<Any> = arrayOf(
         snap.recoveryPct ?: -1,
         snap.restPct ?: -1,
         snap.effortPct ?: -1,
@@ -61,6 +80,7 @@ object WidgetShare {
         StressTrace.encode(snap.stressSeries),
         brief.text,
         brief.atMs,
+        HrTrace.encode(day),
     )
 
     /** Whether [caller] may read the snapshot. */
@@ -90,7 +110,11 @@ class WidgetShareProvider : ContentProvider() {
     ): Cursor? {
         if (!WidgetShare.allowed(callingPackage)) return null
         val context = context ?: return null
-        return MatrixCursor(WidgetShare.COLUMNS, 1).apply { addRow(WidgetShare.row(WidgetSnapshotStore.load(context), WidgetShare.brief(context))) }
+        // Binder thread, so the database read may block here; a failed read shares no day trace.
+        val day = runCatching { kotlinx.coroutines.runBlocking { WidgetShare.dayTrace(context) } }.getOrDefault(emptyList())
+        return MatrixCursor(WidgetShare.COLUMNS, 1).apply {
+            addRow(WidgetShare.row(WidgetSnapshotStore.load(context), WidgetShare.brief(context), day))
+        }
     }
 
     override fun getType(uri: Uri): String? = null
