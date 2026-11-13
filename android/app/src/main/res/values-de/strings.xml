@@ -2880,4 +2880,5 @@
     <string name="settings_haptic_clock_digits">Ziffern</string>
     <string name="settings_haptic_clock_reading_detail">Viertel: eine Vibration pro Stunde, dann eine pro Viertelstunde (3:25 ist 3, Pause, 1). Ziffern: jede Ziffer der Uhrzeit.</string>
     <string name="l10n_app_changelog_not_noop_health_connect_sharing_that_a91ce609">Not-Noop: Health-Connect-Freigabe, die funktioniert, Layouts für Tablets und Foldables und sanftere Vibrationen</string>
+    <string name="l10n_app_changelog_stress_and_coach_brief_for_ai_894cea69">Stress und Coach-Briefing für AI Widget Maker</string>
 </resources>

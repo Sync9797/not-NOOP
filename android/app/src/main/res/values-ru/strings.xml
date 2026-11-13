@@ -2762,4 +2762,5 @@
     <string name="settings_haptic_clock_digits">Цифры</string>
     <string name="settings_haptic_clock_reading_detail">Четверти: одна вибрация на каждый час, затем по одной на четверть часа (3:25 — это 3, пауза, 1). Цифры: каждая цифра времени.</string>
     <string name="l10n_app_changelog_not_noop_health_connect_sharing_that_a91ce609">Not-Noop: рабочая передача в Health Connect, макеты для планшетов и складных телефонов и более мягкая вибрация</string>
+    <string name="l10n_app_changelog_stress_and_coach_brief_for_ai_894cea69">Стресс и сводка Coach для AI Widget Maker</string>
 </resources>

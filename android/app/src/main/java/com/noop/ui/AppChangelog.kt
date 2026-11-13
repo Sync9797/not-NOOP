@@ -26,7 +26,7 @@ object AppChangelog {
      * Bump this when you add a release below. The "What's New" sheet shows automatically when the
      * stored last-seen version is behind this. (Decoupled from the bundle version on purpose.)
      */
-    const val CURRENT_VERSION = "12.2.0"
+    const val CURRENT_VERSION = "12.2.1"
 
     data class Release(
         val version: String,
@@ -37,6 +37,16 @@ object AppChangelog {
 
     /** Newest first. */
     val releases: List<Release> = listOf(
+        Release(
+            version = "12.2.1",
+            title = uiString(R.string.l10n_app_changelog_stress_and_coach_brief_for_ai_894cea69),
+            date = "November 2026",
+            items = listOf(
+                "**Stress and Coach brief in AI Widget Maker.** NOOP now shares today's stress curve and the latest Coach brief with AI Widget Maker, for its new Stress and Coach brief widgets.",
+                "**Stress keeps scoring for those widgets.** Today's stress is scored while AI Widget Maker is installed, even with no NOOP stress widget on the home screen.",
+                "**A new Coach brief shows up straight away** in AI Widget Maker instead of waiting for the next heart-rate update.",
+            ),
+        ),
         Release(
             version = "12.2.0",
             title = uiString(R.string.l10n_app_changelog_not_noop_health_connect_sharing_that_a91ce609),

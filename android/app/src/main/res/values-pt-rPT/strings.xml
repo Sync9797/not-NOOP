@@ -2859,4 +2859,5 @@
     <string name="settings_haptic_clock_digits">Dígitos</string>
     <string name="settings_haptic_clock_reading_detail">Quartos: uma vibração por hora e depois uma por quarto de hora (3:25 é 3, uma pausa e 1). Dígitos: cada dígito da hora.</string>
     <string name="l10n_app_changelog_not_noop_health_connect_sharing_that_a91ce609">Not-Noop: partilha com o Health Connect que funciona, esquemas para tablets e dobráveis e vibrações mais suaves</string>
+    <string name="l10n_app_changelog_stress_and_coach_brief_for_ai_894cea69">Stress e resumo do Coach para o AI Widget Maker</string>
 </resources>

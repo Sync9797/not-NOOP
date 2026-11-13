@@ -7,7 +7,7 @@ enum AppChangelog {
 
     /// Bump this when you add a release below. The "What's New" sheet shows automatically when the
     /// stored last-seen version is behind this. (Decoupled from the bundle version on purpose.)
-    static let currentVersion = "12.2.0"
+    static let currentVersion = "12.2.1"
 
     struct Release: Identifiable {
         let version: String
@@ -19,6 +19,16 @@ enum AppChangelog {
 
     /// Newest first.
     static let releases: [Release] = [
+        Release(
+            version: "12.2.1",
+            title: "Stress and Coach brief for AI Widget Maker",
+            date: "November 2026",
+            items: [
+                "**Stress and Coach brief in AI Widget Maker.** NOOP now shares today's stress curve and the latest Coach brief with AI Widget Maker, for its new Stress and Coach brief widgets.",
+                "**Stress keeps scoring for those widgets.** Today's stress is scored while AI Widget Maker is installed, even with no NOOP stress widget on the home screen.",
+                "**A new Coach brief shows up straight away** in AI Widget Maker instead of waiting for the next heart-rate update.",
+            ]
+        ),
         Release(
             version: "12.2.0",
             title: "Not-Noop: Health Connect sharing that works, tablet and foldable layouts, and gentler buzzes",
