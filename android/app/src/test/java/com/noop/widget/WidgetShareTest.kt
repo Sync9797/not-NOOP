@@ -22,7 +22,7 @@ class WidgetShareTest {
             updatedAtMs = 1234L,
         )
         assertArrayEquals(
-            arrayOf<Any>(75, 91, 45, 62, 1, -1, 1, 1234L, "100:60,160:64", "", "", 0L),
+            arrayOf<Any>(75, 91, 45, 62, 1, -1, 1, 1234L, "100:60,160:64", "", "", 0L, ""),
             WidgetShare.row(snap),
         )
     }
@@ -37,6 +37,13 @@ class WidgetShareTest {
         assertEquals("3600:1.5:0,7200:-:0,10800:2.25:1", row[9])
         assertEquals("Charge is 67%.", row[10])
         assertEquals(99L, row[11])
+        assertEquals(WidgetShare.COLUMNS.size, row.size)
+    }
+
+    @Test
+    fun aRowCarriesTheDaysHeartRate() {
+        val row = WidgetShare.row(WidgetSnapshot(), day = listOf(HrPoint(300, 58), HrPoint(600, 61)))
+        assertEquals("300:58,600:61", row[12])
         assertEquals(WidgetShare.COLUMNS.size, row.size)
     }
 }
