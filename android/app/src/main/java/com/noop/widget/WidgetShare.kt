@@ -30,28 +30,35 @@ object WidgetShare {
 
     @Volatile private var lastPingMs = 0L
 
-    /** Where NOOP's own Coach brief widget reads the latest brief (written by CoachBriefScheduler). */
-    private const val BRIEF_PREFS = "noop_widget"
-    private const val BRIEF_TEXT = "coachBriefText"
-    private const val BRIEF_AT = "coachBriefDateMs"
-
-    /**
-     * The shared columns. The last three were added for the companion's Stress and Coach brief widgets
-     * (AI Widget Maker 0.9.13): `stress_series` is today's curve in [StressTrace.encode]'s
-     * "epochSec:level:moving" form ("-" for an unscored hour), `coach_brief` the brief's Markdown and
-     * `coach_brief_at` when it was written (epoch ms). Appended, so an older companion reading by
-     * column name is unaffected.
-     */
     val COLUMNS = arrayOf(
         "recovery", "rest", "effort", "hr", "hr_stale", "battery", "connected", "updated_at", "hr_series",
         "stress_series", "coach_brief", "coach_brief_at",
     )
 
+    /** The Coach brief as the Coach Brief widget shows it, and when it was written (0 when there is none). */
+    data class Brief(val text: String = "", val atMs: Long = 0L)
+
     /**
-     * One row of [COLUMNS] for [snap] and the Coach [brief]; -1 marks a value NOOP has not got yet, and
-     * an empty string / 0 a stress curve or brief it has not got. Pure, for tests.
+     * Whether the companion is installed. It draws a Stress widget from [COLUMNS], so its presence
+     * counts as a placed stress widget for scoring (see WidgetSnapshotStore.stressWidgetPlacement).
+     * Visible to this app through the manifest's <queries> entry for it.
      */
-    fun row(snap: WidgetSnapshot, brief: String? = null, briefAtMs: Long = 0L): Array<Any> = arrayOf(
+    fun companionInstalled(context: Context): Boolean = runCatching {
+        context.packageManager.getPackageInfo(COMPANION, 0)
+        true
+    }.getOrDefault(false)
+
+    /** The brief the Coach Brief widget reads, from the same prefs. */
+    fun brief(context: Context): Brief {
+        val p = context.getSharedPreferences("noop_widget", Context.MODE_PRIVATE)
+        return Brief(p.getString("coachBriefText", null).orEmpty(), p.getLong("coachBriefDateMs", 0L))
+    }
+
+    /**
+     * One row of [COLUMNS] for [snap] and [brief]; -1 marks a value NOOP has not got yet. The stress
+     * curve is today's only ([WidgetSnapshotStore.load] drops any other day's). Pure, for tests.
+     */
+    fun row(snap: WidgetSnapshot, brief: Brief = Brief()): Array<Any> = arrayOf(
         snap.recoveryPct ?: -1,
         snap.restPct ?: -1,
         snap.effortPct ?: -1,
@@ -62,33 +69,19 @@ object WidgetShare {
         snap.updatedAtMs,
         HrTrace.encode(snap.hrSeries),
         StressTrace.encode(snap.stressSeries),
-        brief.orEmpty(),
-        if (brief.isNullOrBlank()) 0L else briefAtMs,
+        brief.text,
+        brief.atMs,
     )
-
-    /** The latest Coach brief and when it was written, as NOOP's own brief widget reads them. */
-    fun brief(context: Context): Pair<String?, Long> {
-        val p = context.applicationContext.getSharedPreferences(BRIEF_PREFS, Context.MODE_PRIVATE)
-        return p.getString(BRIEF_TEXT, null) to p.getLong(BRIEF_AT, 0L)
-    }
-
-    /**
-     * Whether the companion is installed. It now draws a Stress widget from [COLUMNS], so its presence
-     * counts as a placed stress widget for scoring (see WidgetSnapshotStore.stressWidgetPlacement).
-     * Visible to this app through the manifest's <queries> entry for it.
-     */
-    fun companionInstalled(context: Context): Boolean = runCatching {
-        context.packageManager.getPackageInfo(COMPANION, 0)
-        true
-    }.getOrDefault(false)
 
     /** Whether [caller] may read the snapshot. */
     fun allowed(caller: String?): Boolean = caller == COMPANION
 
-    /** Tells the companion the snapshot changed (at most once a minute, unless [force]d: a new Coach
-     *  brief is rare and should not wait for the next heart-rate push to be noticed). */
-    fun ping(context: Context, nowMs: Long = System.currentTimeMillis(), force: Boolean = false) {
-        if (!force && nowMs - lastPingMs < PING_GAP_MS) return
+    /**
+     * Tells the companion the snapshot changed: at most once a minute for heart rate, or right away
+     * with [now] for the rare changes (a scored stress hour, a new brief) a minute's gap could swallow.
+     */
+    fun ping(context: Context, nowMs: Long = System.currentTimeMillis(), now: Boolean = false) {
+        if (!now && nowMs - lastPingMs < PING_GAP_MS) return
         lastPingMs = nowMs
         runCatching { context.sendBroadcast(Intent(ACTION_CHANGED).setPackage(COMPANION)) }
     }
@@ -107,10 +100,7 @@ class WidgetShareProvider : ContentProvider() {
     ): Cursor? {
         if (!WidgetShare.allowed(callingPackage)) return null
         val context = context ?: return null
-        val (brief, briefAt) = WidgetShare.brief(context)
-        return MatrixCursor(WidgetShare.COLUMNS, 1).apply {
-            addRow(WidgetShare.row(WidgetSnapshotStore.load(context), brief, briefAt))
-        }
+        return MatrixCursor(WidgetShare.COLUMNS, 1).apply { addRow(WidgetShare.row(WidgetSnapshotStore.load(context), WidgetShare.brief(context))) }
     }
 
     override fun getType(uri: Uri): String? = null

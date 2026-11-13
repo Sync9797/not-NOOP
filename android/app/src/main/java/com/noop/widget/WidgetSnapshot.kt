@@ -239,6 +239,7 @@ object WidgetSnapshotStore {
             .putString(KEY_STRESS, StressTrace.encode(series))
             .putLong(KEY_STRESS_DAY, epochDay)
             .apply()
+        WidgetShare.ping(app, now = true)
         val ids = runCatching {
             GlanceAppWidgetManager(app).getGlanceIds(StressGlanceWidget::class.java)
         }.getOrDefault(emptyList())
