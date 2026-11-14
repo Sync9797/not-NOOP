@@ -2891,4 +2891,5 @@
     <string name="settings_material_surfaces_title">Także tła</string>
     <string name="settings_material_surfaces_detail">Barwi również tła i karty według tapety. Wykresy i wyniki zachowują swoje kolory.</string>
     <string name="l10n_app_changelog_background_sync_option_foldable_book_mode_b8358da7">Opcja synchronizacji w tle, tryb książki dla składanych telefonów i więcej Material You</string>
+    <string name="l10n_app_changelog_bigger_buttons_on_a_half_folded_ede1fb22">Większe przyciski na półzłożonym telefonie, czytelne nagłówki na zdjęciach</string>
 </resources>

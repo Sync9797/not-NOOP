@@ -7,7 +7,7 @@ enum AppChangelog {
 
     /// Bump this when you add a release below. The "What's New" sheet shows automatically when the
     /// stored last-seen version is behind this. (Decoupled from the bundle version on purpose.)
-    static let currentVersion = "12.3.0"
+    static let currentVersion = "12.3.1"
 
     struct Release: Identifiable {
         let version: String
@@ -19,6 +19,15 @@ enum AppChangelog {
 
     /// Newest first.
     static let releases: [Release] = [
+        Release(
+            version: "12.3.1",
+            title: "Bigger buttons on a half-folded phone, readable headings on photos",
+            date: "November 2026",
+            items: [
+                "**Big buttons when half-folded.** Standing a foldable on its hinge now turns the bottom half into large rounded buttons for Today, Trends, Sleep, Coach and More, instead of a thin bar floating in empty space.",
+                "**Headings readable on your background.** With a background photo, or the sky behind cards, headings like \"Sleep performance\" now show in light text with a soft shadow instead of dark text that disappeared into a dark photo.",
+            ]
+        ),
         Release(
             version: "12.3.0",
             title: "Background sync option, foldable book mode and more Material You",

@@ -26,7 +26,7 @@ object AppChangelog {
      * Bump this when you add a release below. The "What's New" sheet shows automatically when the
      * stored last-seen version is behind this. (Decoupled from the bundle version on purpose.)
      */
-    const val CURRENT_VERSION = "12.3.0"
+    const val CURRENT_VERSION = "12.3.1"
 
     data class Release(
         val version: String,
@@ -37,6 +37,15 @@ object AppChangelog {
 
     /** Newest first. */
     val releases: List<Release> = listOf(
+        Release(
+            version = "12.3.1",
+            title = uiString(R.string.l10n_app_changelog_bigger_buttons_on_a_half_folded_ede1fb22),
+            date = "November 2026",
+            items = listOf(
+                "**Big buttons when half-folded.** Standing a foldable on its hinge now turns the bottom half into large rounded buttons for Today, Trends, Sleep, Coach and More, instead of a thin bar floating in empty space.",
+                "**Headings readable on your background.** With a background photo, or the sky behind cards, headings like \"Sleep performance\" now show in light text with a soft shadow instead of dark text that disappeared into a dark photo.",
+            ),
+        ),
         Release(
             version = "12.3.0",
             title = uiString(R.string.l10n_app_changelog_background_sync_option_foldable_book_mode_b8358da7),

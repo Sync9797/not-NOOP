@@ -2904,4 +2904,5 @@
     <string name="settings_material_surfaces_title">Backgrounds too</string>
     <string name="settings_material_surfaces_detail">Tint backgrounds and cards from your wallpaper as well. Charts and scores keep their colours.</string>
     <string name="l10n_app_changelog_background_sync_option_foldable_book_mode_b8358da7">Background sync option, foldable book mode and more Material You</string>
+    <string name="l10n_app_changelog_bigger_buttons_on_a_half_folded_ede1fb22">Bigger buttons on a half-folded phone, readable headings on photos</string>
 </resources>
