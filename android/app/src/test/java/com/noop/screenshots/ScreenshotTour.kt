@@ -12,6 +12,8 @@ import com.noop.ui.NoopCard
 import com.noop.ui.NoopPrefs
 import com.noop.ui.NoopTheme
 import com.noop.ui.ScoringGuideScreen
+import com.noop.ui.TabletopNavPad
+import com.noop.ui.Destination
 import com.noop.ui.WhoopModelComparisonScreen
 import org.junit.Assume.assumeTrue
 import org.junit.Before
@@ -57,6 +59,12 @@ class ScreenshotTour {
     @Test @Config(qualifiers = PHONE_NIGHT) fun phoneModelComparisonNight() = shoot("phone-model-comparison-night") { WhoopModelComparisonScreen(onClose = {}) }
     @Test @Config(qualifiers = TABLET) fun tabletScoringGuide() = shoot("tablet-scoring-guide") { ScoringGuideScreen(onClose = {}) }
 
+    // The bottom half of a half-folded phone (tabletop), where the nav pad replaces the bar.
+    @Test @Config(qualifiers = TABLETOP_HALF) fun tabletopNavPad() =
+        shoot("tabletop-nav-pad") { TabletopNavPad(current = Destination.Sleep, onTabSelected = {}) }
+    @Test @Config(qualifiers = TABLETOP_HALF_NIGHT) fun tabletopNavPadNight() =
+        shoot("tabletop-nav-pad-night") { TabletopNavPad(current = Destination.Sleep, onTabSelected = {}) }
+
     private fun shoot(name: String, content: @Composable () -> Unit) {
         val controller = Robolectric.buildActivity(ComponentActivity::class.java).setup()
         val activity = controller.get()
@@ -83,6 +91,8 @@ class ScreenshotTour {
     private companion object {
         const val PHONE = "w411dp-h891dp-port-xhdpi"
         const val PHONE_NIGHT = "w411dp-h891dp-port-night-xhdpi"
+        const val TABLETOP_HALF = "w840dp-h340dp-land-xhdpi"
+        const val TABLETOP_HALF_NIGHT = "w840dp-h340dp-land-night-xhdpi"
         const val TABLET = "w1280dp-h800dp-land-mdpi"
     }
 }

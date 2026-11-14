@@ -37,6 +37,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.fillMaxSize
@@ -110,6 +111,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -897,7 +899,7 @@ fun AppRoot(viewModel: AppViewModel = viewModel()) {
                     // where a thumb rests while the device stands on its hinge.
                     Spacer(Modifier.height(with(density) { (hinge.bottomPx - hinge.topPx).toDp() }))
                     Box(Modifier.fillMaxWidth().weight(1f), contentAlignment = Alignment.Center) {
-                        GlassBottomBar(current = current, onTabSelected = onShellTabSelected)
+                        TabletopNavPad(current = current, onTabSelected = onShellTabSelected)
                     }
                 }
             }
@@ -1432,6 +1434,86 @@ private fun GlassNavRail(
                         modifier = Modifier.fillMaxWidth(),
                         onClick = { onTabSelected(tab.dest) },
                     )
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Tabletop posture's navigation (Not-Noop): the bottom half of a half-folded device is a whole panel
+ * under the thumbs, so instead of the phone's thin capsule floating in it, the tabs become large
+ * rounded-square glass buttons that fill the half. Same tabs and active rule as the bar and rail
+ * ([shellTabsFor] / [isShellTabActive]), so the three cannot drift. Tiles grow to a comfortable maximum
+ * height rather than stretching into slabs on a tall bottom half, and the row is width-capped so the
+ * buttons stay square-ish on a wide fold.
+ */
+@Composable
+internal fun TabletopNavPad(
+    current: Destination,
+    onTabSelected: (Destination) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val tabs = shellTabsFor(BottomBarStyleStore.coachEnabled)
+    val tileShape = RoundedCornerShape(24.dp)
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .navigationBarsPadding()
+            .padding(horizontal = 20.dp, vertical = Metrics.space16),
+        contentAlignment = Alignment.Center,
+    ) {
+        Row(
+            modifier = Modifier
+                .widthIn(max = 760.dp)
+                .fillMaxWidth()
+                .heightIn(max = 148.dp)
+                .fillMaxHeight(),
+            horizontalArrangement = Arrangement.spacedBy(Metrics.space12),
+        ) {
+            tabs.forEach { tab ->
+                val active = isShellTabActive(tab, current, tabs)
+                val label = stringResource(tab.labelRes)
+                val tint = if (active) Palette.accent else Palette.textSecondary
+                Surface(
+                    shape = tileShape,
+                    color = Palette.surfaceRaised.copy(alpha = BottomBarStyleStore.barAlpha),
+                    tonalElevation = 2.dp,
+                    shadowElevation = 4.dp,
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .border(
+                            width = if (active) 1.5.dp else 0.5.dp,
+                            color = if (active) Palette.accent else Palette.hairline.copy(alpha = 0.6f),
+                            shape = tileShape,
+                        )
+                        .clip(tileShape)
+                        .clickable(onClick = { onTabSelected(tab.dest) })
+                        .semantics {
+                            contentDescription = label
+                            selected = active
+                        },
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(if (active) Palette.accentMuted else Color.Transparent)
+                            .padding(Metrics.space8),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(Metrics.space8, Alignment.CenterVertically),
+                    ) {
+                        Icon(tab.icon, contentDescription = null, tint = tint, modifier = Modifier.size(30.dp))
+                        Text(
+                            label,
+                            style = NoopType.subhead.copy(
+                                fontWeight = if (active) FontWeight.SemiBold else FontWeight.Medium,
+                            ),
+                            color = tint,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
                 }
             }
         }
