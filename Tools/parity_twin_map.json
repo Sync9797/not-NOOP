@@ -18,17 +18,17 @@
     ]
   },
   "authority": {
-    "files": {"count": 509, "sha256": "0a0b02d39eb26ad0635933ad6fca51fb4c33db98178410bfe6676ab9d0fdcaee"},
-    "functions": {"count": 4576, "sha256": "185fcee294b4829e13261af6a44cd73bdcb7eb107285b420f64dc57c13e44f64"},
+    "files": {"count": 510, "sha256": "ba482d25612168eb0f5cf4c606bfa8c8b1dae2c82c391988c69fa01e0b23b40b"},
+    "functions": {"count": 4585, "sha256": "d3bef3639b673c33ef384d952d907f30054b8e36c03090e49f4153ea389a2422"},
     "properties": {"count": 496, "sha256": "18c74d4787010d269ae31f0ca2a9898b60cd5e79591bb82194007038c625054c"},
-    "constants": {"count": 2043, "sha256": "1fbf873620f09d8d75915d736742cc5f2902c69893a0e5bef51aac68f5a95cb6"},
+    "constants": {"count": 2045, "sha256": "3747196c7558e25287b4c8c8c872a79ab1e0ab0acac2942a294bfcc3a3c92af6"},
     "file_pairs": {"count": 81, "sha256": "3c94824ccff843da495a212a973d89ce61e536b6795dbee2d0e496a7e7a498f0"},
     "function_pairs": {"count": 238, "sha256": "62681716d701dbd647daf6676dbbf32b6ae1e19f8a5b7ce177824619a61700bd"},
     "property_pairs": {"count": 167, "sha256": "a6877b76b4ad9d4f6705421de0df1e17a06881c47b1d693a5cdb4161067ae8dd"},
     "constant_pairs": {"count": 720, "sha256": "ac70a1ecc9b69f9d3b9a6f98ebbdf7ea3ab6a61c7ee03ba52b5d89f2ac3e6332"},
-    "unpaired_files": {"count": 369, "sha256": "3462a2a8135bfd793dc6493f10fb72b4fae9028ad9ec47c8dec84b9f5a4dc01a"},
-    "unpaired_functions": {"count": 4113, "sha256": "e3e115a3e1830edbd5245bed84a652909a28b50491d2d5a4bf38261e4d28a158"},
+    "unpaired_files": {"count": 370, "sha256": "fc83ac401e750613f8131860319147b6a17247590fa6b81c355889a856e8904f"},
+    "unpaired_functions": {"count": 4122, "sha256": "91d16af9e2c6d2d770e09cf2bad385662483258b9e121ba6d6fbbaf1c51c9a19"},
     "unpaired_properties": {"count": 162, "sha256": "dabff97ba9bce0aebdc8ef84b9c4f107ce574020e8b0455d8f9214082948246b"},
-    "unpaired_constants": {"count": 603, "sha256": "50e0e35f81849a69cb6ac0a1c1dac563c51f8dab7f367359f650c84c940bc595"}
+    "unpaired_constants": {"count": 605, "sha256": "9e49684540ef9a015c99edb2b06ec55300086ecc2574bdd7e74b718de6af1322"}
   }
 }

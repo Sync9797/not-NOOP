@@ -140,6 +140,9 @@
          Settings import routes alongside their workouts; without it, the route is gracefully skipped
          and the workout still imports with its distance/HR. Read-only; NOOP never writes routes. -->
     <uses-permission android:name="android.permission.health.READ_EXERCISE_ROUTES" />
+    <!-- Optional background Health Connect sync (Not-Noop, off by default). Declaring it requests
+         nothing: Android asks only when the user turns the option on in Data Sources. -->
+    <uses-permission android:name="android.permission.health.READ_HEALTH_DATA_IN_BACKGROUND" />
     <!-- Water logged in other apps (#949), so drinks tracked by a dedicated hydration app or a smart
          bottle don't have to be entered twice. Read-only; NOOP never writes water back. MUST be
          declared or Health Connect silently drops the runtime request (same trap as #412 above). -->

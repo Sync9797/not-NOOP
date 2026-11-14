@@ -492,6 +492,102 @@
       "identity_sha256": "c80a8ae87cf2322b7cea56cdfb34c2a0d924e0d58f4ae410d7b486b570c7dd7e",
       "platform": "kotlin",
       "rationale": "Not-Noop's Android quarter-hour Haptic Clock reading, paced on the WHOOP 4.0 HAPTICS_TERMINATED event in WhoopBleClient.buzzTimeNow. The Apple apps keep the digit reading (HapticClock.pulses, still a shared twin); their app targets cannot be built in this fork's environment, so the reading is Android-only for now."
+    },
+    {
+      "type": "platform_specific",
+      "kind": "add-unpaired-function",
+      "identity": "kotlin\u0000android/app/src/main/java/com/noop/ingest/HealthConnectBackgroundSync.kt::intervalHours/1#1",
+      "identity_sha256": "97f2b27a63b8adc04e0b24e6008bf73916ebf01c540cd07fcddfb813f65d5560",
+      "platform": "kotlin",
+      "rationale": "Not-Noop optional background Health Connect sync (off by default): the background interval for the user's sync-interval setting. Health Connect is Android's platform health store and WorkManager its background scheduler; the Apple apps sync through HealthKit, which has no Health Connect background-read permission or worker to mirror."
+    },
+    {
+      "type": "platform_specific",
+      "kind": "add-unpaired-function",
+      "identity": "kotlin\u0000android/app/src/main/java/com/noop/ingest/HealthConnectBackgroundSync.kt::schedule/1#1",
+      "identity_sha256": "cd070ae3c30597bee74a198a460b8c78f5dbce90eb2da2356ae8ef98c481d3e0",
+      "platform": "kotlin",
+      "rationale": "Not-Noop optional background Health Connect sync (off by default): schedules the periodic WorkManager pass. Health Connect is Android's platform health store and WorkManager its background scheduler; the Apple apps sync through HealthKit, which has no Health Connect background-read permission or worker to mirror."
+    },
+    {
+      "type": "platform_specific",
+      "kind": "add-unpaired-function",
+      "identity": "kotlin\u0000android/app/src/main/java/com/noop/ingest/HealthConnectBackgroundSync.kt::cancel/1#1",
+      "identity_sha256": "4eda53e71c995e333417acff22ad157913fa029f3531f939f8fbf4329141640c",
+      "platform": "kotlin",
+      "rationale": "Not-Noop optional background Health Connect sync (off by default): cancels the periodic WorkManager pass. Health Connect is Android's platform health store and WorkManager its background scheduler; the Apple apps sync through HealthKit, which has no Health Connect background-read permission or worker to mirror."
+    },
+    {
+      "type": "platform_specific",
+      "kind": "add-unpaired-function",
+      "identity": "kotlin\u0000android/app/src/main/java/com/noop/ingest/HealthConnectBackgroundSync.kt::wanted/1#1",
+      "identity_sha256": "c89992cd66db530b5ca35d54c8c21a0d92f3e58fa3b976261270729a57065cb8",
+      "platform": "kotlin",
+      "rationale": "Not-Noop optional background Health Connect sync (off by default): whether the option and its parent auto-sync are both on. Health Connect is Android's platform health store and WorkManager its background scheduler; the Apple apps sync through HealthKit, which has no Health Connect background-read permission or worker to mirror."
+    },
+    {
+      "type": "platform_specific",
+      "kind": "add-unpaired-function",
+      "identity": "kotlin\u0000android/app/src/main/java/com/noop/ingest/HealthConnectBackgroundSync.kt::reconcile/1#1",
+      "identity_sha256": "78daf4f46fd674adfdb79d660a683bed64658872c825ae892f58887008bf85ab",
+      "platform": "kotlin",
+      "rationale": "Not-Noop optional background Health Connect sync (off by default): keeps the schedule in step with the settings. Health Connect is Android's platform health store and WorkManager its background scheduler; the Apple apps sync through HealthKit, which has no Health Connect background-read permission or worker to mirror."
+    },
+    {
+      "type": "platform_specific",
+      "kind": "add-unpaired-function",
+      "identity": "kotlin\u0000android/app/src/main/java/com/noop/ingest/HealthConnectBackgroundSync.kt::doWork/0#1",
+      "identity_sha256": "114f6917ae4f38b7fae92f1bc24995cff2efcca633d01da710a47f381dfd6387",
+      "platform": "kotlin",
+      "rationale": "Not-Noop optional background Health Connect sync (off by default): one background pass over the last few days. Health Connect is Android's platform health store and WorkManager its background scheduler; the Apple apps sync through HealthKit, which has no Health Connect background-read permission or worker to mirror."
+    },
+    {
+      "type": "platform_specific",
+      "kind": "add-unpaired-function",
+      "identity": "kotlin\u0000android/app/src/main/java/com/noop/ingest/HealthConnectImporter.kt::importRecent/4#1",
+      "identity_sha256": "1982b37932a13fda142efc05e5a324da77afba3c0f8465dde9ee3dba628709bc",
+      "platform": "kotlin",
+      "rationale": "Not-Noop optional background Health Connect sync (off by default): the short-window import a background pass runs. Health Connect is Android's platform health store and WorkManager its background scheduler; the Apple apps sync through HealthKit, which has no Health Connect background-read permission or worker to mirror."
+    },
+    {
+      "type": "platform_specific",
+      "kind": "add-unpaired-function",
+      "identity": "kotlin\u0000android/app/src/main/java/com/noop/ingest/HealthConnectImporter.kt::importWindow/5#1",
+      "identity_sha256": "e7ad65fc7ac8f6fec2d77ebc8848a6c0b0ea2c7a45c3998ada15f5fde0c25576",
+      "platform": "kotlin",
+      "rationale": "Not-Noop optional background Health Connect sync (off by default): serialises the full and short-window imports behind one lock. Health Connect is Android's platform health store and WorkManager its background scheduler; the Apple apps sync through HealthKit, which has no Health Connect background-read permission or worker to mirror."
+    },
+    {
+      "type": "platform_specific",
+      "kind": "add-unpaired-function",
+      "identity": "kotlin\u0000android/app/src/main/java/com/noop/ingest/HealthConnectImporter.kt::importLocked/5#1",
+      "identity_sha256": "2649baafa9605405245a05e29276d95fd7fc93bc892660d51e06801386a14cba",
+      "platform": "kotlin",
+      "rationale": "Not-Noop optional background Health Connect sync (off by default): the import body, now taking an optional day window. Health Connect is Android's platform health store and WorkManager its background scheduler; the Apple apps sync through HealthKit, which has no Health Connect background-read permission or worker to mirror."
+    },
+    {
+      "type": "platform_specific",
+      "kind": "add-unpaired-constant",
+      "identity": "kotlin\u0000android/app/src/main/java/com/noop/ingest/HealthConnectBackgroundSync.kt::WINDOW_DAYS",
+      "identity_sha256": "169659d123e9b331bd837e65bb4482b164c1fd3e9bd645bffc18a5c6196f9459",
+      "platform": "kotlin",
+      "rationale": "Not-Noop optional background Health Connect sync (off by default): days a background pass re-reads. Health Connect is Android's platform health store and WorkManager its background scheduler; the Apple apps sync through HealthKit, which has no Health Connect background-read permission or worker to mirror."
+    },
+    {
+      "type": "platform_specific",
+      "kind": "add-unpaired-constant",
+      "identity": "kotlin\u0000android/app/src/main/java/com/noop/ingest/HealthConnectBackgroundSync.kt::WORK",
+      "identity_sha256": "72b85dfb0fc4e7c3976db612161cd265fc6d48652b6f54267156c0a06e4aafd6",
+      "platform": "kotlin",
+      "rationale": "Not-Noop optional background Health Connect sync (off by default): the unique WorkManager name for the periodic pass. Health Connect is Android's platform health store and WorkManager its background scheduler; the Apple apps sync through HealthKit, which has no Health Connect background-read permission or worker to mirror."
+    },
+    {
+      "type": "platform_specific",
+      "kind": "add-unpaired-file",
+      "identity": "kotlin\u0000android/app/src/main/java/com/noop/ingest/HealthConnectBackgroundSync.kt",
+      "identity_sha256": "279f5f552aabfc1774049127b176bc6ec31c994a73d3b3d805dd0efd89d6a0f6",
+      "platform": "kotlin",
+      "rationale": "Not-Noop optional background Health Connect sync (off by default): the scheduler object and its worker. Health Connect is Android's platform health store and WorkManager its background scheduler; the Apple apps sync through HealthKit, which has no Health Connect background-read permission or worker to mirror."
     }
   ]
 }

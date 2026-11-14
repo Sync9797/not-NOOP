@@ -2898,4 +2898,7 @@
     <string name="l10n_app_changelog_not_noop_health_connect_sharing_that_a91ce609">Not-Noop: Health Connect sharing that works, tablet and foldable layouts, and gentler buzzes</string>
     <string name="l10n_app_changelog_stress_and_coach_brief_for_ai_894cea69">Stress and Coach brief for AI Widget Maker</string>
     <string name="stress_after_activity_note">Shaded: the hour after moving, when heart rate may still be settling.</string>
+    <string name="hc_background_sync_title">Sync in the background</string>
+    <string name="hc_background_sync_detail">Off by default to save battery and so NOOP doesn\'t read your health data while it\'s closed. Opening NOOP syncs anyway. Turn on to stay up to date between visits; Android will ask once for background access.</string>
+    <string name="hc_background_sync_denied">Background access wasn\'t granted. NOOP will keep syncing when you open it.</string>
 </resources>

@@ -37,4 +37,7 @@ class HealthConnectManifestPermissionsTest {
 
     @Test fun importReadPermissionsAreDeclared() =
         assertDeclared("HealthConnectImporter.PERMISSIONS", HealthConnectImporter.PERMISSIONS)
+
+    @Test fun backgroundReadPermissionIsDeclared() =
+        assertDeclared("HealthConnectBackgroundSync.PERMISSION", setOf(HealthConnectBackgroundSync.PERMISSION))
 }

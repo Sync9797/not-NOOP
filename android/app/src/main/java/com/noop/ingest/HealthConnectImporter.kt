@@ -40,6 +40,7 @@ import java.time.LocalDate
 import java.time.ZoneId
 import java.time.ZoneOffset
 import kotlin.math.round
+import kotlinx.coroutines.sync.withLock
 import kotlin.reflect.KClass
 
 /**
@@ -310,6 +311,40 @@ object HealthConnectImporter {
         // Null means "whatever the user has selected", resolved AFTER the grant-based migration below. A
         // non-lazy default is evaluated at CALL time, before the migration could widen it.
         categories: Set<ImportCategory>? = null,
+    ): ImportSummary = importWindow(context, repo, heightCm, categories, windowDays = null)
+
+    /**
+     * The import over only the last [windowDays] local days, for the optional background sync
+     * (HealthConnectBackgroundSync). The full [import] reads up to ten years, which is fine when the
+     * app is opened but too heavy to repeat every few hours behind the user's back. Older days keep
+     * what the last full import wrote.
+     */
+    suspend fun importRecent(
+        context: Context,
+        repo: WhoopRepository,
+        heightCm: Double = 0.0,
+        windowDays: Int,
+    ): ImportSummary = importWindow(context, repo, heightCm, categories = null, windowDays = windowDays)
+
+    /** Serialises every import, foreground and background, so two can never rewrite the same rows at once. */
+    private val importLock = kotlinx.coroutines.sync.Mutex()
+
+    private suspend fun importWindow(
+        context: Context,
+        repo: WhoopRepository,
+        heightCm: Double,
+        categories: Set<ImportCategory>?,
+        windowDays: Int?,
+    ): ImportSummary = importLock.withLock {
+        importLocked(context, repo, heightCm, categories, windowDays)
+    }
+
+    private suspend fun importLocked(
+        context: Context,
+        repo: WhoopRepository,
+        heightCm: Double,
+        categories: Set<ImportCategory>?,
+        windowDays: Int?,
     ): ImportSummary {
         if (sdkStatus(context) != HealthConnectClient.SDK_AVAILABLE) {
             return ImportSummary.failure(SOURCE, "Health Connect is not available on this device.")
@@ -354,7 +389,8 @@ object HealthConnectImporter {
 
         val zone = ZoneId.systemDefault()
         val end = Instant.now()
-        val start = LocalDate.now(zone).minusYears(WINDOW_YEARS).atStartOfDay(zone).toInstant()
+        val start = (if (windowDays != null) LocalDate.now(zone).minusDays(windowDays.toLong())
+                     else LocalDate.now(zone).minusYears(WINDOW_YEARS)).atStartOfDay(zone).toInstant()
         val filter = TimeRangeFilter.between(start, end)
         // #528: skip our own writes on import (see readAll / isSelfWritten).
         val selfPackage = context.packageName
@@ -866,8 +902,14 @@ object HealthConnectImporter {
             // Drop nights an earlier run wrote that Health Connect no longer has in that form (the source
             // app revised the bedtime, or the strap now covers the day), so a re-import replaces the night
             // instead of leaving a duplicate beside it.
-            val previousStarts = NoopPrefs.hcSleepStarts(context)
-            val newStarts = sleepRows.mapTo(HashSet()) { it.startTs.toString() }
+            // A windowed (background) import only saw nights inside its window, so only those can be
+            // judged stale; nights before it are kept, and stay tracked for the next full import.
+            val windowStartSec = start.epochSecond
+            val allPrevious = NoopPrefs.hcSleepStarts(context)
+            val previousStarts = if (windowDays == null) allPrevious
+                else allPrevious.filterTo(HashSet()) { (it.toLongOrNull() ?: 0L) >= windowStartSec }
+            val keptOutside = allPrevious - previousStarts
+            val newStarts = sleepRows.mapTo(HashSet()) { it.startTs.toString() } + keptOutside
             for (stale in previousStarts - newStarts) {
                 stale.toLongOrNull()?.let { repo.deleteImportedSleepSession(WHOOP, it) }
             }

@@ -2764,4 +2764,7 @@
     <string name="l10n_app_changelog_not_noop_health_connect_sharing_that_a91ce609">Not-Noop: рабочая передача в Health Connect, макеты для планшетов и складных телефонов и более мягкая вибрация</string>
     <string name="l10n_app_changelog_stress_and_coach_brief_for_ai_894cea69">Стресс и сводка Coach для AI Widget Maker</string>
     <string name="stress_after_activity_note">Затенено: час после движения, когда пульс может ещё снижаться.</string>
+    <string name="hc_background_sync_title">Синхронизация в фоне</string>
+    <string name="hc_background_sync_detail">По умолчанию выключено, чтобы экономить заряд и чтобы NOOP не читал ваши данные о здоровье, пока закрыт. При открытии NOOP всё равно синхронизируется. Включите, чтобы данные были свежими между открытиями; Android один раз запросит фоновый доступ.</string>
+    <string name="hc_background_sync_denied">Фоновый доступ не предоставлен. NOOP продолжит синхронизацию при открытии.</string>
 </resources>

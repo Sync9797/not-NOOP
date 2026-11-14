@@ -2882,4 +2882,7 @@
     <string name="l10n_app_changelog_not_noop_health_connect_sharing_that_a91ce609">Not-Noop: Health-Connect-Freigabe, die funktioniert, Layouts für Tablets und Foldables und sanftere Vibrationen</string>
     <string name="l10n_app_changelog_stress_and_coach_brief_for_ai_894cea69">Stress und Coach-Briefing für AI Widget Maker</string>
     <string name="stress_after_activity_note">Schattiert: die Stunde nach Bewegung, in der sich die Herzfrequenz noch beruhigen kann.</string>
+    <string name="hc_background_sync_title">Im Hintergrund synchronisieren</string>
+    <string name="hc_background_sync_detail">Standardmäßig aus, um Akku zu sparen und damit NOOP deine Gesundheitsdaten nicht liest, während es geschlossen ist. Beim Öffnen synchronisiert NOOP ohnehin. Schalte es ein, um auch zwischendurch aktuell zu bleiben; Android fragt einmal nach Hintergrundzugriff.</string>
+    <string name="hc_background_sync_denied">Hintergrundzugriff wurde nicht gewährt. NOOP synchronisiert weiterhin, wenn du es öffnest.</string>
 </resources>

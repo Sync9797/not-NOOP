@@ -796,6 +796,17 @@ object NoopPrefs {
         }.apply()
     }
 
+    /** Optional background Health Connect sync (HealthConnectBackgroundSync). Default OFF: the app reads
+     *  Health Connect only while open unless the user opts in and grants background access. */
+    const val KEY_HC_BACKGROUND_SYNC = "noop.hcBackgroundSync"
+
+    fun hcBackgroundSync(context: Context): Boolean =
+        of(context).getBoolean(KEY_HC_BACKGROUND_SYNC, false)
+
+    fun setHcBackgroundSync(context: Context, enabled: Boolean) {
+        of(context).edit().putBoolean(KEY_HC_BACKGROUND_SYNC, enabled).apply()
+    }
+
     /** Health Connect periodic auto-sync (Samsung Health → Health Connect → NOOP). Default OFF.
      *  Interval in hours (default 12). Last successful sync as epoch millis (0 = never). */
     const val KEY_HC_AUTO_SYNC = "noop.hcAutoSync"

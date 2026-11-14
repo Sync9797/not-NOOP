@@ -68,6 +68,7 @@ import com.noop.data.PairedDeviceRow
 import com.noop.data.SourceKind
 import com.noop.ble.PuffinExperiment
 import com.noop.ingest.AppleHealthImporter
+import com.noop.ingest.HealthConnectBackgroundSync
 import com.noop.ingest.HealthConnectImporter
 import com.noop.ingest.HealthConnectWriter
 import com.noop.ingest.ActivityFileImporter
@@ -120,6 +121,7 @@ fun DataSourcesScreen(vm: AppViewModel) {
     val hrBroadcastSubscribers by vm.hrBroadcastSubscribers.collectAsStateWithLifecycle()
     val hrBroadcastStatus by vm.hrBroadcastStatus.collectAsStateWithLifecycle()
     val hcAutoSync by vm.hcAutoSync.collectAsStateWithLifecycle()
+    val hcBackgroundSync by vm.hcBackgroundSync.collectAsStateWithLifecycle()
     val hcSyncHours by vm.hcSyncHours.collectAsStateWithLifecycle()
     val hcLastSync by vm.hcLastSync.collectAsStateWithLifecycle()
     val hcWriteback by vm.hcWriteback.collectAsStateWithLifecycle()
@@ -309,6 +311,28 @@ fun DataSourcesScreen(vm: AppViewModel) {
             runImport { HealthConnectImporter.import(context, vm.repo, ProfileStore.from(context).heightCm) }
         } else {
             Toast.makeText(context, "Health Connect access not granted.", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    // Optional background sync: turned on only once Android grants background read access.
+    val hcBackgroundPermissionLauncher = rememberLauncherForActivityResult(
+        PermissionController.createRequestPermissionResultContract(),
+    ) { granted ->
+        if (HealthConnectBackgroundSync.PERMISSION in granted) {
+            vm.setHcBackgroundSync(true)
+        } else {
+            vm.setHcBackgroundSync(false)
+            Toast.makeText(context, uiString(R.string.hc_background_sync_denied), Toast.LENGTH_LONG).show()
+        }
+    }
+
+    fun enableHcBackgroundSync() {
+        scope.launch {
+            val granted = runCatching {
+                HealthConnectImporter.client(context).permissionController.getGrantedPermissions()
+            }.getOrDefault(emptySet())
+            if (HealthConnectBackgroundSync.PERMISSION in granted) vm.setHcBackgroundSync(true)
+            else hcBackgroundPermissionLauncher.launch(setOf(HealthConnectBackgroundSync.PERMISSION))
         }
     }
 
@@ -524,8 +548,8 @@ fun DataSourcesScreen(vm: AppViewModel) {
                 ) { startHealthConnect() }
 
                 // Auto-sync: pull new Health Connect data when you open NOOP, if it's been longer than
-                // the chosen interval — no manual taps. On-open only (no background worker): it avoids a
-                // sensitive background-health permission and is reliable, and opening the app is enough.
+                // the chosen interval — no manual taps. On-open by default: it needs no background-health
+                // permission and opening the app is enough. "Sync in the background" below is the opt-in.
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
@@ -581,6 +605,37 @@ fun DataSourcesScreen(vm: AppViewModel) {
                         style = NoopType.footnote,
                         color = Palette.textTertiary,
                     )
+                    // Optional background sync (Not-Noop). Default OFF; the detail line says why, once.
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(uiString(R.string.hc_background_sync_title), style = NoopType.subhead, color = Palette.textPrimary)
+                            Text(
+                                uiString(R.string.hc_background_sync_detail),
+                                style = NoopType.footnote,
+                                color = Palette.textTertiary,
+                            )
+                        }
+                        Switch(
+                            checked = hcBackgroundSync,
+                            onCheckedChange = { on ->
+                                if (on) enableHcBackgroundSync() else vm.setHcBackgroundSync(false)
+                            },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = Palette.surfaceBase,
+                                checkedTrackColor = Palette.accent,
+                                uncheckedThumbColor = Palette.textSecondary,
+                                uncheckedTrackColor = Palette.surfaceInset,
+                                uncheckedBorderColor = Palette.hairline,
+                            ),
+                            modifier = Modifier.semantics {
+                                contentDescription = uiString(R.string.hc_background_sync_title)
+                            },
+                        )
+                    }
                 }
 
                 // Writeback: the inverse direction. Opt-in, default OFF, computed metrics only.

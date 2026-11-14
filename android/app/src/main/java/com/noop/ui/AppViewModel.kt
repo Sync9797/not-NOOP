@@ -2619,12 +2619,27 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         _hcAutoSync.value = enabled
         NoopPrefs.setHcAutoSync(appContext, enabled)
         if (enabled) syncHealthConnectIfStale(force = true)
+        // The optional background sync is a sub-option of auto-sync: it pauses with it and resumes with it.
+        com.noop.ingest.HealthConnectBackgroundSync.reconcile(appContext)
+    }
+
+    private val _hcBackgroundSync = MutableStateFlow(NoopPrefs.hcBackgroundSync(appContext))
+    /** Optional background Health Connect sync (default OFF). The UI requests the background permission
+     *  before turning it on. */
+    val hcBackgroundSync: StateFlow<Boolean> = _hcBackgroundSync.asStateFlow()
+
+    fun setHcBackgroundSync(enabled: Boolean) {
+        _hcBackgroundSync.value = enabled
+        NoopPrefs.setHcBackgroundSync(appContext, enabled)
+        com.noop.ingest.HealthConnectBackgroundSync.reconcile(appContext)
     }
 
     /** Change the sync interval (hours). Takes effect on the next on-open catch-up sync. */
     fun setHcSyncHours(hours: Int) {
         _hcSyncHours.value = hours
         NoopPrefs.setHcSyncHours(appContext, hours)
+        // The optional background sync runs on the same interval.
+        com.noop.ingest.HealthConnectBackgroundSync.reconcile(appContext)
     }
 
     /** Flip Health Connect writeback (computed metrics → HC). Persists; the UI requests the write
