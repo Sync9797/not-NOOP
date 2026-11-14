@@ -1,0 +1,99 @@
+# Not-Noop: weekly check for new commits in upstream NOOP (ryanbr/noop).
+#
+# Not-Noop shares history with ryanbr/noop, so upstream fixes can be merged in. This workflow only
+# REPORTS: it keeps one open issue (label `upstream-sync`) listing the upstream commits Not-Noop does not
+# have yet and the files a merge would conflict on, and closes it once Not-Noop has caught up.
+#
+# Why an issue rather than an automatic pull request: the workflow's GITHUB_TOKEN may not push commits
+# that touch .github/workflows/, and upstream changes those files from time to time, so an automated
+# branch push would fail exactly on the weeks it matters. Merging stays a deliberate step:
+#   git fetch https://github.com/ryanbr/noop main && git merge FETCH_HEAD   (then resolve and test)
+name: Upstream check (ryanbr/noop)
+
+on:
+  schedule:
+    # Mondays 09:23 UTC: off the hour, when scheduled jobs queue least.
+    - cron: '23 9 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: upstream-check
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          fetch-depth: 0   # full history, so the merge base with upstream is known
+      - name: Compare with upstream and update the tracking issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          git remote add upstream https://github.com/ryanbr/noop.git
+          git fetch --quiet upstream main
+          AHEAD=$(git rev-list --count HEAD..upstream/main)
+          EXISTING=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --label upstream-sync \
+            --json number --jq '.[0].number // empty')
+
+          if [ "$AHEAD" -eq 0 ]; then
+            echo "Not-Noop has every upstream commit."
+            if [ -n "$EXISTING" ]; then
+              gh issue close "$EXISTING" --repo "$GITHUB_REPOSITORY" \
+                --comment "Not-Noop now has every commit from ryanbr/noop main."
+            fi
+            exit 0
+          fi
+
+          # Dry-run merge to name the files that would conflict; nothing is committed or pushed.
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          CONFLICTS=""
+          if ! git merge --no-commit --no-ff upstream/main >/dev/null 2>&1; then
+            CONFLICTS=$(git diff --name-only --diff-filter=U || true)
+          fi
+          git merge --abort >/dev/null 2>&1 || git reset --hard --quiet HEAD
+
+          BODY=$(mktemp)
+          {
+            echo "ryanbr/noop \`main\` has **${AHEAD}** commit(s) Not-Noop does not have yet."
+            echo
+            echo "### New upstream commits (newest first, up to 60)"
+            echo
+            git log --no-merges --format='- %h %s (%as)' HEAD..upstream/main | head -60
+            echo
+            echo "### Files changed upstream"
+            echo
+            echo '```'
+            git diff --stat "$(git merge-base HEAD upstream/main)" upstream/main | tail -1
+            echo '```'
+            echo
+            if [ -n "$CONFLICTS" ]; then
+              echo "### A merge would conflict in"
+              echo
+              printf '%s\n' "$CONFLICTS" | sed 's/^/- `/; s/$/`/'
+              echo
+              echo "These need resolving by hand, keeping Not-Noop's changes (app id, signing, links, fixes)."
+            else
+              echo "A merge applies cleanly (still run the tests before releasing)."
+            fi
+            echo
+            echo "To merge: \`git fetch https://github.com/ryanbr/noop main && git merge FETCH_HEAD\`, resolve, run \`./gradlew testFullDebugUnitTest\`, then release with a version bump."
+            echo
+            echo "_Updated by the weekly upstream check._"
+          } > "$BODY"
+
+          gh label create upstream-sync --repo "$GITHUB_REPOSITORY" --color 0E8A16 \
+            --description "New commits in upstream ryanbr/noop" --force >/dev/null
+          if [ -n "$EXISTING" ]; then
+            gh issue edit "$EXISTING" --repo "$GITHUB_REPOSITORY" --body-file "$BODY"
+          else
+            gh issue create --repo "$GITHUB_REPOSITORY" --title "Upstream NOOP has new commits to merge" \
+              --label upstream-sync --body-file "$BODY"
+          fi
