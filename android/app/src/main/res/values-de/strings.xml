@@ -2885,4 +2885,6 @@
     <string name="hc_background_sync_title">Im Hintergrund synchronisieren</string>
     <string name="hc_background_sync_detail">Standardmäßig aus, um Akku zu sparen und damit NOOP deine Gesundheitsdaten nicht liest, während es geschlossen ist. Beim Öffnen synchronisiert NOOP ohnehin. Schalte es ein, um auch zwischendurch aktuell zu bleiben; Android fragt einmal nach Hintergrundzugriff.</string>
     <string name="hc_background_sync_denied">Hintergrundzugriff wurde nicht gewährt. NOOP synchronisiert weiterhin, wenn du es öffnest.</string>
+    <string name="settings_material_surfaces_title">Auch Hintergründe</string>
+    <string name="settings_material_surfaces_detail">Hintergründe und Karten ebenfalls nach deinem Hintergrundbild einfärben. Diagramme und Werte behalten ihre Farben.</string>
 </resources>

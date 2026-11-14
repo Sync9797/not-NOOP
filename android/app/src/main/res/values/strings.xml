@@ -2901,4 +2901,6 @@
     <string name="hc_background_sync_title">Sync in the background</string>
     <string name="hc_background_sync_detail">Off by default to save battery and so NOOP doesn\'t read your health data while it\'s closed. Opening NOOP syncs anyway. Turn on to stay up to date between visits; Android will ask once for background access.</string>
     <string name="hc_background_sync_denied">Background access wasn\'t granted. NOOP will keep syncing when you open it.</string>
+    <string name="settings_material_surfaces_title">Backgrounds too</string>
+    <string name="settings_material_surfaces_detail">Tint backgrounds and cards from your wallpaper as well. Charts and scores keep their colours.</string>
 </resources>

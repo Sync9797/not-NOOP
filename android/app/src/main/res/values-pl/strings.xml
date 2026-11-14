@@ -2888,4 +2888,6 @@
     <string name="hc_background_sync_title">Synchronizuj w tle</string>
     <string name="hc_background_sync_detail">Domyślnie wyłączone, aby oszczędzać baterię i żeby NOOP nie odczytywał danych zdrowotnych, gdy jest zamknięty. Po otwarciu NOOP i tak się synchronizuje. Włącz, aby mieć aktualne dane między wizytami; Android raz poprosi o dostęp w tle.</string>
     <string name="hc_background_sync_denied">Nie przyznano dostępu w tle. NOOP nadal będzie synchronizować się po otwarciu.</string>
+    <string name="settings_material_surfaces_title">Także tła</string>
+    <string name="settings_material_surfaces_detail">Barwi również tła i karty według tapety. Wykresy i wyniki zachowują swoje kolory.</string>
 </resources>

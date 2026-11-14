@@ -1625,6 +1625,17 @@ fun SettingsScreen(
                         AccentPrefs.setColor(context, next)
                     },
                 )
+                // Not-Noop: the full Material You look, as a second step. Off by default; data colours
+                // never follow it.
+                if (accentColor == AccentColor.MATERIAL_YOU) {
+                    SettingsRowDivider()
+                    SettingsToggleRow(
+                        title = uiString(R.string.settings_material_surfaces_title),
+                        detail = uiString(R.string.settings_material_surfaces_detail),
+                        checked = AccentPrefs.materialSurfaces,
+                        onCheckedChange = { on -> AccentPrefs.setMaterialSurfaces(context, on) },
+                    )
+                }
             }
             if (accentColor != AccentColor.MATERIAL_YOU) {
                 if (MaterialYouAccent.isSupported) SettingsRowDivider()

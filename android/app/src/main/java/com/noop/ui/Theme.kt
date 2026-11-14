@@ -50,7 +50,7 @@ object Palette {
     // composables AND Canvas DrawScopes) with no call-site changes. Set by NoopTheme.
     internal var active by mutableStateOf(DarkTokens)
     /** True when the light scheme is active (surface code uses this for the per-scheme idiom). */
-    val isLight: Boolean get() = active === LightTokens
+    val isLight: Boolean get() = active.light
 
     // Chart style — when CLASSIC, the DATA accessors below return the throwback red→green ramps
     // (light/dark tuned). Reads ChartStylePrefs.style (snapshot state) so a flip re-colours live.
@@ -408,6 +408,9 @@ object StrandAlpha {
     const val unselectedBar = 0.88f
     const val warningFill = 0.12f
     const val warningBorder = 0.40f
+    /** Canvas wash over the user's wallpaper on pages whose text sits straight on the background
+     *  (WallpaperPage), so a busy photo or bright sky never fights body text in either theme. */
+    const val wallpaperScrim = 0.72f
 }
 
 // MARK: - Metrics (ported from StrandDesign/Components.swift NoopMetrics)
@@ -606,17 +609,24 @@ fun NoopTheme(content: @Composable () -> Unit) {
         AppearanceMode.DARK -> true
         AppearanceMode.SYSTEM -> isSystemInDarkTheme()
     }
-    val tokens = if (dark) DarkTokens else LightTokens
-    if (Palette.active !== tokens) Palette.active = tokens
+    val baseTokens = if (dark) DarkTokens else LightTokens
+    var tokens = baseTokens
 
     // Material You accent: resolve the wallpaper's primary for the current mode before children compose,
-    // guarded + idempotent like the Palette.active write above. A wallpaper change recreates the activity,
-    // so this re-resolves then too.
+    // guarded + idempotent like the Palette.active write below. A wallpaper change recreates the activity,
+    // so this re-resolves then too. With "wallpaper colours for backgrounds" on, the surfaces follow too.
     val context = LocalContext.current
     if (AccentPrefs.color == AccentColor.MATERIAL_YOU && MaterialYouAccent.isSupported) {
-        val primary = (if (dark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)).primary
-        if (MaterialYouAccent.primary != primary) MaterialYouAccent.primary = primary
+        val scheme = if (dark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+        if (MaterialYouAccent.primary != scheme.primary) MaterialYouAccent.primary = scheme.primary
+        if (AccentPrefs.materialSurfaces) {
+            // Compared by value (PaletteTokens is a data class): the same wallpaper keeps the current
+            // instance, so the identity guard below does not write, and nothing recomposes in a loop.
+            val derived = materialYouSurfaces(baseTokens, scheme)
+            tokens = if (derived == Palette.active) Palette.active else derived
+        }
     }
+    if (Palette.active !== tokens) Palette.active = tokens
 
     // Status-/nav-bar icon appearance: light icons on the dark theme, dark icons on the warm-paper
     // light theme (otherwise the icons are invisible). Edge-to-edge keeps the bars transparent.

@@ -2864,4 +2864,6 @@
     <string name="hc_background_sync_title">Sincronizar em segundo plano</string>
     <string name="hc_background_sync_detail">Desativado por predefinição para poupar bateria e para que o NOOP não leia os seus dados de saúde enquanto está fechado. Ao abrir, o NOOP sincroniza na mesma. Ative para se manter atualizado entre visitas; o Android pedirá uma vez acesso em segundo plano.</string>
     <string name="hc_background_sync_denied">O acesso em segundo plano não foi concedido. O NOOP continuará a sincronizar quando o abrir.</string>
+    <string name="settings_material_surfaces_title">Também os fundos</string>
+    <string name="settings_material_surfaces_detail">Aplica também as cores do seu fundo de ecrã aos fundos e cartões. Os gráficos e as pontuações mantêm as suas cores.</string>
 </resources>

@@ -5,6 +5,7 @@ import android.content.SharedPreferences
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.material3.ColorScheme
 import androidx.compose.ui.graphics.Color
 
 // MARK: - PaletteTokens — the per-scheme colour set behind `object Palette`
@@ -96,6 +97,9 @@ data class PaletteTokens(
     // + heroLabel flip with it so the edge stays subtle and the source-badge text stays readable in both.
     val heroFill: Color,
     val heroBorder: Color,
+    // Whether this is a light set. Explicit rather than `active === LightTokens`, because the optional
+    // Material You surfaces (materialYouSurfaces) derive a new set from either one.
+    val light: Boolean = false,
 )
 
 // WHOOP-reset dark palette (gold killed 2026-06-22). Values match StrandPalette.swift's DARK
@@ -158,6 +162,7 @@ val LightTokens = PaletteTokens(
     // Frosted WHITE hero in light mode (#1160), subtle dark edge. (Hero text uses the flip-able text*
     // tokens now, so no separate label token is needed.)
     heroFill = Color(0xD9FFFFFF), heroBorder = Color(0x1A000000),
+    light = true,
 )
 
 // MARK: - Chart style (data-viz colour mode) + the Classic throwback ramps
@@ -387,6 +392,7 @@ object AccentPrefs {
     private const val FILE = "noop_prefs"
     private const val KEY_COLOR = "accent.color"
     private const val KEY_CUSTOM = "accent.customHex"
+    private const val KEY_MATERIAL_SURFACES = "accent.materialSurfaces"
 
     private fun prefs(ctx: Context): SharedPreferences =
         ctx.applicationContext.getSharedPreferences(FILE, Context.MODE_PRIVATE)
@@ -397,7 +403,18 @@ object AccentPrefs {
     var customHex by mutableStateOf(AccentColor.DEFAULT_CUSTOM_HEX)
         private set
 
+    /** Not-Noop, Android 12+: with the Material You accent on, also tint backgrounds, cards and lines from
+     *  the wallpaper (the full Material You look). Default OFF; data colours are never affected. */
+    var materialSurfaces by mutableStateOf(false)
+        private set
+
+    fun setMaterialSurfaces(ctx: Context, enabled: Boolean) {
+        materialSurfaces = enabled
+        prefs(ctx).edit().putBoolean(KEY_MATERIAL_SURFACES, enabled).apply()
+    }
+
     fun load(ctx: Context) {
+        materialSurfaces = prefs(ctx).getBoolean(KEY_MATERIAL_SURFACES, false)
         color = AccentColor.fromStorage(prefs(ctx).getString(KEY_COLOR, AccentColor.MINT.storageValue))
         customHex = prefs(ctx).getString(KEY_CUSTOM, AccentColor.DEFAULT_CUSTOM_HEX)
             ?: AccentColor.DEFAULT_CUSTOM_HEX
@@ -443,4 +460,38 @@ enum class ThemePreset(
                 it.accent == accent && it.chart == chart && it.backdrop == backdrop && it.cardOpacity == cardOpacity
             } ?: CUSTOM
     }
+}
+
+/**
+ * Pure: [base] with its chrome surfaces taken from a Material You [scheme] (Not-Noop, optional, off by
+ * default). Only backgrounds, cards, insets and hairlines change. Text keeps NOOP's own contrast-checked
+ * tokens, and every data colour (recovery, strain, sleep, zones, scores, status) stays exactly as it was,
+ * so the numbers and charts read the same with or without it.
+ *
+ * Light keeps NOOP's shape of a tinted page under lighter cards; dark keeps a deep page under raised
+ * cards, using Material's tonal surface containers for each role.
+ */
+internal fun materialYouSurfaces(base: PaletteTokens, scheme: ColorScheme): PaletteTokens = if (base.light) {
+    base.copy(
+        surfaceBase = scheme.surfaceContainer,
+        surfaceRaised = scheme.surfaceContainerLowest,
+        surfaceOverlay = scheme.surfaceContainerLowest,
+        surfaceInset = scheme.surfaceContainerHigh,
+        hairline = scheme.outlineVariant,
+        hairlineStrong = scheme.outline.copy(alpha = 0.6f),
+        cardFillTop = scheme.surfaceContainerLowest,
+        cardFillBottom = scheme.surfaceContainerLow,
+        heroFill = scheme.surfaceContainerLowest.copy(alpha = base.heroFill.alpha),
+    )
+} else {
+    base.copy(
+        surfaceBase = scheme.surfaceContainerLowest,
+        surfaceRaised = scheme.surfaceContainerHigh,
+        surfaceOverlay = scheme.surfaceContainer,
+        surfaceInset = scheme.surfaceContainerLow,
+        hairline = scheme.outlineVariant,
+        hairlineStrong = scheme.outline.copy(alpha = 0.6f),
+        cardFillTop = scheme.surfaceContainerHigh,
+        cardFillBottom = scheme.surfaceContainer,
+    )
 }

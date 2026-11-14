@@ -2842,4 +2842,6 @@
     <string name="hc_background_sync_title">后台同步</string>
     <string name="hc_background_sync_detail">默认关闭，以节省电量，并让 NOOP 在关闭时不读取你的健康数据。打开 NOOP 时仍会同步。开启后可在两次打开之间保持最新；Android 会询问一次后台访问权限。</string>
     <string name="hc_background_sync_denied">未授予后台访问权限。NOOP 仍会在你打开时同步。</string>
+    <string name="settings_material_surfaces_title">背景也跟随</string>
+    <string name="settings_material_surfaces_detail">背景和卡片也采用壁纸配色。图表和分数保持原有颜色。</string>
 </resources>

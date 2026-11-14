@@ -2767,4 +2767,6 @@
     <string name="hc_background_sync_title">Синхронизация в фоне</string>
     <string name="hc_background_sync_detail">По умолчанию выключено, чтобы экономить заряд и чтобы NOOP не читал ваши данные о здоровье, пока закрыт. При открытии NOOP всё равно синхронизируется. Включите, чтобы данные были свежими между открытиями; Android один раз запросит фоновый доступ.</string>
     <string name="hc_background_sync_denied">Фоновый доступ не предоставлен. NOOP продолжит синхронизацию при открытии.</string>
+    <string name="settings_material_surfaces_title">И фоны тоже</string>
+    <string name="settings_material_surfaces_detail">Окрашивать по обоям также фон и карточки. Графики и оценки сохраняют свои цвета.</string>
 </resources>
