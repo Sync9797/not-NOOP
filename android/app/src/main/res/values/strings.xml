@@ -2903,4 +2903,5 @@
     <string name="hc_background_sync_denied">Background access wasn\'t granted. NOOP will keep syncing when you open it.</string>
     <string name="settings_material_surfaces_title">Backgrounds too</string>
     <string name="settings_material_surfaces_detail">Tint backgrounds and cards from your wallpaper as well. Charts and scores keep their colours.</string>
+    <string name="l10n_app_changelog_background_sync_option_foldable_book_mode_b8358da7">Background sync option, foldable book mode and more Material You</string>
 </resources>

@@ -2769,4 +2769,5 @@
     <string name="hc_background_sync_denied">Фоновый доступ не предоставлен. NOOP продолжит синхронизацию при открытии.</string>
     <string name="settings_material_surfaces_title">И фоны тоже</string>
     <string name="settings_material_surfaces_detail">Окрашивать по обоям также фон и карточки. Графики и оценки сохраняют свои цвета.</string>
+    <string name="l10n_app_changelog_background_sync_option_foldable_book_mode_b8358da7">Фоновая синхронизация по желанию, режим книги для складных телефонов и больше Material You</string>
 </resources>

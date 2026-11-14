@@ -2873,4 +2873,5 @@
     <string name="hc_background_sync_denied">L\'accès en arrière-plan n\'a pas été accordé. NOOP continuera de se synchroniser à l\'ouverture.</string>
     <string name="settings_material_surfaces_title">Fonds aussi</string>
     <string name="settings_material_surfaces_detail">Teinte aussi les fonds et les cartes selon votre fond d\'écran. Les graphiques et les scores gardent leurs couleurs.</string>
+    <string name="l10n_app_changelog_background_sync_option_foldable_book_mode_b8358da7">Synchronisation en arrière-plan en option, mode livre pour les pliables et plus de Material You</string>
 </resources>

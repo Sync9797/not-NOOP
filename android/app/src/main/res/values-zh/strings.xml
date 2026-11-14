@@ -2844,4 +2844,5 @@
     <string name="hc_background_sync_denied">未授予后台访问权限。NOOP 仍会在你打开时同步。</string>
     <string name="settings_material_surfaces_title">背景也跟随</string>
     <string name="settings_material_surfaces_detail">背景和卡片也采用壁纸配色。图表和分数保持原有颜色。</string>
+    <string name="l10n_app_changelog_background_sync_option_foldable_book_mode_b8358da7">可选后台同步、折叠屏书本模式和更多 Material You</string>
 </resources>

@@ -2842,4 +2842,5 @@
     <string name="hc_background_sync_denied">Accesso in background non concesso. NOOP continuerà a sincronizzarsi quando lo apri.</string>
     <string name="settings_material_surfaces_title">Anche gli sfondi</string>
     <string name="settings_material_surfaces_detail">Colora anche sfondi e schede in base allo sfondo del telefono. Grafici e punteggi mantengono i loro colori.</string>
+    <string name="l10n_app_changelog_background_sync_option_foldable_book_mode_b8358da7">Sincronizzazione in background opzionale, modalità libro per i pieghevoli e più Material You</string>
 </resources>

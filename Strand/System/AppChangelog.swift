@@ -7,7 +7,7 @@ enum AppChangelog {
 
     /// Bump this when you add a release below. The "What's New" sheet shows automatically when the
     /// stored last-seen version is behind this. (Decoupled from the bundle version on purpose.)
-    static let currentVersion = "12.2.1"
+    static let currentVersion = "12.3.0"
 
     struct Release: Identifiable {
         let version: String
@@ -19,6 +19,18 @@ enum AppChangelog {
 
     /// Newest first.
     static let releases: [Release] = [
+        Release(
+            version: "12.3.0",
+            title: "Background sync option, foldable book mode and more Material You",
+            date: "November 2026",
+            items: [
+                "**Optional background Health Connect sync.** A new switch under Data Sources keeps Health Connect data fresh while NOOP is closed. It is off by default to save battery and keep your health data untouched while the app is closed; opening NOOP still syncs either way.",
+                "**Stress after activity is marked.** The hour after you were moving is lightly shaded on the stress card and widget, since heart rate may still be settling. The readings themselves are unchanged.",
+                "**Foldables held like a book** keep screens to one side of the hinge, so no text sits in the crease.",
+                "**Full Material You, if you want it.** With wallpaper colours on, a new \"Backgrounds too\" switch tints backgrounds and cards from your wallpaper. Charts and scores keep their own colours.",
+                "**Your wallpaper on every full page.** The guides, steps calibration and live session and workout screens now show your sky or background image, and the guides use a readable column on tablets.",
+            ]
+        ),
         Release(
             version: "12.2.1",
             title: "Stress and Coach brief for AI Widget Maker",

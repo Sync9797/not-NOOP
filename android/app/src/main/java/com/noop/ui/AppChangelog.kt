@@ -26,7 +26,7 @@ object AppChangelog {
      * Bump this when you add a release below. The "What's New" sheet shows automatically when the
      * stored last-seen version is behind this. (Decoupled from the bundle version on purpose.)
      */
-    const val CURRENT_VERSION = "12.2.1"
+    const val CURRENT_VERSION = "12.3.0"
 
     data class Release(
         val version: String,
@@ -37,6 +37,18 @@ object AppChangelog {
 
     /** Newest first. */
     val releases: List<Release> = listOf(
+        Release(
+            version = "12.3.0",
+            title = uiString(R.string.l10n_app_changelog_background_sync_option_foldable_book_mode_b8358da7),
+            date = "November 2026",
+            items = listOf(
+                "**Optional background Health Connect sync.** A new switch under Data Sources keeps Health Connect data fresh while NOOP is closed. It is off by default to save battery and keep your health data untouched while the app is closed; opening NOOP still syncs either way.",
+                "**Stress after activity is marked.** The hour after you were moving is lightly shaded on the stress card and widget, since heart rate may still be settling. The readings themselves are unchanged.",
+                "**Foldables held like a book** keep screens to one side of the hinge, so no text sits in the crease.",
+                "**Full Material You, if you want it.** With wallpaper colours on, a new \"Backgrounds too\" switch tints backgrounds and cards from your wallpaper. Charts and scores keep their own colours.",
+                "**Your wallpaper on every full page.** The guides, steps calibration and live session and workout screens now show your sky or background image, and the guides use a readable column on tablets.",
+            ),
+        ),
         Release(
             version = "12.2.1",
             title = uiString(R.string.l10n_app_changelog_stress_and_coach_brief_for_ai_894cea69),
