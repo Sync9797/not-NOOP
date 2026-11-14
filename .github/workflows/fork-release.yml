@@ -60,8 +60,28 @@ jobs:
             exit 1
           fi
 
-  bump:
+  # The unit tests must pass before anything is bumped, tagged or published. Robolectric fetches its
+  # Android runtime jars from Maven Central at test time, which a hosted runner can reach.
+  test:
     needs: preflight
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    defaults:
+      run:
+        working-directory: android
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+      - uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5.6.0
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/wrapper-validation@0723195856401067f7a2779048b490ace7a47d7c # v5.0.2
+      - uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5.0.2
+      - name: Unit tests
+        run: ./gradlew testFullDebugUnitTest
+
+  bump:
+    needs: [preflight, test]
     runs-on: ubuntu-latest
     # Pushes the version-bump commit to the dispatched branch and creates the GitHub release.
     permissions:
@@ -73,6 +93,8 @@ jobs:
       buildVersion: ${{ steps.b.outputs.buildVersion }}
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          fetch-depth: 0   # history + tags, for the same-version guard below
       - id: b
         env:
           GH_TOKEN: ${{ github.token }}
@@ -97,6 +119,23 @@ jobs:
           echo "ver=$NEW" >> "$GITHUB_OUTPUT"
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
           echo "Version: $CUR -> $NEW  (tag $TAG)"
+
+          # Same-version guard. Re-running a release for a version that already exists is allowed only
+          # when the app code is what that release was built from (a re-run refreshing its assets).
+          # Otherwise the APK would change under an unchanged version number: phones that installed the
+          # first one would never be offered the second. Bump the version instead.
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            TAG_SHA=$(git rev-list -n 1 "$TAG" 2>/dev/null || true)
+            if [ -z "$TAG_SHA" ]; then
+              echo "::error::Release $TAG exists but its tag is not in this checkout; cannot confirm the code is unchanged. Bump the version."
+              exit 1
+            fi
+            if ! git diff --quiet "$TAG_SHA" HEAD -- android/app/src/main android/app/build.gradle.kts; then
+              echo "::error::Release $TAG already exists and the app code has changed since it was built. Run again with a version bump (patch / minor / major)."
+              exit 1
+            fi
+            echo "Release $TAG exists and the app code is unchanged since it: refreshing its assets."
+          fi
 
           if [ "$NEW" != "$CUR" ]; then
             # Bump BOTH platforms' version + build number in source, then commit to the branch so the
