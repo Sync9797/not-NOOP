@@ -58,6 +58,8 @@ import androidx.compose.ui.platform.LocalContext
 import android.content.ClipData
 import android.content.ClipboardManager
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -200,7 +202,8 @@ fun NoopCard(
             .frostedCardSurface(tint = tint, cornerRadius = Metrics.cardRadius)
             .padding(padding),
     ) {
-        content()
+        // Inside a card the text sits on the card, not the wallpaper.
+        CompositionLocalProvider(LocalOnBackdrop provides false) { content() }
     }
 }
 
@@ -270,6 +273,14 @@ fun Overline(text: String, modifier: Modifier = Modifier, color: Color = Palette
 
 // MARK: - Section header
 
+/**
+ * Not-Noop: true while content is laid straight on a full-screen wallpaper (a custom background image, or
+ * the sky with "Sky behind cards"), set by ScreenScaffold / LazyScreenScaffold and cleared again inside
+ * [NoopCard]. Text that reads it switches to light with a soft shadow, as the screen titles do, because
+ * the theme's dark text is unreadable on a dark photo.
+ */
+val LocalOnBackdrop = compositionLocalOf { false }
+
 @Composable
 fun SectionHeader(
     title: String,
@@ -277,6 +288,8 @@ fun SectionHeader(
     trailing: String? = null,
     modifier: Modifier = Modifier,
 ) {
+    val onBackdrop = LocalOnBackdrop.current
+    val shadow = if (onBackdrop) Palette.backdropTextShadow else null
     Column(
         modifier = modifier.fillMaxWidth(),
     ) {
@@ -285,13 +298,29 @@ fun SectionHeader(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.Top,
             ) {
-                if (overline != null) Overline(overline, modifier = Modifier.weight(1f))
+                if (overline != null) {
+                    if (onBackdrop) {
+                        Text(
+                            overline.uppercase(),
+                            style = NoopType.overline.copy(shadow = shadow),
+                            color = Palette.onDarkSecondary,
+                            modifier = Modifier.weight(1f),
+                        )
+                    } else {
+                        Overline(overline, modifier = Modifier.weight(1f))
+                    }
+                }
                 if (trailing != null) {
-                    Text(trailing, style = NoopType.footnote, color = Palette.textSecondary)
+                    Text(
+                        trailing,
+                        style = NoopType.footnote.copy(shadow = shadow),
+                        color = if (onBackdrop) Palette.onDarkSecondary else Palette.textSecondary,
+                    )
                 }
             }
         }
-        Text(title, style = NoopType.title2, color = Palette.textPrimary)
+        Text(title, style = NoopType.title2.copy(shadow = shadow),
+            color = if (onBackdrop) Palette.onDarkPrimary else Palette.textPrimary)
     }
 }
 
@@ -1374,7 +1403,10 @@ fun ScreenScaffold(
                     if (trailing != null) trailing()
                 }
             }
-            content()
+            // Not-Noop: headers placed straight on a full-screen wallpaper read light (see LocalOnBackdrop).
+            CompositionLocalProvider(LocalOnBackdrop provides (backdrop != null && backdropFullBleed)) {
+                content()
+            }
         }
     }
 
@@ -1520,19 +1552,22 @@ fun LazyScreenScaffold(
         // as weight() still reach the parent layout.
         BoxWithConstraints(modifier = listModifier) {
             val side = readableSidePadding(maxWidth)
-            LazyColumn(
-                modifier = Modifier.fillMaxWidth(),
-                state = listState,
-                contentPadding = PaddingValues(start = side, top = topPadding, end = side, bottom = 28.dp),
-                // #765: the shared inter-card spacing token by default (Today/Explore + the eager screens share
-                // one uniform card rhythm); a caller may pass a tighter [rowSpacing] (the liquid Today does, for
-                // the iOS-compact section rhythm).
-                verticalArrangement = Arrangement.spacedBy(rowSpacing),
-            ) {
-                if (header != null) {
-                    item { header() }
+            // Not-Noop: headers placed straight on a full-screen wallpaper read light (see LocalOnBackdrop).
+            CompositionLocalProvider(LocalOnBackdrop provides (backdrop != null && backdropFullBleed)) {
+                LazyColumn(
+                    modifier = Modifier.fillMaxWidth(),
+                    state = listState,
+                    contentPadding = PaddingValues(start = side, top = topPadding, end = side, bottom = 28.dp),
+                    // #765: the shared inter-card spacing token by default (Today/Explore + the eager screens share
+                    // one uniform card rhythm); a caller may pass a tighter [rowSpacing] (the liquid Today does, for
+                    // the iOS-compact section rhythm).
+                    verticalArrangement = Arrangement.spacedBy(rowSpacing),
+                ) {
+                    if (header != null) {
+                        item { header() }
+                    }
+                    content()
                 }
-                content()
             }
         }
     }

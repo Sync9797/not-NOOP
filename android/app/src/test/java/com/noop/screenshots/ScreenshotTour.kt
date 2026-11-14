@@ -11,6 +11,7 @@ import com.noop.ui.LazyScreenScaffold
 import com.noop.ui.NoopCard
 import com.noop.ui.NoopPrefs
 import com.noop.ui.NoopTheme
+import com.noop.ui.SectionHeader
 import com.noop.ui.ScoringGuideScreen
 import com.noop.ui.TabletopNavPad
 import com.noop.ui.Destination
@@ -58,6 +59,24 @@ class ScreenshotTour {
     @Test @Config(qualifiers = PHONE) fun phoneScoringGuide() = shoot("phone-scoring-guide") { ScoringGuideScreen(onClose = {}) }
     @Test @Config(qualifiers = PHONE_NIGHT) fun phoneModelComparisonNight() = shoot("phone-model-comparison-night") { WhoopModelComparisonScreen(onClose = {}) }
     @Test @Config(qualifiers = TABLET) fun tabletScoringGuide() = shoot("tablet-scoring-guide") { ScoringGuideScreen(onClose = {}) }
+
+    // Section headers straight on a full-screen wallpaper read light; one inside a card stays dark.
+    @Test @Config(qualifiers = PHONE) fun phoneHeadersOnWallpaper() = shootFullBleed("phone-headers-on-wallpaper")
+    @Test @Config(qualifiers = PHONE_NIGHT) fun phoneHeadersOnWallpaperNight() = shootFullBleed("phone-headers-on-wallpaper-night")
+
+    private fun shootFullBleed(name: String) {
+        NoopPrefs.setSkyBehindCards(RuntimeEnvironment.getApplication(), true)
+        try {
+            shoot(name) {
+                LazyScreenScaffold(title = "Sleep", subtitle = "Headers over the wallpaper") {
+                    item { SectionHeader("Sleep performance", overline = "Last night", trailing = "Rest") }
+                    item { NoopCard { SectionHeader("Inside a card", overline = "Stays dark", trailing = "Trend") } }
+                }
+            }
+        } finally {
+            NoopPrefs.setSkyBehindCards(RuntimeEnvironment.getApplication(), false)
+        }
+    }
 
     // The bottom half of a half-folded phone (tabletop), where the nav pad replaces the bar.
     @Test @Config(qualifiers = TABLETOP_HALF) fun tabletopNavPad() =
