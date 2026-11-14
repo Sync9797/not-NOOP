@@ -57,6 +57,39 @@ class AdaptiveLayoutTest {
         assertNull(tabletopHinge(true, true, 1100, 1100, shellTopInWindowPx = 0, shellHeightPx = 0, minHalfPx = 400))
     }
 
+    @Test fun aBookFoldWinsOverWidthButNotOverTabletop() {
+        val book = BookHinge(startWidthPx = 900, hingeWidthPx = 0)
+        for (w in WindowWidthClass.entries) {
+            assertEquals(ShellNavigation.BOOK, shellNavigationFor(w, null, book))
+        }
+        assertEquals(ShellNavigation.TABLETOP, shellNavigationFor(WindowWidthClass.EXPANDED, TabletopHinge(1000, 1000), book))
+    }
+
+    @Test fun onlyAHalfOpenedVerticalFoldIsBook() {
+        fun hinge(halfOpened: Boolean, vertical: Boolean) = bookHinge(
+            halfOpened, vertical, foldLeftInWindowPx = 900, foldRightInWindowPx = 900,
+            shellLeftInWindowPx = 0, shellWidthPx = 1800, minHalfPx = 400,
+        )
+        assertEquals(BookHinge(startWidthPx = 900, hingeWidthPx = 0), hinge(halfOpened = true, vertical = true))
+        assertNull("flat is not book", hinge(halfOpened = false, vertical = true))
+        assertNull("tabletop is not book", hinge(halfOpened = true, vertical = false))
+    }
+
+    @Test fun theBookHingeIsInShellCoordinatesAndMirrorsForRightToLeft() {
+        // A 30px hinge from x=900 to x=930 in a shell starting at x=100, 1700px wide.
+        assertEquals(BookHinge(startWidthPx = 800, hingeWidthPx = 30),
+            bookHinge(true, true, 900, 930, shellLeftInWindowPx = 100, shellWidthPx = 1700, minHalfPx = 400))
+        // Right-to-left: the start half is the right one, 1700 - 830 = 870px wide.
+        assertEquals(BookHinge(startWidthPx = 870, hingeWidthPx = 30),
+            bookHinge(true, true, 900, 930, shellLeftInWindowPx = 100, shellWidthPx = 1700, minHalfPx = 400, rightToLeft = true))
+    }
+
+    @Test fun aBookFoldThatLeavesASliverIsIgnored() {
+        assertNull(bookHinge(true, true, 900, 900, shellLeftInWindowPx = 800, shellWidthPx = 1000, minHalfPx = 400))
+        assertNull(bookHinge(true, true, 900, 900, shellLeftInWindowPx = 0, shellWidthPx = 1000, minHalfPx = 400))
+        assertNull(bookHinge(true, true, 900, 900, shellLeftInWindowPx = 0, shellWidthPx = 0, minHalfPx = 400))
+    }
+
     @Test fun phonesKeepThe28dpInset() {
         for (w in listOf(320.dp, 360.dp, 412.dp, 480.dp, 776.dp)) {
             assertEquals("width $w", 28.dp, readableSidePadding(w))

@@ -383,7 +383,7 @@ object BottomBarStyleStore {
     fun barHeightForContent(): Dp = if (overlay && barOverlaysContent) barHeight else 0.dp
 
     /**
-     * False while the shell shows a navigation rail or the tabletop split, where no bar floats over a
+     * False while the shell shows a navigation rail, the tabletop split or the book split, where no bar floats over a
      * screen's content, so screens must not keep a last-measured bar height as bottom padding. Set by
      * [AppRoot] from its [ShellNavigation]; true on phones, so the phone layout is unchanged.
      */
@@ -601,13 +601,18 @@ fun AppRoot(viewModel: AppViewModel = viewModel()) {
     // window coordinates.
     var shellTopPx by remember { mutableIntStateOf(0) }
     var shellHeightPx by remember { mutableIntStateOf(0) }
+    var shellLeftPx by remember { mutableIntStateOf(0) }
+    var shellWidthPx by remember { mutableIntStateOf(0) }
     val widthClass = WindowWidthClass.forWidth(LocalConfiguration.current.screenWidthDp.dp)
-    val hinge = rememberTabletopHinge(
+    val (hinge, bookHinge) = rememberFoldHinges(
         shellTopInWindowPx = shellTopPx,
         shellHeightPx = shellHeightPx,
+        shellLeftInWindowPx = shellLeftPx,
+        shellWidthPx = shellWidthPx,
         minHalfPx = with(density) { 160.dp.roundToPx() },
+        rightToLeft = LocalLayoutDirection.current == androidx.compose.ui.unit.LayoutDirection.Rtl,
     )
-    val shellNav = shellNavigationFor(widthClass, hinge)
+    val shellNav = shellNavigationFor(widthClass, hinge, bookHinge)
     // Screens pad their content for the bar only while it floats over them (the phone layout).
     SideEffect { BottomBarStyleStore.barOverlaysContent = shellNav == ShellNavigation.BOTTOM_BAR }
     val onShellTabSelected: (Destination) -> Unit = { dest ->
@@ -620,6 +625,8 @@ fun AppRoot(viewModel: AppViewModel = viewModel()) {
             .onGloballyPositioned {
                 shellTopPx = it.positionInWindow().y.roundToInt()
                 shellHeightPx = it.size.height
+                shellLeftPx = it.positionInWindow().x.roundToInt()
+                shellWidthPx = it.size.width
             },
     ) {
         // Large screens / foldables: a rail beside the screens on a wide window, or screens above the hinge
@@ -630,7 +637,14 @@ fun AppRoot(viewModel: AppViewModel = viewModel()) {
         // it on entry.
         if (shellNav != ShellNavigation.BOTTOM_BAR) ShellBackdrop(refreshKey = currentRoute)
         Row(Modifier.fillMaxSize()) {
-            Column(Modifier.weight(1f).fillMaxHeight()) {
+            Column(
+                // Book posture: the screens fill only the half before the hinge.
+                if (shellNav == ShellNavigation.BOOK && bookHinge != null) {
+                    Modifier.width(with(density) { bookHinge.startWidthPx.toDp() }).fillMaxHeight()
+                } else {
+                    Modifier.weight(1f).fillMaxHeight()
+                },
+            ) {
                 Box(
                     if (shellNav == ShellNavigation.TABLETOP && hinge != null) {
                         Modifier.fillMaxWidth().height(with(density) { hinge.topPx.toDp() })
@@ -890,6 +904,14 @@ fun AppRoot(viewModel: AppViewModel = viewModel()) {
             // The rail sits on the END edge (right in left-to-right languages), under a right thumb, like the
             // iPad dock. Mirrors automatically in right-to-left layouts.
             if (shellNav == ShellNavigation.RAIL) GlassNavRail(current = current, onTabSelected = onShellTabSelected)
+            if (shellNav == ShellNavigation.BOOK && bookHinge != null) {
+                // Past the hinge: the wallpaper, with the rail at the far edge under the hand holding that
+                // half. Using this half for a second screen would need two-pane layouts, which NOOP's
+                // screens do not have yet.
+                Spacer(Modifier.width(with(density) { bookHinge.hingeWidthPx.toDp() }))
+                Spacer(Modifier.weight(1f))
+                GlassNavRail(current = current, onTabSelected = onShellTabSelected)
+            }
         }
 
         // Quick-actions sheet, opened by the raised gold centre FAB. Each row routes to an
@@ -1317,7 +1339,7 @@ private fun GlassBottomBar(
 private fun shellContentInsets(shellNav: ShellNavigation): WindowInsets = when (shellNav) {
     ShellNavigation.BOTTOM_BAR -> ScaffoldDefaults.contentWindowInsets
     // The rail beside the screens owns the end inset.
-    ShellNavigation.RAIL -> ScaffoldDefaults.contentWindowInsets
+    ShellNavigation.RAIL, ShellNavigation.BOOK -> ScaffoldDefaults.contentWindowInsets
         .only(WindowInsetsSides.Top + WindowInsetsSides.Bottom + WindowInsetsSides.Start)
     // The top half ends at the hinge, so it has no bottom system bar to clear.
     ShellNavigation.TABLETOP -> ScaffoldDefaults.contentWindowInsets

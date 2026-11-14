@@ -48,14 +48,28 @@ enum class ShellNavigation {
 
     /** Half-folded with a horizontal hinge: screens above the hinge, the bar below it. */
     TABLETOP,
+
+    /** Half-folded with a vertical hinge, held like a book: screens in the half before the hinge, the
+     *  rail at the far edge of the other, so no text sits in the crease. */
+    BOOK,
 }
 
 /** A half-opened horizontal fold, as pixel offsets from the top of the app shell. */
 data class TabletopHinge(val topPx: Int, val bottomPx: Int)
 
-/** Tabletop wins over width (a half-folded device is held like a laptop); then wide windows get the rail. */
-internal fun shellNavigationFor(widthClass: WindowWidthClass, tabletop: TabletopHinge?): ShellNavigation = when {
+/** A half-opened vertical fold: [startWidthPx] is the width of the half before the hinge (the left half
+ *  in left-to-right layouts), [hingeWidthPx] the hinge itself (zero on most foldables). */
+data class BookHinge(val startWidthPx: Int, val hingeWidthPx: Int)
+
+/** A fold posture wins over width (a half-folded device is held like a laptop or a book); then wide
+ *  windows get the rail. */
+internal fun shellNavigationFor(
+    widthClass: WindowWidthClass,
+    tabletop: TabletopHinge?,
+    book: BookHinge? = null,
+): ShellNavigation = when {
     tabletop != null -> ShellNavigation.TABLETOP
+    book != null -> ShellNavigation.BOOK
     widthClass != WindowWidthClass.COMPACT -> ShellNavigation.RAIL
     else -> ShellNavigation.BOTTOM_BAR
 }
@@ -85,20 +99,55 @@ internal fun tabletopHinge(
 }
 
 /**
- * The current tabletop hinge, or null. Reads androidx.window's fold reports for the hosting activity;
- * on a device without a fold the flow simply never reports one.
+ * Pure: the book hinge in shell coordinates, or null when the fold is not a book one.
+ *
+ * Book means HALF_OPENED with a VERTICAL fold. Same guards as [tabletopHinge]: a fold outside the shell,
+ * or one leaving either half narrower than [minHalfPx], is ignored. In right-to-left layouts the start
+ * half is the right one, so its width is measured from the shell's right edge.
  */
+internal fun bookHinge(
+    halfOpened: Boolean,
+    vertical: Boolean,
+    foldLeftInWindowPx: Int,
+    foldRightInWindowPx: Int,
+    shellLeftInWindowPx: Int,
+    shellWidthPx: Int,
+    minHalfPx: Int,
+    rightToLeft: Boolean = false,
+): BookHinge? {
+    if (!halfOpened || !vertical || shellWidthPx <= 0) return null
+    val left = foldLeftInWindowPx - shellLeftInWindowPx
+    val right = foldRightInWindowPx - shellLeftInWindowPx
+    if (left < minHalfPx || shellWidthPx - right < minHalfPx || right < left) return null
+    val start = if (rightToLeft) shellWidthPx - right else left
+    return BookHinge(startWidthPx = start, hingeWidthPx = right - left)
+}
+
+/** The hosting activity's current fold, or null. On a device without a fold the flow never reports one. */
 @Composable
-internal fun rememberTabletopHinge(shellTopInWindowPx: Int, shellHeightPx: Int, minHalfPx: Int): TabletopHinge? {
+private fun rememberFold(): FoldingFeature? {
     val activity = LocalContext.current.findHostActivity()
     val layoutInfoFlow = remember(activity) {
         activity?.let { WindowInfoTracker.getOrCreate(it).windowLayoutInfo(it) }
     }
     val layoutInfo = layoutInfoFlow?.collectAsState(initial = null)?.value
-    val fold = layoutInfo?.displayFeatures?.filterIsInstance<FoldingFeature>()?.firstOrNull()
-        ?: return null
-    return tabletopHinge(
-        halfOpened = fold.state == FoldingFeature.State.HALF_OPENED,
+    return layoutInfo?.displayFeatures?.filterIsInstance<FoldingFeature>()?.firstOrNull()
+}
+
+/** The current tabletop and book hinges (at most one is non-null), from androidx.window's fold reports. */
+@Composable
+internal fun rememberFoldHinges(
+    shellTopInWindowPx: Int,
+    shellHeightPx: Int,
+    shellLeftInWindowPx: Int,
+    shellWidthPx: Int,
+    minHalfPx: Int,
+    rightToLeft: Boolean,
+): Pair<TabletopHinge?, BookHinge?> {
+    val fold = rememberFold() ?: return null to null
+    val halfOpened = fold.state == FoldingFeature.State.HALF_OPENED
+    val tabletop = tabletopHinge(
+        halfOpened = halfOpened,
         horizontal = fold.orientation == FoldingFeature.Orientation.HORIZONTAL,
         foldTopInWindowPx = fold.bounds.top,
         foldBottomInWindowPx = fold.bounds.bottom,
@@ -106,6 +155,17 @@ internal fun rememberTabletopHinge(shellTopInWindowPx: Int, shellHeightPx: Int, 
         shellHeightPx = shellHeightPx,
         minHalfPx = minHalfPx,
     )
+    val book = bookHinge(
+        halfOpened = halfOpened,
+        vertical = fold.orientation == FoldingFeature.Orientation.VERTICAL,
+        foldLeftInWindowPx = fold.bounds.left,
+        foldRightInWindowPx = fold.bounds.right,
+        shellLeftInWindowPx = shellLeftInWindowPx,
+        shellWidthPx = shellWidthPx,
+        minHalfPx = minHalfPx,
+        rightToLeft = rightToLeft,
+    )
+    return tabletop to book
 }
 
 private tailrec fun Context.findHostActivity(): Activity? = when (this) {
