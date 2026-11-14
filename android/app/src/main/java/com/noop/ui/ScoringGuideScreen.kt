@@ -167,7 +167,8 @@ fun ScoringGuideScreen(
         if (highlighted == section) highlighted = null
     }
 
-    Surface(modifier = Modifier.fillMaxSize(), color = Palette.surfaceBase) {
+    WallpaperPage {
+    Surface(modifier = Modifier.fillMaxSize(), color = androidx.compose.ui.graphics.Color.Transparent) {
         Column(modifier = Modifier.fillMaxSize()) {
             // Design Reset: a FLAT opaque WHOOP-grey title surface — no scenic hero, no bloom, no
             // domain tint. The header reads as a clean raised card edge, matching the Today look.
@@ -184,7 +185,9 @@ fun ScoringGuideScreen(
                         if (viewportTop == null) viewportTop = it.positionInRoot().y.toInt()
                     }
                     .verticalScroll(scroll)
-                    .padding(20.dp),
+                    // Not-Noop: a readable column on tablets; on a phone this is the same 20dp all round.
+                    .readableHorizontalPadding(minimum = 20.dp)
+                    .padding(vertical = 20.dp),
                 verticalArrangement = Arrangement.spacedBy(Metrics.sectionGap),
             ) {
                 IntroCard()
@@ -219,6 +222,7 @@ fun ScoringGuideScreen(
             Hairline()
             Footer(onClose = onClose)
         }
+    }
     }
 }
 

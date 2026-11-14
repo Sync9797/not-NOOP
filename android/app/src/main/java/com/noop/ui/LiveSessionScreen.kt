@@ -135,7 +135,8 @@ fun LiveSessionScreen(vm: AppViewModel, onClose: () -> Unit) {
     if (runner == null) return
 
     val snap by runner.snapshot.collectAsStateWithLifecycle()
-    Box(modifier = Modifier.fillMaxSize().background(Palette.surfaceBase)) {
+    WallpaperPage {
+    Box(modifier = Modifier.fillMaxSize()) {
         if (snap.ended) {
             LiveSessionSummary(
                 vm = vm,
@@ -149,6 +150,7 @@ fun LiveSessionScreen(vm: AppViewModel, onClose: () -> Unit) {
         } else {
             LiveSessionBody(runner = runner, snap = snap, onEnd = { runner.end() })
         }
+    }
     }
 }
 

@@ -115,7 +115,8 @@ fun LiveWorkoutScreen(vm: AppViewModel, onClose: () -> Unit) {
 
     // A scenic Effort-tinted backdrop behind the whole in-exercise screen — the live workout reads as
     // an Effort-world hero, not a flat panel.
-    Box(modifier = Modifier.fillMaxSize().background(Palette.surfaceBase)) {
+    WallpaperPage {
+    Box(modifier = Modifier.fillMaxSize()) {
         ScenicHeroBackground(modifier = Modifier.matchParentSize(), domain = DomainTheme.Effort)
         // #845: the in-exercise content is fixed-height (HR hero + effort gauge + zone rail + stat row +
         // End button). On a tall, content-dense screen it ran PAST the available height: the old layout was a
@@ -232,6 +233,7 @@ fun LiveWorkoutScreen(vm: AppViewModel, onClose: () -> Unit) {
                 ) { Text(uiString(R.string.workout_action_end), style = NoopType.headline) }
             }
         }
+    }
     }
 
     // Confirm before ending (#517): a stray tap on "End workout" used to stop the session and

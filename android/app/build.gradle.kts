@@ -18,6 +18,12 @@ val requestedReleaseBuild = gradle.startParameter.taskNames.any {
     it.contains("Release", ignoreCase = true)
 }
 
+// Not-Noop screenshot tour (docs/SCREENSHOTS.md): `-PnoopScreenshots` renders real screens to PNGs under
+// app/build/screenshots with Robolectric. Off by default, so ordinary test runs and CI are unchanged:
+// merging app resources into unit tests slows every run, and only the tour needs them.
+val noopScreenshots = providers.gradleProperty("noopScreenshots").isPresent
+val noopScreenshotDir = layout.buildDirectory.dir("screenshots")
+
 android {
     namespace = "com.noop"
     compileSdk = 35
@@ -53,6 +59,11 @@ android {
                 keyPassword = keystoreProps.getProperty("keyPassword")
             }
         }
+    }
+
+    testOptions {
+        // Only the screenshot tour needs real resources inside Robolectric (see noopScreenshots above).
+        unitTests.isIncludeAndroidResources = noopScreenshots
     }
 
     buildTypes {
@@ -237,6 +248,10 @@ tasks.withType<Test>().configureEach {
     dependsOn(syncRoomSchemaSnapshot)
     systemProperty("room.schemaLocation", roomSchemaSnapshotDir.get().asFile.absolutePath)
     inputs.dir(roomSchemaSnapshotDir).withPropertyName("roomSchemas").optional()
+    if (noopScreenshots) {
+        systemProperty("noop.screenshots.dir", noopScreenshotDir.get().asFile.absolutePath)
+        outputs.upToDateWhen { false } // a tour is always re-rendered
+    }
 }
 
 // Resolve every external module to the exact version recorded in app/gradle.lockfile. Direct

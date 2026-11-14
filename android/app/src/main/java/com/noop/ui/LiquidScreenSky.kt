@@ -6,7 +6,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -90,5 +92,33 @@ fun LiquidScreenSky(height: Dp = 340.dp, fillHeight: Boolean = false) {
             // A partial settle in fill-height mode keeps the horizon tint alive behind the scroll.
             settleStrength = if (fillHeight) 0.78f else 1f,
         )
+    }
+}
+
+/**
+ * Not-Noop: a full-screen page that does not use ScreenScaffold / LazyScreenScaffold (guides, live
+ * session and workout, steps calibration) still shows the user's backdrop, so moving into it from a
+ * scaffold screen no longer drops to flat canvas. Same image > sky > canvas precedence as
+ * [screenBackdropSlot]. These pages put body text straight on the background rather than on cards, so
+ * the backdrop sits under a [StrandAlpha.wallpaperScrim] canvas wash: the wallpaper's colour shows
+ * through while text keeps its normal contrast. With no backdrop chosen it is plain canvas, as before.
+ */
+@Composable
+fun WallpaperPage(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
+    val context = LocalContext.current
+    val showDayCycle = remember { NoopPrefs.showDayCycleBackground(context) }
+    val skyBehindCards = remember { NoopPrefs.skyBehindCards(context) }
+    val backdrop = screenBackdropSlot(showDayCycle, skyBehindCards)
+    Box(modifier = modifier.fillMaxSize().background(Palette.surfaceBase)) {
+        if (backdrop != null) {
+            backdrop()
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Palette.surfaceBase.copy(alpha = StrandAlpha.wallpaperScrim))
+                    .clearAndSetSemantics {},
+            )
+        }
+        content()
     }
 }

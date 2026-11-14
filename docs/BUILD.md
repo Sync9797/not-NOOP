@@ -348,6 +348,8 @@ xcodebuild -project Strand.xcodeproj -scheme Strand -destination 'platform=macOS
 
 ---
 
+To look at Android screens without a device, see [SCREENSHOTS.md](SCREENSHOTS.md) (`-PnoopScreenshots`).
+
 ## Credits
 
 NOOP builds on prior community reverse-engineering and interoperability work:

@@ -148,7 +148,8 @@ fun StepsCalibrationScreen(
         if (motions.isNotEmpty()) sampleMotion = motions.sorted()[motions.size / 2]
     }
 
-    Surface(modifier = Modifier.fillMaxSize(), color = Palette.surfaceBase) {
+    WallpaperPage {
+    Surface(modifier = Modifier.fillMaxSize(), color = androidx.compose.ui.graphics.Color.Transparent) {
         Column(modifier = Modifier.fillMaxSize()) {
             Header(onClose)
             Hairline()
@@ -161,7 +162,8 @@ fun StepsCalibrationScreen(
                     // not inherit the scaffold's bar clearance. In the overlay layout the screen reaches the
                     // bottom edge, so without this the last rows sit behind the bar. Zero when the overlay
                     // is off. Any future destination that scrolls outside ScreenScaffold needs the same.
-                    .padding(20.dp)
+                    .readableHorizontalPadding(minimum = 20.dp)
+                    .padding(vertical = 20.dp)
                     .padding(bottom = BottomBarStyleStore.barHeightForContent()),
                 verticalArrangement = Arrangement.spacedBy(Metrics.sectionGap),
             ) {
@@ -183,6 +185,7 @@ fun StepsCalibrationScreen(
             Hairline()
             Footer(onClose)
         }
+    }
     }
 }
 

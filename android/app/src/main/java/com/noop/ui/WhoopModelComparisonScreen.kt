@@ -108,7 +108,8 @@ private val CAPABILITIES: List<CapabilityRow> = listOf(
 @Composable
 fun WhoopModelComparisonScreen(onClose: () -> Unit) {
     val scroll = rememberScrollState()
-    Surface(modifier = Modifier.fillMaxSize(), color = Palette.surfaceBase) {
+    WallpaperPage {
+    Surface(modifier = Modifier.fillMaxSize(), color = androidx.compose.ui.graphics.Color.Transparent) {
         Column(modifier = Modifier.fillMaxSize()) {
             Header(onClose)
             Hairline()
@@ -117,7 +118,9 @@ fun WhoopModelComparisonScreen(onClose: () -> Unit) {
                     .weight(1f)
                     .fillMaxWidth()
                     .verticalScroll(scroll)
-                    .padding(20.dp),
+                    // Not-Noop: a readable column on tablets; on a phone this is the same 20dp all round.
+                    .readableHorizontalPadding(minimum = 20.dp)
+                    .padding(vertical = 20.dp),
                 verticalArrangement = Arrangement.spacedBy(Metrics.sectionGap),
             ) {
                 IntroCard()
@@ -127,6 +130,7 @@ fun WhoopModelComparisonScreen(onClose: () -> Unit) {
             Hairline()
             Footer(onClose)
         }
+    }
     }
 }
 
