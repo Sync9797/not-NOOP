@@ -82,6 +82,47 @@ class StressTraceTest {
         assertEquals(75f, span.endInclusive, 0.001f)
     }
 
+    // MARK: - after activity (display-only shading)
+
+    @Test
+    fun `the scored hour right after a moving stretch is shaded and later hours are not`() {
+        val day = listOf(at(0, 1.0), at(1, null, moving = true), at(2, 2.6), at(3, 1.2))
+        val span = StressTrace.afterActivitySpans(day, 90f).single()
+        // Hour 2 only: midpoint to each neighbour, so it starts where the moving stretch ends.
+        assertEquals(45f, span.start, 0.001f)
+        assertEquals(75f, span.endInclusive, 0.001f)
+    }
+
+    @Test
+    fun `half-hour points within the hour after moving shade as one stretch`() {
+        val day = listOf(
+            StressPoint(0, 1.0), StressPoint(1800, null, moving = true),
+            StressPoint(3600, 2.4), StressPoint(5400, 2.2), StressPoint(7200, 1.5),
+        )
+        // 3600 and 5400 are 30 and 60 minutes after the moving point; 7200 is 90 minutes after.
+        assertEquals(1, StressTrace.afterActivitySpans(day, 100f).size)
+        val shaded = StressTrace.afterActivitySpans(day, 100f, windowSeconds = 1800).single()
+        assertEquals(37.5f, shaded.start, 0.001f)
+        assertEquals(62.5f, shaded.endInclusive, 0.001f)
+    }
+
+    @Test
+    fun `no moving stretch, an unscored hour, or a day starting moving at its end shades nothing`() {
+        assertTrue(StressTrace.afterActivitySpans(listOf(at(0, 1.0), at(1, 2.0)), 100f).isEmpty())
+        assertTrue(StressTrace.afterActivitySpans(listOf(at(0, null, moving = true), at(1, null)), 100f).isEmpty())
+        assertTrue(StressTrace.afterActivitySpans(listOf(at(0, 1.0), at(1, null, moving = true)), 100f).isEmpty())
+        assertTrue(StressTrace.afterActivitySpans(emptyList(), 100f).isEmpty())
+    }
+
+    @Test
+    fun `shading never changes the levels or the line`() {
+        val day = listOf(at(0, 1.0), at(1, null, moving = true), at(2, 2.6))
+        val before = StressTrace.segments(day, 100f, 100f)
+        StressTrace.afterActivitySpans(day, 100f)
+        assertEquals(before, StressTrace.segments(day, 100f, 100f))
+        assertEquals(2.6, StressTrace.stats(day)!!.peak.level!!, 0.0)
+    }
+
     // MARK: - the high band
 
     @Test

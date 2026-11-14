@@ -238,6 +238,59 @@ object StressTrace {
         return out
     }
 
+    /** How long after a moving stretch a scored point counts as "after activity" for the shading. */
+    const val AFTER_ACTIVITY_SECONDS: Long = 3_600L
+
+    /**
+     * The scored points within [windowSeconds] after a moving (masked) point, grouped into CONTIGUOUS x
+     * ranges, for the faint "after activity" shading behind the trace. DISPLAY ONLY (Not-Noop): it
+     * changes no level, mask or stored value. Heart rate stays up for a while after moving, and
+     * [DaytimeStress] masks only the single hour after a moving hour, and only while HR is still well
+     * above the calm reference; the points just past that read as stress though they are often
+     * recovery. Shading them says "read with care" without hiding anything.
+     *
+     * Spans use [movingSpans]' edge rule (midpoint to each neighbour, stopping at the ends of the
+     * series), so a shaded stretch starts where the moving bar's stretch ends.
+     */
+    fun afterActivitySpans(
+        series: List<StressPoint>,
+        width: Float,
+        windowSeconds: Long = AFTER_ACTIVITY_SECONDS,
+    ): List<ClosedFloatingPointRange<Float>> {
+        if (series.isEmpty() || width <= 0f) return emptyList()
+        val t0 = series.first().ts
+        val span = (series.last().ts - t0).toFloat()
+        val xs = FloatArray(series.size) {
+            if (span <= 0f) 0f else (series[it].ts - t0) / span * width
+        }
+        val last = series.lastIndex
+        fun leftEdge(i: Int): Float = if (i == 0) xs[0] else (xs[i - 1] + xs[i]) / 2f
+        fun rightEdge(i: Int): Float = if (i == last) xs[last] else (xs[i] + xs[i + 1]) / 2f
+        var lastMovingTs: Long? = null
+        val marked = BooleanArray(series.size)
+        for (i in series.indices) {
+            val p = series[i]
+            if (p.moving) {
+                lastMovingTs = p.ts
+                continue
+            }
+            val since = lastMovingTs?.let { p.ts - it }
+            marked[i] = p.level != null && since != null && since > 0 && since <= windowSeconds
+        }
+        val out = ArrayList<ClosedFloatingPointRange<Float>>()
+        var runStart: Int? = null
+        for (i in series.indices) {
+            if (marked[i] && runStart == null) runStart = i
+            val from = runStart
+            if (from != null && (!marked[i] || i == last)) {
+                val lo = leftEdge(from)
+                out.add(lo..maxOf(rightEdge(if (marked[i]) i else i - 1), lo))
+                runStart = null
+            }
+        }
+        return out
+    }
+
     /**
      * A 0-3 level as the one string every surface prints (#2164).
      *

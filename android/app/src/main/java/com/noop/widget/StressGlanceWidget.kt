@@ -277,6 +277,9 @@ private fun StressTraceImage(
             markColor = stressTextSecondary(dark).getColor(context)
                 .copy(alpha = 0.5f).compositeOver(stressSurfaceColor(dark)).toArgb(),
             strokePx = 2f * density,
+            afterActivitySpans = StressTrace.afterActivitySpans(snap.stressSeries, wPx.toFloat()),
+            shadeColor = stressTextSecondary(dark).getColor(context)
+                .copy(alpha = 0.12f).compositeOver(stressSurfaceColor(dark)).toArgb(),
         )
     }.getOrNull()
     if (bmp != null) {

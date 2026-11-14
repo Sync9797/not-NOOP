@@ -821,6 +821,17 @@ internal fun StressTodayCard(
                             val gradient = Brush.verticalGradient(listOf(tense, steady, calm),
                                                                   startY = 0f, endY = chartH)
 
+                            // The hour after a moving stretch, shaded faintly BEHIND the trace (display
+                            // only): heart rate may still be settling there, so a high reading is often
+                            // recovery rather than stress. Nothing is hidden or rescored.
+                            StressTrace.afterActivitySpans(points, w).forEach { span ->
+                                drawRect(
+                                    color = markTone.copy(alpha = StrandAlpha.chartFillSoft),
+                                    topLeft = Offset(span.start, 0f),
+                                    size = Size((span.endInclusive - span.start).coerceAtLeast(strokeW), chartH),
+                                )
+                            }
+
                             StressTrace.segments(points, w, chartH).forEach { run ->
                                 if (run.isEmpty()) return@forEach
                                 if (run.size == 1) {
@@ -903,6 +914,14 @@ internal fun StressTodayCard(
                             activityMaskedHours,
                             activityMaskedHours,
                         ),
+                        style = NoopType.footnote,
+                        color = textTertiary,
+                    )
+                }
+                // Explains the shading, and only when some is drawn.
+                if (remember(points) { StressTrace.afterActivitySpans(points, 1f).isNotEmpty() }) {
+                    Text(
+                        uiString(R.string.stress_after_activity_note),
                         style = NoopType.footnote,
                         color = textTertiary,
                     )

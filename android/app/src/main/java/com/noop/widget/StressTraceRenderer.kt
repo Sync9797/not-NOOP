@@ -53,6 +53,11 @@ internal object StressTraceRenderer {
          *  would draw at FULL strength. */
         markColor: Int,
         strokePx: Float,
+        /** from [StressTrace.afterActivitySpans]: the hour after a moving stretch, shaded faintly behind
+         *  the trace (display only). Empty draws nothing. */
+        afterActivitySpans: List<ClosedFloatingPointRange<Float>> = emptyList(),
+        /** The shading's colour, already composited against the card (RGB_565 has no alpha). */
+        shadeColor: Int = backgroundColor,
     ): Bitmap? {
         if (segments.isEmpty() && movingSpans.isEmpty() && highPoints.isEmpty()) return null
         // The caller sized this with the shared payload budget; re-check it rather than re-decide it.
@@ -79,6 +84,15 @@ internal object StressTraceRenderer {
         // coordinates against. Dividing by the shortened band instead pushed a calm day, whose y sits
         // at the very bottom of the full box, past the bottom of the chart and into the marks.
         fun px(p: StressTrace.Pt) = p.x to (inset + p.y / h.toFloat() * usableH)
+
+        // The after-activity shading goes down first, behind the fill and the line.
+        if (afterActivitySpans.isNotEmpty() && shadeColor != backgroundColor) {
+            val shadePaint = Paint().apply { color = shadeColor; style = Paint.Style.FILL }
+            for (span in afterActivitySpans) {
+                val x1 = maxOf(span.endInclusive, span.start + strokePx)
+                canvas.drawRect(span.start, 0f, x1, chartH, shadePaint)
+            }
+        }
 
         // One shader for every segment: Y encodes the score, so vertical position IS the ramp.
         val ramp = LinearGradient(
