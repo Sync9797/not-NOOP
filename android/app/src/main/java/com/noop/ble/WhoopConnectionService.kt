@@ -46,6 +46,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.retryWhen
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
@@ -338,13 +339,21 @@ class WhoopConnectionService : Service() {
                 // Defence-in-depth: a Room/disk error in this flow would otherwise propagate uncaught
                 // out of scope.launch and kill the process — the FGS exists to protect the connection,
                 // not to take it down. (Audited during #82, which proved unrelated/unreproducible —
-                // this guard is belt-and-braces, not a diagnosed fix.) After catch{emit} the inner
-                // flow completes; combine keeps running on ble.state with days frozen.
+                // this guard is belt-and-braces, not a diagnosed fix.) Not-Noop: it used to `catch` and
+                // complete, which froze `days` EMPTY for the life of the service, so one transient read error
+                // blanked the home widget's scores until the process restarted (ryanbr/noop#2807). Now the
+                // first failure still emits an empty list, so the notification can start, and the read is
+                // retried every 30 s until it recovers.
                 // #797: the bounded merge (recentDaysMergedFlow) is enough here, the notification only reads
                 // today's row; this stops a years-deep import re-merging the whole history on every change.
                 // #1304/#512: the active strap's live day is under its own id ("whoop-<uuid>"); a raw
                 // "my-whoop" read (which the union method collapses to) misses it. Same accessor as :606.
-                repo.recentDaysMergedFlow((application as NoopApplication).activeDeviceId).catch { emit(emptyList()) },
+                repo.recentDaysMergedFlow((application as NoopApplication).activeDeviceId)
+                    .retryWhen { _, attempt ->
+                        if (attempt == 0L) emit(emptyList())
+                        kotlinx.coroutines.delay(DAYS_READ_RETRY_MS)
+                        true
+                    },
             ) { state, days ->
                 // #911: resolve the day the way the dashboard does, via the LOGICAL local day (rolls at
                 // 04:00, with the #304 pre-04:00 carve-out), NOT a naive LocalDate.now() that rolls at
@@ -852,6 +861,9 @@ class WhoopConnectionService : Service() {
          *  half-hour resolution and to the in-app analytics cadence, not to the live HR stream that
          *  drives the collector it sits in. */
         private val STRESS_RESCORE_INTERVAL_MS = StressWidgetProducer.RESCORE_INTERVAL_MS
+
+        /** How long to wait before re-reading the day rows after a failed read (see the `days` flow). */
+        private const val DAYS_READ_RETRY_MS = 30_000L
 
         private const val CHANNEL_ID = "noop_strap_connection"
         private const val NOTIF_ID = 4201

@@ -55,6 +55,9 @@ class NoopApplication : Application() {
         // this is a no-op once a schedule exists, and the worker retires itself when no widget is
         // placed — which is what stops this costing anything for an install that has never had one.
         com.noop.widget.StressWidgetRefresh.ensureScheduled(this)
+        // Not-Noop (ryanbr/noop#2807): the same safety net for the main, compact and heart-rate widgets,
+        // so they keep drawing (and roll over to the new day) while the strap is out of range.
+        com.noop.widget.HomeWidgetRefresh.ensureScheduled(this)
         // Optional background Health Connect sync: scheduled only while the user has it on.
         com.noop.ingest.HealthConnectBackgroundSync.reconcile(this)
         // #2556: the stale-battery warning needs a wake that does NOT depend on the BLE link, because the
