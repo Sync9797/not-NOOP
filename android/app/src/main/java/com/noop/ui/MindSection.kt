@@ -84,7 +84,26 @@ fun MindSection(vm: AppViewModel) {
     var moodSeq by remember { mutableStateOf(0) }
     var editing by remember { mutableStateOf(false) }
 
-    val todayKey = remember { MoodStore.todayKey() }
+    // Not-Noop: re-stamped on every resume, and resolved afresh at each tap below. This was a one-time
+    // `remember`, so a screen kept alive past midnight (the journal opened before bed and left in the
+    // background) still treated the PREVIOUS day as today: it showed yesterday's mood as today's, and a
+    // tap overwrote yesterday's check-in instead of logging today's. The journal answers above already
+    // re-stamp their day key on resume (#860); this is the same treatment for the mood row.
+    var todayKey by remember { mutableStateOf(MoodStore.todayKey()) }
+    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+    androidx.compose.runtime.DisposableEffect(lifecycleOwner) {
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
+                val key = MoodStore.todayKey()
+                if (key != todayKey) {
+                    todayKey = key
+                    editing = false
+                }
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
     LaunchedEffect(moodSeq) {
         moodSeries = store.moodSeries()
         loaded = true
@@ -127,8 +146,11 @@ fun MindSection(vm: AppViewModel) {
                                 selected = todayMood == face.value,
                                 onClick = {
                                     editing = false
+                                    // The day at the moment of the tap, never a key captured earlier.
+                                    val key = MoodStore.todayKey()
+                                    todayKey = key
                                     scope.launch {
-                                        store.setMood(todayKey, face.value)
+                                        store.setMood(key, face.value)
                                         moodSeq++
                                     }
                                 },
