@@ -15,6 +15,7 @@ import com.noop.ui.SectionHeader
 import com.noop.ui.ScoringGuideScreen
 import com.noop.ui.TabletopNavPad
 import com.noop.ui.GlassBottomBar
+import com.noop.ui.GlassNavRail
 import com.noop.ui.Destination
 import com.noop.ui.WhoopModelComparisonScreen
 import org.junit.Assume.assumeTrue
@@ -84,6 +85,12 @@ class ScreenshotTour {
         shoot("phone-bar") { GlassBottomBar(current = Destination.Workouts, onTabSelected = {}) }
     @Test @Config(qualifiers = "es-w360dp-h640dp-port-xhdpi") fun phoneBarSpanish() =
         shoot("phone-bar-es") { GlassBottomBar(current = Destination.Workouts, onTabSelected = {}) }
+
+    // The tablet / unfolded rail: icons only, the current tab in an accent circle.
+    @Test @Config(qualifiers = TABLET) fun tabletRail() =
+        shoot("tablet-rail") { GlassNavRail(current = Destination.Workouts, onTabSelected = {}) }
+    @Test @Config(qualifiers = "w1280dp-h800dp-land-night-mdpi") fun tabletRailNight() =
+        shoot("tablet-rail-night") { GlassNavRail(current = Destination.Workouts, onTabSelected = {}) }
 
     // The bottom half of a half-folded phone (tabletop), where the nav pad replaces the bar.
     @Test @Config(qualifiers = TABLETOP_HALF) fun tabletopNavPad() =

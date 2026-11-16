@@ -39,6 +39,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -1395,7 +1396,7 @@ private fun ShellBackdrop(refreshKey: Any?) {
 // isShellTabActive), so the two cannot drift.
 
 @Composable
-private fun GlassNavRail(
+internal fun GlassNavRail(
     current: Destination,
     onTabSelected: (Destination) -> Unit,
     modifier: Modifier = Modifier,
@@ -1421,7 +1422,8 @@ private fun GlassNavRail(
             tonalElevation = 2.dp,
             shadowElevation = 4.dp,
             modifier = Modifier
-                .width(80.dp)
+                // Icons only (Not-Noop), so the rail is narrower than the 80dp it needed for labels.
+                .width(64.dp)
                 .border(0.5.dp, Palette.hairline.copy(alpha = 0.6f), railShape),
         ) {
             Column(
@@ -1433,16 +1435,52 @@ private fun GlassNavRail(
                 verticalArrangement = Arrangement.spacedBy(Metrics.space6),
             ) {
                 tabs.forEach { tab ->
-                    BarSlot(
+                    RailIconSlot(
                         icon = tab.icon,
                         label = stringResource(tab.labelRes),
                         active = isShellTabActive(tab, current, tabs),
-                        modifier = Modifier.fillMaxWidth(),
                         onClick = { onTabSelected(tab.dest) },
                     )
                 }
             }
         }
+    }
+}
+
+/**
+ * One rail slot, icon only (Not-Noop: tablets and unfolded foldables only; the phone bar and the tabletop
+ * pad keep their labels). With no word under it the current tab needs more than a colour change, so it
+ * sits in a soft accent circle. TalkBack still reads the tab's name and its selected state.
+ */
+@Composable
+private fun RailIconSlot(
+    icon: ImageVector,
+    label: String,
+    active: Boolean,
+    onClick: () -> Unit,
+) {
+    Box(
+        modifier = Modifier
+            .size(48.dp)
+            .clip(CircleShape)
+            .background(if (active) Palette.accentMuted else Color.Transparent)
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = onClick,
+            )
+            .semantics {
+                contentDescription = label
+                selected = active
+            },
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            icon,
+            contentDescription = null,
+            tint = if (active) Palette.accent else Palette.textSecondary,
+            modifier = Modifier.size(26.dp),
+        )
     }
 }
 
