@@ -613,6 +613,8 @@ fun SettingsScreen(
     // Settings → About "What's new" button). Persistence/gating lives in NoopRoot; this
     // is a manual re-open and writes nothing.
     var showWhatsNew by remember { mutableStateOf(false) }
+    // Not-Noop "Report a bug" (BugReport): the explainer shown before the log is saved and GitHub opens.
+    var showBugReport by remember { mutableStateOf(false) }
 
     // "How your scores work" explainer sheet, reachable any time from About (macOS/iOS parity).
     var showScoringGuide by remember { mutableStateOf(false) }
@@ -4179,14 +4181,7 @@ fun SettingsScreen(
                         .clickable(
                             interactionSource = supportInteraction,
                             indication = null,
-                        ) {
-                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(SUPPORT_BUG_REPORT_URL))
-                            try {
-                                context.startActivity(intent)
-                            } catch (_: ActivityNotFoundException) {
-                                Toast.makeText(context, SUPPORT_LABEL, Toast.LENGTH_LONG).show()
-                            }
-                        }
+                        ) { showBugReport = true }
                         .padding(horizontal = 14.dp, vertical = 12.dp)
                         .semantics { contentDescription = uiString(R.string.l10n_settings_screen_contact_support_at_support_email_f0c4adce, SUPPORT_LABEL) },
                 ) {
@@ -4206,6 +4201,62 @@ fun SettingsScreen(
                     }
                 }
             }
+        }
+
+        // Not-Noop "Report a bug": say exactly what happens before anything is saved or opened. Continue saves
+        // the scrubbed strap log to Downloads and opens a prefilled issue; the reporter attaches the file and
+        // submits from their own GitHub account, so nothing leaves the phone without them sending it.
+        if (showBugReport) {
+            AlertDialog(
+                onDismissRequest = { showBugReport = false },
+                containerColor = Palette.surfaceOverlay,
+                title = {
+                    Text(uiString(R.string.bug_report_title), style = NoopType.title2, color = Palette.textPrimary)
+                },
+                text = {
+                    Text(uiString(R.string.bug_report_body), style = NoopType.subhead, color = Palette.textSecondary)
+                },
+                confirmButton = {
+                    TextButton(onClick = {
+                        showBugReport = false
+                        scope.launch {
+                            val logText = vm.ble.exportLogText()
+                            val saved = LogExport.saveStrapLogToDownloads(context, logText)
+                            val active = runCatching {
+                                vm.pairedDevices().firstOrNull { it.id == vm.activeStrapId }
+                            }.getOrNull()
+                            val url = BugReport.issueUrl(
+                                version = "${com.noop.BuildConfig.VERSION_NAME} (${com.noop.BuildConfig.VERSION_CODE})",
+                                osLine = BugReport.osLine(
+                                    android.os.Build.VERSION.RELEASE, android.os.Build.VERSION.SDK_INT,
+                                    android.os.Build.MANUFACTURER, android.os.Build.MODEL,
+                                ),
+                                strapOption = BugReport.strapOption(active?.model, active?.brand),
+                                savedFileName = saved,
+                            )
+                            if (saved != null) {
+                                Toast.makeText(context, uiString(R.string.bug_report_saved, saved), Toast.LENGTH_LONG).show()
+                            } else {
+                                // Older Android: hand the log to the share sheet (save it to Files or Drive),
+                                // then still open the prefilled form.
+                                LogExport.shareStrapLog(context, logText)
+                            }
+                            try {
+                                context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+                            } catch (_: ActivityNotFoundException) {
+                                Toast.makeText(context, SUPPORT_LABEL, Toast.LENGTH_LONG).show()
+                            }
+                        }
+                    }) {
+                        Text(uiString(R.string.bug_report_continue), color = Palette.accent)
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showBugReport = false }) {
+                        Text(uiString(R.string.bug_report_cancel), color = Palette.textSecondary)
+                    }
+                },
+            )
         }
 
         // What's new sheet, opened from the About row above. Full-screen Dialog so it
@@ -4258,9 +4309,6 @@ fun SettingsScreen(
         }
     }
 }
-
-/** Support opens a new bug report on Not-Noop's GitHub, using the repository's bug form. */
-private const val SUPPORT_BUG_REPORT_URL = "https://github.com/Sync9797/not-NOOP/issues/new?template=bug_report.yml"
 
 /** Shown in the support row ("Questions, feedback, bugs: …") and as the fallback when no browser opens. */
 private const val SUPPORT_LABEL = "github.com/Sync9797/not-NOOP/issues"

@@ -2889,4 +2889,10 @@
     <string name="settings_material_surfaces_detail">Hintergründe und Karten ebenfalls nach deinem Hintergrundbild einfärben. Diagramme und Werte behalten ihre Farben.</string>
     <string name="l10n_app_changelog_background_sync_option_foldable_book_mode_b8358da7">Option für Hintergrund-Sync, Buchmodus für Foldables und mehr Material You</string>
     <string name="l10n_app_changelog_bigger_buttons_on_a_half_folded_ede1fb22">Größere Tasten auf halb gefalteten Geräten, lesbare Überschriften auf Fotos</string>
+    <string name="nav_tab_workouts">Workouts</string>
+    <string name="bug_report_title">Fehler melden</string>
+    <string name="bug_report_body">NOOP speichert dein Armband-Protokoll im Download-Ordner, ohne Seriennummern und Bluetooth-Adressen, und öffnet eine Fehlermeldung auf GitHub, in der App-Version, Telefon und Android-Version schon ausgefüllt sind.\n\nBeschreibe dort, was passiert ist, hänge das gespeicherte Protokoll an und tippe auf „Submit“. Du brauchst ein kostenloses GitHub-Konto. Es wird nichts gesendet, bevor du absendest.</string>
+    <string name="bug_report_continue">Weiter</string>
+    <string name="bug_report_cancel">Abbrechen</string>
+    <string name="bug_report_saved">%1$s im Download-Ordner gespeichert. Hänge es auf der GitHub-Seite an.</string>
 </resources>

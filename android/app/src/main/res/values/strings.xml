@@ -2905,4 +2905,10 @@
     <string name="settings_material_surfaces_detail">Tint backgrounds and cards from your wallpaper as well. Charts and scores keep their colours.</string>
     <string name="l10n_app_changelog_background_sync_option_foldable_book_mode_b8358da7">Background sync option, foldable book mode and more Material You</string>
     <string name="l10n_app_changelog_bigger_buttons_on_a_half_folded_ede1fb22">Bigger buttons on a half-folded phone, readable headings on photos</string>
+    <string name="nav_tab_workouts">Workouts</string>
+    <string name="bug_report_title">Report a bug</string>
+    <string name="bug_report_body">NOOP will save your strap log to Downloads, with serial numbers and Bluetooth addresses removed, and open a bug report on GitHub with your app version, phone and Android version filled in.\n\nOn that page, describe what happened, attach the saved log and press Submit. You need a free GitHub account. Nothing is sent until you submit it.</string>
+    <string name="bug_report_continue">Continue</string>
+    <string name="bug_report_cancel">Cancel</string>
+    <string name="bug_report_saved">Saved %1$s to Downloads. Attach it on the GitHub page.</string>
 </resources>

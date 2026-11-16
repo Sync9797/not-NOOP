@@ -2868,4 +2868,10 @@
     <string name="settings_material_surfaces_detail">Aplica também as cores do seu fundo de ecrã aos fundos e cartões. Os gráficos e as pontuações mantêm as suas cores.</string>
     <string name="l10n_app_changelog_background_sync_option_foldable_book_mode_b8358da7">Opção de sincronização em segundo plano, modo livro para dobráveis e mais Material You</string>
     <string name="l10n_app_changelog_bigger_buttons_on_a_half_folded_ede1fb22">Botões maiores com o telemóvel meio dobrado e títulos legíveis sobre fotos</string>
+    <string name="nav_tab_workouts">Treinos</string>
+    <string name="bug_report_title">Comunicar um erro</string>
+    <string name="bug_report_body">O NOOP vai guardar o registo da sua pulseira em Transferências, sem números de série nem endereços Bluetooth, e abrir um relatório de erro no GitHub com a versão da app, o telemóvel e a versão do Android já preenchidos.\n\nNessa página, descreva o que aconteceu, anexe o registo guardado e prima Submit. Precisa de uma conta GitHub gratuita. Nada é enviado até o submeter.</string>
+    <string name="bug_report_continue">Continuar</string>
+    <string name="bug_report_cancel">Cancelar</string>
+    <string name="bug_report_saved">%1$s guardado em Transferências. Anexe-o na página do GitHub.</string>
 </resources>

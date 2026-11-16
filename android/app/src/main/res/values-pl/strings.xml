@@ -2892,4 +2892,10 @@
     <string name="settings_material_surfaces_detail">Barwi również tła i karty według tapety. Wykresy i wyniki zachowują swoje kolory.</string>
     <string name="l10n_app_changelog_background_sync_option_foldable_book_mode_b8358da7">Opcja synchronizacji w tle, tryb książki dla składanych telefonów i więcej Material You</string>
     <string name="l10n_app_changelog_bigger_buttons_on_a_half_folded_ede1fb22">Większe przyciski na półzłożonym telefonie, czytelne nagłówki na zdjęciach</string>
+    <string name="nav_tab_workouts">Treningi</string>
+    <string name="bug_report_title">Zgłoś błąd</string>
+    <string name="bug_report_body">NOOP zapisze dziennik opaski w folderze Pobrane, bez numerów seryjnych i adresów Bluetooth, i otworzy zgłoszenie błędu na GitHubie z wypełnioną wersją aplikacji, telefonem i wersją Androida.\n\nNa tej stronie opisz, co się stało, dołącz zapisany dziennik i naciśnij Submit. Potrzebne jest bezpłatne konto GitHub. Nic nie zostanie wysłane, dopóki tego nie wyślesz.</string>
+    <string name="bug_report_continue">Dalej</string>
+    <string name="bug_report_cancel">Anuluj</string>
+    <string name="bug_report_saved">Zapisano %1$s w folderze Pobrane. Dołącz go na stronie GitHub.</string>
 </resources>

@@ -2844,4 +2844,10 @@
     <string name="settings_material_surfaces_detail">Colora anche sfondi e schede in base allo sfondo del telefono. Grafici e punteggi mantengono i loro colori.</string>
     <string name="l10n_app_changelog_background_sync_option_foldable_book_mode_b8358da7">Sincronizzazione in background opzionale, modalità libro per i pieghevoli e più Material You</string>
     <string name="l10n_app_changelog_bigger_buttons_on_a_half_folded_ede1fb22">Pulsanti più grandi con il telefono semipiegato e titoli leggibili sulle foto</string>
+    <string name="nav_tab_workouts">Sport</string>
+    <string name="bug_report_title">Segnala un bug</string>
+    <string name="bug_report_body">NOOP salverà il registro del tuo bracciale in Download, senza numeri di serie né indirizzi Bluetooth, e aprirà una segnalazione su GitHub con versione dell\'app, telefono e versione di Android già compilati.\n\nSu quella pagina descrivi cosa è successo, allega il registro salvato e premi Submit. Serve un account GitHub gratuito. Non viene inviato nulla finché non lo invii tu.</string>
+    <string name="bug_report_continue">Continua</string>
+    <string name="bug_report_cancel">Annulla</string>
+    <string name="bug_report_saved">%1$s salvato in Download. Allegalo nella pagina di GitHub.</string>
 </resources>

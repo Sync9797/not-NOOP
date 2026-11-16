@@ -2846,4 +2846,10 @@
     <string name="settings_material_surfaces_detail">背景和卡片也采用壁纸配色。图表和分数保持原有颜色。</string>
     <string name="l10n_app_changelog_background_sync_option_foldable_book_mode_b8358da7">可选后台同步、折叠屏书本模式和更多 Material You</string>
     <string name="l10n_app_changelog_bigger_buttons_on_a_half_folded_ede1fb22">半折叠时按钮更大，照片背景上的标题清晰可读</string>
+    <string name="nav_tab_workouts">运动</string>
+    <string name="bug_report_title">报告问题</string>
+    <string name="bug_report_body">NOOP 会将手环日志保存到“下载”文件夹（已移除序列号和蓝牙地址），并在 GitHub 上打开一个问题报告，自动填好应用版本、手机型号和 Android 版本。\n\n在该页面描述发生了什么，附上保存的日志，然后点按 Submit。你需要一个免费的 GitHub 账号。在你提交之前不会发送任何内容。</string>
+    <string name="bug_report_continue">继续</string>
+    <string name="bug_report_cancel">取消</string>
+    <string name="bug_report_saved">已将 %1$s 保存到“下载”。请在 GitHub 页面上附加它。</string>
 </resources>

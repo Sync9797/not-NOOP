@@ -2875,4 +2875,10 @@
     <string name="settings_material_surfaces_detail">Teinte aussi les fonds et les cartes selon votre fond d\'écran. Les graphiques et les scores gardent leurs couleurs.</string>
     <string name="l10n_app_changelog_background_sync_option_foldable_book_mode_b8358da7">Synchronisation en arrière-plan en option, mode livre pour les pliables et plus de Material You</string>
     <string name="l10n_app_changelog_bigger_buttons_on_a_half_folded_ede1fb22">Des boutons plus grands téléphone à demi plié, des titres lisibles sur les photos</string>
+    <string name="nav_tab_workouts">Séances</string>
+    <string name="bug_report_title">Signaler un bug</string>
+    <string name="bug_report_body">NOOP va enregistrer le journal de votre bracelet dans Téléchargements, sans numéros de série ni adresses Bluetooth, et ouvrir un rapport de bug sur GitHub avec la version de l\'app, le téléphone et la version d\'Android déjà remplis.\n\nSur cette page, décrivez ce qui s\'est passé, joignez le journal enregistré et appuyez sur Submit. Il faut un compte GitHub gratuit. Rien n\'est envoyé avant que vous ne le soumettiez.</string>
+    <string name="bug_report_continue">Continuer</string>
+    <string name="bug_report_cancel">Annuler</string>
+    <string name="bug_report_saved">%1$s enregistré dans Téléchargements. Joignez-le sur la page GitHub.</string>
 </resources>

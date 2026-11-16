@@ -2771,4 +2771,10 @@
     <string name="settings_material_surfaces_detail">Окрашивать по обоям также фон и карточки. Графики и оценки сохраняют свои цвета.</string>
     <string name="l10n_app_changelog_background_sync_option_foldable_book_mode_b8358da7">Фоновая синхронизация по желанию, режим книги для складных телефонов и больше Material You</string>
     <string name="l10n_app_changelog_bigger_buttons_on_a_half_folded_ede1fb22">Крупные кнопки на полусложенном телефоне и читаемые заголовки на фото</string>
+    <string name="nav_tab_workouts">Спорт</string>
+    <string name="bug_report_title">Сообщить об ошибке</string>
+    <string name="bug_report_body">NOOP сохранит журнал браслета в папку «Загрузки» без серийных номеров и Bluetooth-адресов и откроет отчёт об ошибке на GitHub, где уже указаны версия приложения, телефон и версия Android.\n\nНа этой странице опишите, что произошло, прикрепите сохранённый журнал и нажмите Submit. Нужна бесплатная учётная запись GitHub. Ничего не отправляется, пока вы сами не отправите отчёт.</string>
+    <string name="bug_report_continue">Продолжить</string>
+    <string name="bug_report_cancel">Отмена</string>
+    <string name="bug_report_saved">%1$s сохранён в «Загрузки». Прикрепите его на странице GitHub.</string>
 </resources>

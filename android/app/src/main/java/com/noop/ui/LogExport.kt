@@ -359,6 +359,33 @@ object LogExport {
     private fun fileUri(context: Context, file: File) =
         FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
 
+    /**
+     * Not-Noop "Report a bug": write the same scrubbed strap log [shareStrapLog] shares, then copy it into
+     * the public Downloads folder so a browser's "attach files" picker on GitHub can reach it (the app's
+     * cache, where shares are staged, is invisible to other apps). Returns the saved file name, or null
+     * when it could not be saved there; the caller then falls back to the share sheet.
+     *
+     * Android 10+ only, through MediaStore, which needs no storage permission. Earlier versions return
+     * null rather than asking for WRITE_EXTERNAL_STORAGE for one file.
+     */
+    suspend fun saveStrapLogToDownloads(context: Context, logText: String): String? = runCatching {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return null
+        withContext(Dispatchers.IO) {
+            val file = writeStrapLogFile(context, logText)
+            val values = android.content.ContentValues().apply {
+                put(android.provider.MediaStore.MediaColumns.DISPLAY_NAME, file.name)
+                put(android.provider.MediaStore.MediaColumns.MIME_TYPE, "text/plain")
+                put(android.provider.MediaStore.MediaColumns.RELATIVE_PATH, android.os.Environment.DIRECTORY_DOWNLOADS)
+            }
+            val resolver = context.contentResolver
+            val uri = resolver.insert(android.provider.MediaStore.Downloads.EXTERNAL_CONTENT_URI, values)
+                ?: return@withContext null
+            resolver.openOutputStream(uri)?.use { out -> file.inputStream().use { it.copyTo(out) } }
+                ?: return@withContext null
+            file.name
+        }
+    }.getOrNull()
+
     suspend fun shareStrapLog(context: Context, logText: String) {
         runCatching {
             // writeStrapLogFile does blocking file IO (#646/#651) — keep it off whatever dispatcher the
