@@ -203,4 +203,27 @@ class ScheduledReportPolicyTest {
         assertEquals("1 h 8 min", ScheduledReportPolicy.durationLabel(68))
         assertEquals("2 h", ScheduledReportPolicy.durationLabel(120))
     }
+
+    // Not-Noop (ryanbr/noop#2289): a recap held by the 05:00 floor is booked for then, not left to chance.
+    @Test fun aRecapHeldByTheFloorIsDeferredUntilFive() {
+        assertEquals(260, ScheduledReportPolicy.morningDeferralMinutes(true, true, null, "2026-11-15", nowMinuteOfDay = 40))
+        assertEquals(1, ScheduledReportPolicy.morningDeferralMinutes(true, true, "2026-11-14", "2026-11-15", nowMinuteOfDay = 299))
+    }
+
+    @Test fun nothingIsDeferredThatWouldNotPostAnyway() {
+        // At or after the floor it posts now instead.
+        assertNull(ScheduledReportPolicy.morningDeferralMinutes(true, true, null, "2026-11-15", nowMinuteOfDay = 300))
+        // Switched off, nothing to report, or already recapped: never booked.
+        assertNull(ScheduledReportPolicy.morningDeferralMinutes(false, true, null, "2026-11-15", nowMinuteOfDay = 40))
+        assertNull(ScheduledReportPolicy.morningDeferralMinutes(true, false, null, "2026-11-15", nowMinuteOfDay = 40))
+        assertNull(ScheduledReportPolicy.morningDeferralMinutes(true, true, "2026-11-15", "2026-11-15", nowMinuteOfDay = 40))
+    }
+
+    @Test fun deferralAndTheGateNeverBothSayYes() {
+        for (minute in 0 until 24 * 60 step 7) {
+            val deferred = ScheduledReportPolicy.morningDeferralMinutes(true, true, null, "d", minute) != null
+            val now = ScheduledReportPolicy.shouldNotifyMorning(true, true, null, "d", minute)
+            assertTrue("minute $minute", deferred != now)
+        }
+    }
 }

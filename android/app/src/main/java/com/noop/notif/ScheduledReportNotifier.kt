@@ -78,6 +78,26 @@ object ScheduledReportPolicy {
         lastNotifiedDay != reportDay &&
         nowMinuteOfDay >= earliestMinuteOfDay
 
+    /**
+     * Minutes until [earliestMinuteOfDay] when a recap is due in every respect EXCEPT the time of day, else
+     * null. Not-Noop: this is what closes the loss described on [shouldNotifyMorning]. A deferred recap is
+     * handed to [MorningRecapWorker] to re-run the same gate at the floor, so it no longer depends on a
+     * database write or the app being reopened after 05:00, and it is not lost if the process dies.
+     */
+    fun morningDeferralMinutes(
+        enabled: Boolean,
+        chargeOrRestPresent: Boolean,
+        lastNotifiedDay: String?,
+        reportDay: String,
+        nowMinuteOfDay: Int,
+        earliestMinuteOfDay: Int = EARLIEST_MORNING_MINUTE,
+    ): Int? =
+        if (enabled && chargeOrRestPresent && lastNotifiedDay != reportDay && nowMinuteOfDay < earliestMinuteOfDay) {
+            earliestMinuteOfDay - nowMinuteOfDay
+        } else {
+            null
+        }
+
     /** Fire the post-workout summary only for a workout STRICTLY newer than the last one summarised, so a
      *  re-sync of the same backlog never re-notifies. [lastWorkoutTs] is 0 before the first ever. */
     fun shouldNotifyWorkout(
@@ -146,14 +166,24 @@ object ScheduledReportNotifier {
         // reportDay is the banked night's day (the resolved today-row's `day`), NOT LocalDate.now() — the
         // calendar day rolls at midnight while the row still resolves to last night's until a new night is
         // banked, which re-fired the recap at the start of a new day for late-nighters (#567).
+        val enabled = NoopPrefs.morningReportEnabled(context)
+        val present = chargePct != null || restPct != null
+        val lastDay = NoopPrefs.reportMorningDay(context)
+        // The clock the floor compares against. Read here rather than inside the policy, so the policy
+        // stays pure and the test can pin 00:40 and 07:00 without a fake clock. Read ONCE, so the deferral
+        // and the gate below cannot straddle 05:00 and disagree.
+        val nowMinute = java.time.LocalTime.now().let { it.hour * 60 + it.minute }
+        // Held by the 05:00 floor: book a re-check for then instead of hoping something re-evaluates.
+        ScheduledReportPolicy.morningDeferralMinutes(enabled, present, lastDay, reportDay, nowMinute)?.let { wait ->
+            MorningRecapWorker.schedule(context, reportDay, chargePct, restPct, wait.toLong())
+            return
+        }
         if (!ScheduledReportPolicy.shouldNotifyMorning(
-                enabled = NoopPrefs.morningReportEnabled(context),
-                chargeOrRestPresent = chargePct != null || restPct != null,
-                lastNotifiedDay = NoopPrefs.reportMorningDay(context),
+                enabled = enabled,
+                chargeOrRestPresent = present,
+                lastNotifiedDay = lastDay,
                 reportDay = reportDay,
-                // The clock the floor compares against. Read here rather than inside the policy, so the policy
-                // stays pure and the test can pin 00:40 and 07:00 without a fake clock.
-                nowMinuteOfDay = java.time.LocalTime.now().let { it.hour * 60 + it.minute },
+                nowMinuteOfDay = nowMinute,
             )
         ) return
         val copy = ScheduledReportPolicy.morningCopy(chargePct, restPct) ?: return
@@ -243,3 +273,58 @@ object ScheduledReportNotifier {
 
 /** Round a 0–100 score to a whole number for display, or null if absent (never fabricate a 0). */
 internal fun Double?.scorePctOrNull(): Int? = this?.roundToInt()
+
+/**
+ * Posts a morning recap that [ScheduledReportNotifier.onMorning] held back because it was before 05:00
+ * (Not-Noop; ryanbr/noop#2289). It simply calls [ScheduledReportNotifier.onMorning] again with the same
+ * night's figures, so every rule still applies: the recap must still be switched on, and a night already
+ * recapped (from the app in the meantime) is not posted twice. One pending job at a time; a newer night's
+ * figures replace an older pending one.
+ */
+class MorningRecapWorker(
+    appContext: Context,
+    params: androidx.work.WorkerParameters,
+) : androidx.work.CoroutineWorker(appContext, params) {
+
+    override suspend fun doWork(): Result {
+        val day = inputData.getString(KEY_DAY) ?: return Result.success()
+        ScheduledReportNotifier.onMorning(
+            applicationContext,
+            reportDay = day,
+            chargePct = inputData.getInt(KEY_CHARGE, -1).takeIf { it >= 0 },
+            restPct = inputData.getInt(KEY_REST, -1).takeIf { it >= 0 },
+        )
+        return Result.success()
+    }
+
+    companion object {
+        private const val WORK = "noop.morningRecap"
+        private const val KEY_DAY = "day"
+        private const val KEY_CHARGE = "charge"
+        private const val KEY_REST = "rest"
+
+        /** The figures last booked, so the many re-evaluations before 05:00 (one per data update while a
+         *  strap syncs overnight) re-book only when the night or its figures actually change. */
+        @Volatile private var lastBooked: String? = null
+
+        fun schedule(context: Context, reportDay: String, chargePct: Int?, restPct: Int?, delayMinutes: Long) {
+            val key = "$reportDay|$chargePct|$restPct"
+            if (key == lastBooked) return
+            lastBooked = key
+            val request = androidx.work.OneTimeWorkRequestBuilder<MorningRecapWorker>()
+                .setInitialDelay(delayMinutes, java.util.concurrent.TimeUnit.MINUTES)
+                .setInputData(
+                    androidx.work.workDataOf(
+                        KEY_DAY to reportDay,
+                        KEY_CHARGE to (chargePct ?: -1),
+                        KEY_REST to (restPct ?: -1),
+                    ),
+                )
+                .build()
+            runCatching {
+                androidx.work.WorkManager.getInstance(context.applicationContext)
+                    .enqueueUniqueWork(WORK, androidx.work.ExistingWorkPolicy.REPLACE, request)
+            }
+        }
+    }
+}
