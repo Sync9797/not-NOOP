@@ -1014,6 +1014,36 @@ class WhoopBleClient(
          * Generous (60s, not 20s) because the type-43 raw flood eats BLE airtime between chunks.
          */
         private const val BACKFILL_IDLE_TIMEOUT_MS = 60_000L
+        /**
+         * Not-Noop write watchdog (ryanbr/noop#2805, #2908): how long a confirmed write may go without ANY
+         * completion callback before the write slot is freed. A confirmed write normally completes in well
+         * under a second; this is deliberately generous so a busy offload link is never second-guessed.
+         */
+        internal const val WRITE_ACK_TIMEOUT_MS = 15_000L
+        /** Dropped completions on one link before the link itself is restarted (see [onWriteAckTimeout]). */
+        internal const val WRITE_ACK_TIMEOUTS_BEFORE_RECONNECT = 2
+
+        /** What the write watchdog does when it fires. */
+        internal enum class WriteAckAction { IGNORE, FREE_SLOT, RECONNECT }
+
+        /**
+         * Pure decision for [onWriteAckTimeout], given the dropped-completion count INCLUDING this one.
+         * Ignore when nothing is owed any more, when there is no link, or while the bond write or the 5/MG
+         * hello is outstanding (each has its own watchdog and feeds the bond counters). Restart the link only
+         * once bonded and only from the [WRITE_ACK_TIMEOUTS_BEFORE_RECONNECT]th drop; otherwise free the slot.
+         */
+        internal fun writeAckAction(
+            writeInFlight: Boolean,
+            hasGatt: Boolean,
+            bondWriteOutstanding: Boolean,
+            helloOutstanding: Boolean,
+            didBond: Boolean,
+            timeoutsThisLink: Int,
+        ): WriteAckAction = when {
+            !writeInFlight || !hasGatt || bondWriteOutstanding || helloOutstanding -> WriteAckAction.IGNORE
+            didBond && timeoutsThisLink >= WRITE_ACK_TIMEOUTS_BEFORE_RECONNECT -> WriteAckAction.RECONNECT
+            else -> WriteAckAction.FREE_SLOT
+        }
         /** Deferral before the first connect-time offload, so SET_CLOCK/GET_DATA_RANGE round-trip first. */
         private const val INITIAL_BACKFILL_DELAY_MS = 1_500L
         /** 5/MG fail-open gate: how long to wait for a GET_DATA_RANGE SUCCESS before requesting
@@ -3713,6 +3743,11 @@ class WhoopBleClient(
     // write-completion callbacks - the barrier guarantees the main-thread drain sees the flag flip promptly
     // (else a queued write could stall until the next drain trigger).
     @Volatile private var writeInFlight = false
+    /** Not-Noop write watchdog: the command whose completion is being waited on, and how many completions
+     *  the stack has dropped on this link. Main-looper only; cleared in [reset]. */
+    private var writeAckWatchedCmd: CommandNumber? = null
+    private var writeAckTimeoutsThisLink = 0
+    private val writeAckWatchdogRunnable = Runnable { onWriteAckTimeout() }
     /** #791: set while [writeBondFrame]'s out-of-queue confirmed write is outstanding, so its completion is
      *  not mistaken for evidence about a frame held for retry. @Volatile: set on the main looper, read and
      *  cleared from the GATT binder thread in onCharacteristicWrite. */
@@ -7751,6 +7786,9 @@ class WhoopBleClient(
             characteristic: BluetoothGattCharacteristic,
             status: Int,
         ) {
+            // Any completion, success or failure, proves the stack is still answering: stand the write
+            // watchdog down. removeCallbacks is safe from this binder thread.
+            handler.removeCallbacks(writeAckWatchdogRunnable)
             // Port of didWriteValueFor: a CONFIRMED-write completion (no error) == bonding succeeded.
             if (status != BluetoothGatt.GATT_SUCCESS) {
                 log("Confirmed write failed: ${gattStatusLabel(status)}")
@@ -10134,6 +10172,67 @@ class WhoopBleClient(
         drainWriteQueue()
     }
 
+    /** Start waiting for [cmd]'s completion (main looper, right after the write was accepted). */
+    private fun armWriteAckWatchdog(cmd: CommandNumber?) {
+        writeAckWatchedCmd = cmd
+        handler.removeCallbacks(writeAckWatchdogRunnable)
+        handler.postDelayed(writeAckWatchdogRunnable, WRITE_ACK_TIMEOUT_MS)
+    }
+
+    /**
+     * Not-Noop (ryanbr/noop#2805, #2908): a confirmed write got no completion callback at all.
+     *
+     * Android allows one write in flight, and only the completion callback frees the slot ([writeInFlight]).
+     * When a stack drops that callback, every later write queues behind it for the rest of the link: the
+     * offload ack, so the strap re-sends the same chunk and the chunk counter freezes while the link stays up
+     * (#2805); and the next history request, so sessions time out with zero frames while live heart rate,
+     * which arrives as notifications rather than writes, carries on (#2908). Both reports were cleared by
+     * force-stopping the app, which is a teardown in disguise.
+     *
+     * The first time on a link, free the slot and let the queue move. The frame is NOT re-sent: the stack may
+     * have delivered it and only lost the callback, and the sync paths already re-request what they need. The
+     * second time on the same link the stack is plainly wedged, so restart the link the way the keep-alive and
+     * bond watchdogs do. Never before the strap has bonded: the bond write has its own watchdog, and
+     * not-yet-bonded links feed the #982 / #971 counters, which a teardown here must not disturb. The log line
+     * is always on: it is a rare event and exactly the evidence missing from both reports.
+     */
+    private fun onWriteAckTimeout() {
+        val action = writeAckAction(
+            writeInFlight = writeInFlight,
+            hasGatt = gatt != null,
+            bondWriteOutstanding = bondWriteOutstanding,
+            helloOutstanding = clientHelloWriteAtMs > 0L,
+            didBond = didBond,
+            timeoutsThisLink = writeAckTimeoutsThisLink + 1,
+        )
+        if (action == WriteAckAction.IGNORE) return
+        writeAckTimeoutsThisLink++
+        val cmd = writeAckWatchedCmd?.name ?: "raw frame"
+        writeAckWatchedCmd = null
+        if (action == WriteAckAction.RECONNECT) {
+            log(
+                "Write watchdog: $cmd got no completion after ${WRITE_ACK_TIMEOUT_MS / 1000}s (dropped completion " +
+                    "$writeAckTimeoutsThisLink on this link) — the Bluetooth stack is " +
+                    "stuck, restarting the link (#2805/#2908)",
+            )
+            noteLocalTeardown("writeAckWatchdog")
+            try {
+                gatt?.disconnect()   // → handleDisconnect → reset() → backoff reconnect
+            } catch (t: Throwable) {
+                log("write watchdog: gatt.disconnect() threw ${t.javaClass.simpleName}; tearing down")
+                teardownAfterGattFailure()
+            }
+            return
+        }
+        log(
+            "Write watchdog: $cmd got no completion after ${WRITE_ACK_TIMEOUT_MS / 1000}s — freeing the " +
+                "write queue so later commands are not stuck behind it (dropped completion " +
+                "$writeAckTimeoutsThisLink on this link, #2805/#2908)",
+        )
+        writeInFlight = false
+        drainWriteQueue()
+    }
+
     @SuppressLint("MissingPermission")
     private fun drainWriteQueue() {
         // Serialise onto the GATT thread (main looper) — see connectGatt(..., handler). A command
@@ -10212,6 +10311,7 @@ class WhoopBleClient(
             return
         }
         writeRetries = 0   // this frame went out — reset the per-frame retry budget
+        if (item.withResponse) armWriteAckWatchdog(item.cmd)
 
         // WITHOUT-response writes get NO onCharacteristicWrite callback, so free the slot ourselves —
         // but after a short PACING gap. A bare post fired the next write on the same looper tick, before
@@ -12255,6 +12355,9 @@ class WhoopBleClient(
         writeQueue.clear()
         cccdQueue.clear()
         writeInFlight = false
+        handler.removeCallbacks(writeAckWatchdogRunnable)
+        writeAckWatchedCmd = null
+        writeAckTimeoutsThisLink = 0
         pendingRetry = null
         writeRetries = 0
         bondWriteOutstanding = false   // #791: a stale flag would suppress a legitimate cancel next session
