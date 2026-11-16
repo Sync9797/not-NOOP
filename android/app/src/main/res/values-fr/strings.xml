@@ -2881,4 +2881,5 @@
     <string name="bug_report_continue">Continuer</string>
     <string name="bug_report_cancel">Annuler</string>
     <string name="bug_report_saved">%1$s enregistré dans Téléchargements. Joignez-le sur la page GitHub.</string>
+    <string name="l10n_app_changelog_a_workouts_tab_bug_reports_from_0c56120f">Un onglet Séances, des rapports de bug depuis les réglages et des correctifs de synchronisation et de widgets</string>
 </resources>

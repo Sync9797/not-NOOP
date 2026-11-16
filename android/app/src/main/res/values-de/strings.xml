@@ -2895,4 +2895,5 @@
     <string name="bug_report_continue">Weiter</string>
     <string name="bug_report_cancel">Abbrechen</string>
     <string name="bug_report_saved">%1$s im Download-Ordner gespeichert. Hänge es auf der GitHub-Seite an.</string>
+    <string name="l10n_app_changelog_a_workouts_tab_bug_reports_from_0c56120f">Ein Workouts-Tab, Fehlerberichte aus den Einstellungen und Korrekturen bei Sync und Widgets</string>
 </resources>

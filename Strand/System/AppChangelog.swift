@@ -7,7 +7,7 @@ enum AppChangelog {
 
     /// Bump this when you add a release below. The "What's New" sheet shows automatically when the
     /// stored last-seen version is behind this. (Decoupled from the bundle version on purpose.)
-    static let currentVersion = "12.3.1"
+    static let currentVersion = "12.3.2"
 
     struct Release: Identifiable {
         let version: String
@@ -19,6 +19,19 @@ enum AppChangelog {
 
     /// Newest first.
     static let releases: [Release] = [
+        Release(
+            version: "12.3.2",
+            title: "A Workouts tab, bug reports from Settings, and sync and widget fixes",
+            date: "November 2026",
+            items: [
+                "**Workouts tab.** Workouts now has its own button on the bottom bar and the sidebar, between Sleep and Coach, instead of being inside More.",
+                "**Report a bug from Settings.** Support saves your strap log (serial numbers and Bluetooth addresses removed) to Downloads and opens a bug report on GitHub with your app and phone details filled in. Attach the log and submit; nothing is sent until you do.",
+                "**History sync no longer freezes until you force-stop NOOP.** If Android's Bluetooth stack loses track of one command, NOOP now moves on after 15 seconds, and reconnects if it happens again.",
+                "**Widgets stay filled while the strap is away.** The home-screen widgets used to go blank when the strap was out of range or charging; they now refresh every 15 minutes and roll over to the new day.",
+                "**Mood logs to the right day.** Logging a mood with the screen still open from the evening no longer overwrites the previous day's mood.",
+                "**The morning recap arrives.** A recap held back overnight is now delivered at 05:00 instead of sometimes never.",
+            ]
+        ),
         Release(
             version: "12.3.1",
             title: "Bigger buttons on a half-folded phone, readable headings on photos",

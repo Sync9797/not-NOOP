@@ -2777,4 +2777,5 @@
     <string name="bug_report_continue">Продолжить</string>
     <string name="bug_report_cancel">Отмена</string>
     <string name="bug_report_saved">%1$s сохранён в «Загрузки». Прикрепите его на странице GitHub.</string>
+    <string name="l10n_app_changelog_a_workouts_tab_bug_reports_from_0c56120f">Вкладка «Спорт», отчёты об ошибках из настроек и исправления синхронизации и виджетов</string>
 </resources>
