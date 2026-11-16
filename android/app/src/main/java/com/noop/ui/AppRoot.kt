@@ -262,7 +262,8 @@ internal val drawerGroups: List<DrawerGroup> = listOf(
         Destination.Insights, Destination.Explore, Destination.Compare,
     ), defaultExpanded = true),
     DrawerGroup("Body", R.string.more_group_body, listOf(
-        Destination.Live, Destination.Workouts, Destination.Health, Destination.VitalSigns,
+        // Workouts moved up to its own tab (Not-Noop); a destination lives in one place only (#2218).
+        Destination.Live, Destination.Health, Destination.VitalSigns,
         Destination.LabBook, Destination.Stress, Destination.Breathe, Destination.Intervals,
         Destination.Rhythm,
     ), defaultExpanded = true),
@@ -1215,7 +1216,7 @@ private fun MoreRow(dest: Destination, onClick: () -> Unit) {
 /** A single bottom-bar nav slot: the destination it switches to, plus the bar-specific icon/label. */
 internal data class BarTab(val dest: Destination, val icon: ImageVector, @StringRes val labelRes: Int)
 
-/** The nav slots in iOS order: Today · Trends · Sleep · Coach · More.
+/** The nav slots: Today · Trends · Sleep · Workouts · Coach · More (iOS has no Workouts tab).
  *  More is special-cased (it opens the sheet rather than a route), so it is appended at the call site. */
 internal val barLeadingTabs = listOf(
     BarTab(Destination.Today, Icons.Outlined.GridView, R.string.nav_today),
@@ -1228,6 +1229,11 @@ internal val barLeadingTabs = listOf(
  */
 internal val barTrailingTabs = listOf(
     BarTab(Destination.Sleep, Icons.Filled.Bedtime, R.string.nav_sleep),
+    // Not-Noop: Workouts is a tab of its own (it was two taps deep in More), on the bar, the large-screen
+    // rail and the tabletop pad alike, since all three iterate this one list.
+    // Its own short label: the bar's slots are one line, and "Entrenamientos" / "Entraînements" would
+    // ellipsize at six slots on a phone. The screen title keeps the full word (nav_workouts).
+    BarTab(Destination.Workouts, Icons.Filled.FitnessCenter, R.string.nav_tab_workouts),
     // #2218: Coach was promoted to a top-level tab on iOS and this side did not follow, so it sat in
     // the More list while the comment above claimed the two bars matched. AutoAwesome is the sparkles
     // glyph iOS uses, and the same one the More row already shows, so the entry a wearer has learned
@@ -1249,7 +1255,7 @@ internal fun barTrailingTabsFor(coachEnabled: Boolean): List<BarTab> =
 internal val barMoreTab = BarTab(Destination.More, Icons.Filled.MoreHoriz, R.string.nav_more)
 
 /**
- * Every slot the shell's navigation draws, in order: Today · Trends · Sleep · (Coach) · More. The ONE
+ * Every slot the shell's navigation draws, in order: Today · Trends · Sleep · Workouts · (Coach) · More. The ONE
  * list both the bottom bar and the large-screen rail iterate, so the two cannot disagree on which tabs
  * exist (the #2218 lesson: a second copy of this list is what let Coach light two slots at once).
  */
@@ -1269,7 +1275,7 @@ internal fun isShellTabActive(tab: BarTab, current: Destination, tabs: List<BarT
     }
 
 @Composable
-private fun GlassBottomBar(
+internal fun GlassBottomBar(
     current: Destination,
     onTabSelected: (Destination) -> Unit,
     modifier: Modifier = Modifier,

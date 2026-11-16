@@ -14,6 +14,7 @@ import com.noop.ui.NoopTheme
 import com.noop.ui.SectionHeader
 import com.noop.ui.ScoringGuideScreen
 import com.noop.ui.TabletopNavPad
+import com.noop.ui.GlassBottomBar
 import com.noop.ui.Destination
 import com.noop.ui.WhoopModelComparisonScreen
 import org.junit.Assume.assumeTrue
@@ -77,6 +78,12 @@ class ScreenshotTour {
             NoopPrefs.setSkyBehindCards(RuntimeEnvironment.getApplication(), false)
         }
     }
+
+    // The phone bar with its six slots, in English and in a long-word locale.
+    @Test @Config(qualifiers = "w360dp-h640dp-port-xhdpi") fun phoneBar() =
+        shoot("phone-bar") { GlassBottomBar(current = Destination.Workouts, onTabSelected = {}) }
+    @Test @Config(qualifiers = "es-w360dp-h640dp-port-xhdpi") fun phoneBarSpanish() =
+        shoot("phone-bar-es") { GlassBottomBar(current = Destination.Workouts, onTabSelected = {}) }
 
     // The bottom half of a half-folded phone (tabletop), where the nav pad replaces the bar.
     @Test @Config(qualifiers = TABLETOP_HALF) fun tabletopNavPad() =

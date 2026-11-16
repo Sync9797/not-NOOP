@@ -27,11 +27,11 @@ class BottomBarTabsTest {
         assertTrue("a bar tab must not also appear in the More sheet, found $both", both.isEmpty())
     }
 
-    /** Matching iOS: Today, Trends, Sleep, Coach, then More, which the bar appends itself. */
+    /** iOS's Today, Trends, Sleep, Coach, plus Not-Noop's Workouts tab, then More, which the bar appends. */
     @Test
-    fun theBarCarriesTheSameFourNamedTabsAsIOS() {
+    fun theBarCarriesTheNamedTabsInOrder() {
         assertEquals(
-            listOf(Destination.Today, Destination.Trends, Destination.Sleep, Destination.Coach),
+            listOf(Destination.Today, Destination.Trends, Destination.Sleep, Destination.Workouts, Destination.Coach),
             barTabs.map { it.dest },
         )
     }
