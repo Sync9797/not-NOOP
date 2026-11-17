@@ -7,7 +7,7 @@ enum AppChangelog {
 
     /// Bump this when you add a release below. The "What's New" sheet shows automatically when the
     /// stored last-seen version is behind this. (Decoupled from the bundle version on purpose.)
-    static let currentVersion = "12.3.2"
+    static let currentVersion = "12.3.3"
 
     struct Release: Identifiable {
         let version: String
@@ -19,6 +19,15 @@ enum AppChangelog {
 
     /// Newest first.
     static let releases: [Release] = [
+        Release(
+            version: "12.3.3",
+            title: "A cleaner sidebar and tab names that fit",
+            date: "November 2026",
+            items: [
+                "**Icons-only sidebar on tablets and foldables.** The side navigation shows just the icons, with the current screen in a soft highlight, so it takes up less room. Phones keep their labels.",
+                "**Tab names fit in every language.** Some translations were cut off on phones now that there are six tabs; they use shorter names on the bar.",
+            ]
+        ),
         Release(
             version: "12.3.2",
             title: "A Workouts tab, bug reports from Settings, and sync and widget fixes",

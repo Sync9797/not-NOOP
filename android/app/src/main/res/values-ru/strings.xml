@@ -2781,4 +2781,5 @@
     <string name="nav_tab_today">Сегодня</string>
     <string name="nav_tab_trends">Тренды</string>
     <string name="nav_tab_coach">Тренер</string>
+    <string name="l10n_app_changelog_a_cleaner_sidebar_and_tab_names_27ab65b2">Более аккуратная боковая панель и названия вкладок, которые помещаются</string>
 </resources>

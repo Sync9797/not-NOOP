@@ -26,7 +26,7 @@ object AppChangelog {
      * Bump this when you add a release below. The "What's New" sheet shows automatically when the
      * stored last-seen version is behind this. (Decoupled from the bundle version on purpose.)
      */
-    const val CURRENT_VERSION = "12.3.2"
+    const val CURRENT_VERSION = "12.3.3"
 
     data class Release(
         val version: String,
@@ -37,6 +37,15 @@ object AppChangelog {
 
     /** Newest first. */
     val releases: List<Release> = listOf(
+        Release(
+            version = "12.3.3",
+            title = uiString(R.string.l10n_app_changelog_a_cleaner_sidebar_and_tab_names_27ab65b2),
+            date = "November 2026",
+            items = listOf(
+                "**Icons-only sidebar on tablets and foldables.** The side navigation shows just the icons, with the current screen in a soft highlight, so it takes up less room. Phones keep their labels.",
+                "**Tab names fit in every language.** Some translations were cut off on phones now that there are six tabs; they use shorter names on the bar.",
+            ),
+        ),
         Release(
             version = "12.3.2",
             title = uiString(R.string.l10n_app_changelog_a_workouts_tab_bug_reports_from_0c56120f),
