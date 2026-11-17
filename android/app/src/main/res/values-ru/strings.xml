@@ -2784,4 +2784,19 @@
     <string name="l10n_app_changelog_a_cleaner_sidebar_and_tab_names_27ab65b2">Более аккуратная боковая панель и названия вкладок, которые помещаются</string>
     <string name="book_swap_sides">Поменять стороны</string>
     <string name="l10n_app_changelog_two_columns_on_a_half_open_596e576f">Две колонки на полураскрытом складном телефоне</string>
+    <string name="haptic_lab_title">Шаблоны вибрации (WHOOP 4.0)</string>
+    <string name="haptic_lab_blurb">Все вибрации NOOP используют один и тот же шаблон, поэтому ощущаются одинаково. Попробуйте остальные по одному и отметьте, как ощущается каждый. Двигается только мотор; на браслете ничего не меняется.</string>
+    <string name="haptic_lab_read_list">Прочитать список шаблонов</string>
+    <string name="haptic_lab_stop">Остановить вибрацию</string>
+    <string name="haptic_lab_try_heading">Нажмите на шаблон, чтобы почувствовать его один раз:</string>
+    <string name="haptic_lab_what_felt">Как ощущался шаблон %1$d?</string>
+    <string name="haptic_lab_feel_nothing">Ничего</string>
+    <string name="haptic_lab_feel_one">Одна короткая</string>
+    <string name="haptic_lab_feel_two">Две</string>
+    <string name="haptic_lab_feel_three">Три</string>
+    <string name="haptic_lab_feel_long">Длинная</string>
+    <string name="haptic_lab_feel_other">Другой шаблон</string>
+    <string name="haptic_lab_results">Ваши результаты: %1$s</string>
+    <string name="haptic_lab_share_hint">Результаты записываются в журнал браслета. Поделитесь ими: Настройки › Поддержка › Сообщить об ошибке.</string>
+    <string name="haptic_lab_needs_whoop4">Сначала подключите WHOOP 4.0.</string>
 </resources>

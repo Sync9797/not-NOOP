@@ -3807,6 +3807,9 @@ class WhoopBleClient(
      *  provenance dump fires once per command per session (a 4.0's per-poll battery reads would otherwise
      *  flood the strap log). Cleared in reset(). */
     private val rawDumpedRespCmds = mutableSetOf<String>()
+    /** Not-Noop haptic preset experiment: set by the Test Centre calls, cleared in reset(). While set, the
+     *  replies to 79 and 80 are logged in full (see [readHapticPatterns]). */
+    @Volatile private var hapticPresetTestArmed = false
 
     // ====================================================================================
     // MARK: Public API  (port of BLEManager.connect / disconnect / send + buzz helper)
@@ -4716,6 +4719,54 @@ class WhoopBleClient(
     fun stopHaptics() {
         send(CommandNumber.STOP_HAPTICS, byteArrayOf(0))
         log("Stop haptics (cmd 122)")
+    }
+
+    /**
+     * Not-Noop haptic preset experiment (Test Centre only; WHOOP 4.0 only). See docs/PROTOCOL_ALARMS.md
+     * "Haptic preset experiment".
+     *
+     * Every NOOP buzz on a 4.0 uses preset 2, the graduated alarm buzz, so every buzz feels the same no
+     * matter the repeat count. The strap carries other presets, but which id feels like what is unmapped.
+     * These two calls let a wearer find out:
+     *  - [readHapticPatterns] sends the read-only GET_ALL_HAPTICS_PATTERN (80);
+     *  - [tryHapticPreset] fires ONE loop of a chosen preset id through the same RUN_HAPTICS_PATTERN (79)
+     *    command every buzz already uses.
+     * Reversible by construction: a haptic request only moves the motor, stores nothing and changes no
+     * setting. The worst case is an unfamiliar buzz or none, and [stopHaptics] ends a long one. Sent only on
+     * a tap, never automatically. Not on a 5/MG, whose 79 is remapped to a different body ([send]).
+     *
+     * Each reply is logged in full while the experiment is in use on this link ([hapticPresetTestArmed]),
+     * since the 79 result (SUCCESS / UNSUPPORTED) is itself evidence of which ids exist.
+     *
+     * @return false (and logs why) when no WHOOP 4.0 is connected, so the caller can say so.
+     */
+    fun readHapticPatterns(): Boolean {
+        if (!hapticPresetTestAllowed("read the pattern list")) return false
+        hapticPresetTestArmed = true
+        send(CommandNumber.GET_ALL_HAPTICS_PATTERN, byteArrayOf(0), withResponse = true)
+        log("Haptic preset test: GET_ALL_HAPTICS_PATTERN(80) sent; the reply is logged below when it lands")
+        return true
+    }
+
+    /** One loop of preset [patternId] (0-255). See [readHapticPatterns]. */
+    fun tryHapticPreset(patternId: Int): Boolean {
+        if (!hapticPresetTestAllowed("try preset $patternId")) return false
+        hapticPresetTestArmed = true
+        val id = patternId.coerceIn(0, 255)
+        send(CommandNumber.RUN_HAPTICS_PATTERN, byteArrayOf(id.toByte(), 1, 0, 0, 0), withResponse = true)
+        log("Haptic preset test: trying preset $id (one loop)")
+        return true
+    }
+
+    /** Record what the wearer felt for [patternId], so a shared strap log carries the mapping. */
+    fun noteHapticPresetFeel(patternId: Int, feel: String) {
+        log("Haptic preset test: preset $patternId felt: $feel")
+    }
+
+    private fun hapticPresetTestAllowed(what: String): Boolean {
+        val ok = _state.value.connected && connectedFamily == DeviceFamily.WHOOP4
+        if (!ok) log("Haptic preset test: cannot $what — needs a connected WHOOP 4.0 (family=$connectedFamily)")
+        return ok
     }
 
     /**
@@ -8941,6 +8992,16 @@ class WhoopBleClient(
                             "frame=${frame.joinToString("") { "%02x".format(it) }}",
                     )
                 }
+                // Not-Noop haptic preset experiment: every reply to 79/80 while the Test Centre experiment is in
+                // use on this link, success included, since which ids the strap accepts is the finding.
+                if (hapticPresetTestArmed && (respCmd?.startsWith("GET_ALL_HAPTICS_PATTERN") == true ||
+                        respCmd?.startsWith("RUN_HAPTICS_PATTERN") == true)
+                ) {
+                    log(
+                        "Haptic preset test: $respCmd reply result=${result ?: "none"} " +
+                            "frame=${frame.joinToString("") { "%02x".format(it) }}",
+                    )
+                }
                 // 5/MG range-query gate: a GET_DATA_RANGE SUCCESS releases the history request
                 // (PENDING precedes it; the 2s fail-open fallback covers a swallowed reply). (#78 fork)
                 if (connectedFamily == DeviceFamily.WHOOP5 && backfilling && !historicalKickSent &&
@@ -12370,6 +12431,7 @@ class WhoopBleClient(
         cccdRetries = 0
         sessionStarted = false
         rawDumpedRespCmds.clear()   // #900: re-arm the per-command raw-frame dump for the next connection
+        hapticPresetTestArmed = false
         serviceDiscoveryRunnable?.let { handler.removeCallbacks(it) }
         serviceDiscoveryRunnable = null
         // Clear the onMtuChanged dedup (#50) so the first MTU callback of the NEXT connection — even to

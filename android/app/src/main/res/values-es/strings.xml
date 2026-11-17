@@ -2889,4 +2889,19 @@
     <string name="l10n_app_changelog_a_cleaner_sidebar_and_tab_names_27ab65b2">Una barra lateral más limpia y nombres de pestañas que caben</string>
     <string name="book_swap_sides">Intercambiar lados</string>
     <string name="l10n_app_changelog_two_columns_on_a_half_open_596e576f">Dos columnas en un plegable medio abierto</string>
+    <string name="haptic_lab_title">Patrones de vibración (WHOOP 4.0)</string>
+    <string name="haptic_lab_blurb">Todas las vibraciones de NOOP usan el mismo patrón, por eso se sienten iguales. Prueba los demás uno a uno y anota cómo se siente cada uno. Solo mueve el motor; no cambia nada en la pulsera.</string>
+    <string name="haptic_lab_read_list">Leer lista de patrones</string>
+    <string name="haptic_lab_stop">Detener vibración</string>
+    <string name="haptic_lab_try_heading">Toca un patrón para sentirlo una vez:</string>
+    <string name="haptic_lab_what_felt">¿Cómo se sintió el patrón %1$d?</string>
+    <string name="haptic_lab_feel_nothing">Nada</string>
+    <string name="haptic_lab_feel_one">Uno corto</string>
+    <string name="haptic_lab_feel_two">Dos</string>
+    <string name="haptic_lab_feel_three">Tres</string>
+    <string name="haptic_lab_feel_long">Largo</string>
+    <string name="haptic_lab_feel_other">Otro patrón</string>
+    <string name="haptic_lab_results">Tus resultados: %1$s</string>
+    <string name="haptic_lab_share_hint">Tus resultados se guardan en el registro de la pulsera. Compártelos en Ajustes › Soporte › Informar de un error.</string>
+    <string name="haptic_lab_needs_whoop4">Conecta primero una WHOOP 4.0.</string>
 </resources>

@@ -2905,4 +2905,19 @@
     <string name="l10n_app_changelog_a_cleaner_sidebar_and_tab_names_27ab65b2">Czytelniejszy pasek boczny i nazwy kart, które się mieszczą</string>
     <string name="book_swap_sides">Zamień strony</string>
     <string name="l10n_app_changelog_two_columns_on_a_half_open_596e576f">Dwie kolumny na półotwartym składanym telefonie</string>
+    <string name="haptic_lab_title">Wzorce wibracji (WHOOP 4.0)</string>
+    <string name="haptic_lab_blurb">Każda wibracja NOOP używa tego samego wzorca, dlatego wszystkie są takie same. Wypróbuj pozostałe po kolei i zanotuj, jak każdy się czuje. Porusza tylko silniczek; na opasce nic się nie zmienia.</string>
+    <string name="haptic_lab_read_list">Odczytaj listę wzorców</string>
+    <string name="haptic_lab_stop">Zatrzymaj wibrację</string>
+    <string name="haptic_lab_try_heading">Dotknij wzorca, aby poczuć go raz:</string>
+    <string name="haptic_lab_what_felt">Jak było przy wzorcu %1$d?</string>
+    <string name="haptic_lab_feel_nothing">Nic</string>
+    <string name="haptic_lab_feel_one">Jedna krótka</string>
+    <string name="haptic_lab_feel_two">Dwie</string>
+    <string name="haptic_lab_feel_three">Trzy</string>
+    <string name="haptic_lab_feel_long">Długa</string>
+    <string name="haptic_lab_feel_other">Inny wzorzec</string>
+    <string name="haptic_lab_results">Twoje wyniki: %1$s</string>
+    <string name="haptic_lab_share_hint">Wyniki trafiają do dziennika opaski. Udostępnij je przez Ustawienia › Pomoc › Zgłoś błąd.</string>
+    <string name="haptic_lab_needs_whoop4">Najpierw połącz WHOOP 4.0.</string>
 </resources>

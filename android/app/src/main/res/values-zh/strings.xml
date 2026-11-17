@@ -2859,4 +2859,19 @@
     <string name="l10n_app_changelog_a_cleaner_sidebar_and_tab_names_27ab65b2">更简洁的侧边栏，标签名称完整显示</string>
     <string name="book_swap_sides">交换左右</string>
     <string name="l10n_app_changelog_two_columns_on_a_half_open_596e576f">半展开折叠屏上的双栏显示</string>
+    <string name="haptic_lab_title">振动模式（WHOOP 4.0）</string>
+    <string name="haptic_lab_blurb">NOOP 的每次振动都使用同一个模式，所以感觉都一样。逐个试试其他模式，并记下每个的感觉。只会让马达振动，手环上的任何设置都不会改变。</string>
+    <string name="haptic_lab_read_list">读取模式列表</string>
+    <string name="haptic_lab_stop">停止振动</string>
+    <string name="haptic_lab_try_heading">点按一个模式感受一次：</string>
+    <string name="haptic_lab_what_felt">模式 %1$d 感觉如何？</string>
+    <string name="haptic_lab_feel_nothing">没有感觉</string>
+    <string name="haptic_lab_feel_one">一下短振</string>
+    <string name="haptic_lab_feel_two">两下</string>
+    <string name="haptic_lab_feel_three">三下</string>
+    <string name="haptic_lab_feel_long">长振</string>
+    <string name="haptic_lab_feel_other">其他模式</string>
+    <string name="haptic_lab_results">你的结果：%1$s</string>
+    <string name="haptic_lab_share_hint">结果会写入手环日志。可通过 设置 › 支持 › 报告问题 分享。</string>
+    <string name="haptic_lab_needs_whoop4">请先连接 WHOOP 4.0。</string>
 </resources>

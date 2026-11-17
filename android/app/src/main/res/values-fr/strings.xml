@@ -2888,4 +2888,19 @@
     <string name="l10n_app_changelog_a_cleaner_sidebar_and_tab_names_27ab65b2">Une barre latérale épurée et des noms d\'onglets qui tiennent</string>
     <string name="book_swap_sides">Inverser les côtés</string>
     <string name="l10n_app_changelog_two_columns_on_a_half_open_596e576f">Deux colonnes sur un pliable à demi ouvert</string>
+    <string name="haptic_lab_title">Motifs de vibration (WHOOP 4.0)</string>
+    <string name="haptic_lab_blurb">Toutes les vibrations de NOOP utilisent le même motif, d\'où la même sensation. Essayez les autres un par un et notez ce que chacun donne. Seul le moteur bouge ; rien ne change sur le bracelet.</string>
+    <string name="haptic_lab_read_list">Lire la liste des motifs</string>
+    <string name="haptic_lab_stop">Arrêter la vibration</string>
+    <string name="haptic_lab_try_heading">Touchez un motif pour le ressentir une fois :</string>
+    <string name="haptic_lab_what_felt">Qu\'avez-vous ressenti avec le motif %1$d ?</string>
+    <string name="haptic_lab_feel_nothing">Rien</string>
+    <string name="haptic_lab_feel_one">Une courte</string>
+    <string name="haptic_lab_feel_two">Deux</string>
+    <string name="haptic_lab_feel_three">Trois</string>
+    <string name="haptic_lab_feel_long">Longue</string>
+    <string name="haptic_lab_feel_other">Autre motif</string>
+    <string name="haptic_lab_results">Vos résultats : %1$s</string>
+    <string name="haptic_lab_share_hint">Vos résultats sont écrits dans le journal du bracelet. Partagez-les via Réglages › Assistance › Signaler un bug.</string>
+    <string name="haptic_lab_needs_whoop4">Connectez d\'abord un WHOOP 4.0.</string>
 </resources>

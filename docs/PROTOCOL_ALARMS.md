@@ -56,6 +56,28 @@ and command 68 with revision byte 1, both as acknowledged writes. A bare preset
 write was reported ignored in one run. The paired observation does not prove that
 both commands are universally required by firmware.
 
+### Haptic preset experiment (Not-Noop, Test Centre)
+
+Every NOOP buzz on a WHOOP 4 uses preset 2 above, so every cue (notification, call, live-session
+nudge, tap-for-time) feels the same and only the loop count varies. Which other preset ids exist,
+and what each feels like, is not mapped. Settings › Test Centre › *Vibration presets (WHOOP 4.0)*
+lets a wearer find out:
+
+| Action | Request | Why it is safe |
+|---|---|---|
+| Read pattern list | command 80 `GET_ALL_HAPTICS_PATTERN`, body `00`, acknowledged | A read. The reply is logged in full; its layout is unmapped, and nothing depends on it. |
+| Try preset *n* (0-15) | command 79 `RUN_HAPTICS_PATTERN`, body `n 01 00 00 00` (one loop), acknowledged | The same command every buzz already sends, with a different preset byte. A haptic request only moves the motor: it stores nothing, changes no setting, and ends by itself. The worst case is an unfamiliar buzz or none. |
+| Stop buzz | command 122 `STOP_HAPTICS`, body `00` | Ends a long pattern early (the existing stop). |
+
+**Gating.** Every request is sent only on a tap, never automatically, and only to a connected WHOOP 4.
+The section is hidden for a 5/MG, whose command 79 is remapped to a different body.
+
+**Evidence.** While the experiment is in use on a link, every reply to 79 and 80 is logged with its
+result byte and full frame. A `SUCCESS` or `UNSUPPORTED` result for a preset id is itself evidence
+of which ids exist. What the wearer felt is recorded as `Haptic preset test: preset n felt: …` in
+the strap log, which Report a bug attaches. Until results from more than one strap and firmware
+agree, no product cue moves off preset 2.
+
 Event 60 (`HAPTICS_FIRED`) and event 100 (`HAPTICS_TERMINATED`) exist in the legacy
 event vocabulary. Absence of either event is not proof that the motor did not move.
 Pattern IDs, loop units, intensity, thermal/current limits, concurrency rules and

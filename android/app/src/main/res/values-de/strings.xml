@@ -2902,4 +2902,19 @@
     <string name="l10n_app_changelog_a_cleaner_sidebar_and_tab_names_27ab65b2">Eine aufgeräumte Seitenleiste und Tab-Namen, die passen</string>
     <string name="book_swap_sides">Seiten tauschen</string>
     <string name="l10n_app_changelog_two_columns_on_a_half_open_596e576f">Zwei Spalten auf einem halb geöffneten Foldable</string>
+    <string name="haptic_lab_title">Vibrationsmuster (WHOOP 4.0)</string>
+    <string name="haptic_lab_blurb">Jede NOOP-Vibration nutzt dasselbe Muster, deshalb fühlen sich alle gleich an. Probiere die anderen nacheinander aus und notiere, wie sie sich anfühlen. Bewegt nur den Motor; am Armband ändert sich nichts.</string>
+    <string name="haptic_lab_read_list">Musterliste lesen</string>
+    <string name="haptic_lab_stop">Vibration stoppen</string>
+    <string name="haptic_lab_try_heading">Tippe auf ein Muster, um es einmal zu spüren:</string>
+    <string name="haptic_lab_what_felt">Wie hat sich Muster %1$d angefühlt?</string>
+    <string name="haptic_lab_feel_nothing">Nichts</string>
+    <string name="haptic_lab_feel_one">Einmal kurz</string>
+    <string name="haptic_lab_feel_two">Zweimal</string>
+    <string name="haptic_lab_feel_three">Dreimal</string>
+    <string name="haptic_lab_feel_long">Lang</string>
+    <string name="haptic_lab_feel_other">Anderes Muster</string>
+    <string name="haptic_lab_results">Deine Ergebnisse: %1$s</string>
+    <string name="haptic_lab_share_hint">Deine Ergebnisse stehen im Armband-Protokoll. Teile sie über Einstellungen › Support › Fehler melden.</string>
+    <string name="haptic_lab_needs_whoop4">Verbinde zuerst ein WHOOP 4.0.</string>
 </resources>

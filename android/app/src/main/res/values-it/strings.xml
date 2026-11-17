@@ -2857,4 +2857,19 @@
     <string name="l10n_app_changelog_a_cleaner_sidebar_and_tab_names_27ab65b2">Una barra laterale più pulita e nomi delle schede che entrano</string>
     <string name="book_swap_sides">Scambia i lati</string>
     <string name="l10n_app_changelog_two_columns_on_a_half_open_596e576f">Due colonne su un pieghevole semiaperto</string>
+    <string name="haptic_lab_title">Schemi di vibrazione (WHOOP 4.0)</string>
+    <string name="haptic_lab_blurb">Ogni vibrazione di NOOP usa lo stesso schema, per questo sembrano tutte uguali. Prova gli altri uno alla volta e annota come li senti. Muove solo il motore; sul bracciale non cambia nulla.</string>
+    <string name="haptic_lab_read_list">Leggi elenco schemi</string>
+    <string name="haptic_lab_stop">Ferma vibrazione</string>
+    <string name="haptic_lab_try_heading">Tocca uno schema per sentirlo una volta:</string>
+    <string name="haptic_lab_what_felt">Com\'era lo schema %1$d?</string>
+    <string name="haptic_lab_feel_nothing">Niente</string>
+    <string name="haptic_lab_feel_one">Una breve</string>
+    <string name="haptic_lab_feel_two">Due</string>
+    <string name="haptic_lab_feel_three">Tre</string>
+    <string name="haptic_lab_feel_long">Lunga</string>
+    <string name="haptic_lab_feel_other">Schema diverso</string>
+    <string name="haptic_lab_results">I tuoi risultati: %1$s</string>
+    <string name="haptic_lab_share_hint">I risultati vengono scritti nel registro del bracciale. Condividili da Impostazioni › Supporto › Segnala un bug.</string>
+    <string name="haptic_lab_needs_whoop4">Collega prima un WHOOP 4.0.</string>
 </resources>

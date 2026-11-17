@@ -227,6 +227,16 @@ fun TestCentreScreen(vm: AppViewModel, onOpenGroundTruthCollector: () -> Unit = 
         // --- Section 2: Diagnostic tools ---
         DiagnosticToolsCard(vm)
 
+        // Not-Noop: the WHOOP 4.0 haptic preset experiment (try each vibration preset, record what it felt
+        // like). Hidden for a 5/MG, whose buzz command takes a different body.
+        if (!is5MG) {
+            SettingsSectionTC(
+                icon = hapticPresetLabIcon,
+                title = stringResource(R.string.haptic_lab_title),
+                blurb = stringResource(R.string.haptic_lab_blurb),
+            ) { HapticPresetLabContent(vm) }
+        }
+
         SettingsSectionTC(
             icon = Icons.AutoMirrored.Filled.DirectionsWalk,
             title = stringResource(R.string.ground_truth_title),
