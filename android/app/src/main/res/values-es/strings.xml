@@ -2888,4 +2888,5 @@
     <string name="nav_tab_coach">Coach</string>
     <string name="l10n_app_changelog_a_cleaner_sidebar_and_tab_names_27ab65b2">Una barra lateral más limpia y nombres de pestañas que caben</string>
     <string name="book_swap_sides">Intercambiar lados</string>
+    <string name="l10n_app_changelog_two_columns_on_a_half_open_596e576f">Dos columnas en un plegable medio abierto</string>
 </resources>

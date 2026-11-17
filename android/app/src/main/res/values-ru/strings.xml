@@ -2783,4 +2783,5 @@
     <string name="nav_tab_coach">Тренер</string>
     <string name="l10n_app_changelog_a_cleaner_sidebar_and_tab_names_27ab65b2">Более аккуратная боковая панель и названия вкладок, которые помещаются</string>
     <string name="book_swap_sides">Поменять стороны</string>
+    <string name="l10n_app_changelog_two_columns_on_a_half_open_596e576f">Две колонки на полураскрытом складном телефоне</string>
 </resources>

@@ -26,7 +26,7 @@ object AppChangelog {
      * Bump this when you add a release below. The "What's New" sheet shows automatically when the
      * stored last-seen version is behind this. (Decoupled from the bundle version on purpose.)
      */
-    const val CURRENT_VERSION = "12.3.3"
+    const val CURRENT_VERSION = "12.4.0"
 
     data class Release(
         val version: String,
@@ -37,6 +37,17 @@ object AppChangelog {
 
     /** Newest first. */
     val releases: List<Release> = listOf(
+        Release(
+            version = "12.4.0",
+            title = uiString(R.string.l10n_app_changelog_two_columns_on_a_half_open_596e576f),
+            date = "November 2026",
+            items = listOf(
+                "**Two screens in book mode.** Half-open a foldable like a book and Today stays on one side while the other side shows the tab you pick: Trends, Sleep, Workouts, Coach or More.",
+                "**Details open beside Today.** Tapping a ring, a metric, the journal or Sleep on Today opens it on the other side, so Today stays in view.",
+                "**Swap sides.** A button under the sidebar's icons flips which side Today is on.",
+                "**The greeting fits.** \"Good evening\" is no longer cut short next to the readiness pills.",
+            ),
+        ),
         Release(
             version = "12.3.3",
             title = uiString(R.string.l10n_app_changelog_a_cleaner_sidebar_and_tab_names_27ab65b2),

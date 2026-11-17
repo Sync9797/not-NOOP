@@ -2901,4 +2901,5 @@
     <string name="nav_tab_coach">Coach</string>
     <string name="l10n_app_changelog_a_cleaner_sidebar_and_tab_names_27ab65b2">Eine aufgeräumte Seitenleiste und Tab-Namen, die passen</string>
     <string name="book_swap_sides">Seiten tauschen</string>
+    <string name="l10n_app_changelog_two_columns_on_a_half_open_596e576f">Zwei Spalten auf einem halb geöffneten Foldable</string>
 </resources>
