@@ -46,4 +46,13 @@ class ShellTabsTest {
             }
         }
     }
+
+    @Test fun inBookPostureTheRailLeavesOutTheTodayItAlreadyShows() {
+        for (coach in listOf(true, false)) {
+            val book = railTabsFor(coach, todayPinned = true).map { it.dest }
+            assertEquals(shellTabsFor(coach).map { it.dest } - Destination.Today, book)
+            // Outside book posture the rail is exactly the shared list.
+            assertEquals(shellTabsFor(coach), railTabsFor(coach, todayPinned = false))
+        }
+    }
 }

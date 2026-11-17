@@ -954,6 +954,7 @@ fun AppRoot(viewModel: AppViewModel = viewModel()) {
                     current = current,
                     onTabSelected = onShellTabSelected,
                     onSwapSides = { bookSwapped = !bookSwapped },
+                    todayPinned = true,
                 )
             } else {
                 stackPane(Modifier.weight(1f).fillMaxHeight())
@@ -1312,6 +1313,14 @@ internal fun shellTabsFor(coachEnabled: Boolean): List<BarTab> =
     barLeadingTabs + barTrailingTabsFor(coachEnabled) + barMoreTab
 
 /**
+ * The rail's slots (Not-Noop). In book posture Today is pinned in its own pane and always on screen, so
+ * the rail drops its Today slot rather than offer a button that does nothing visible. Everywhere else it
+ * is exactly [shellTabsFor], the one list the bar and pad also use.
+ */
+internal fun railTabsFor(coachEnabled: Boolean, todayPinned: Boolean): List<BarTab> =
+    shellTabsFor(coachEnabled).let { tabs -> if (todayPinned) tabs.filterNot { it.dest == Destination.Today } else tabs }
+
+/**
  * Whether [tab] is lit for [current], given the visible [tabs]. A tab lights for its own destination;
  * More also stays lit for every screen reached THROUGH More (any destination that is not one of the
  * other visible tabs), so a drilled-in screen reads as "you're in More", never "nowhere".
@@ -1450,8 +1459,10 @@ internal fun GlassNavRail(
     modifier: Modifier = Modifier,
     // Book posture only: swap which half holds Today. Null hides the control.
     onSwapSides: (() -> Unit)? = null,
+    // Book posture: Today is pinned in its own pane, so the rail leaves out its Today slot.
+    todayPinned: Boolean = false,
 ) {
-    val tabs = shellTabsFor(BottomBarStyleStore.coachEnabled)
+    val tabs = railTabsFor(BottomBarStyleStore.coachEnabled, todayPinned)
     val railShape = RoundedCornerShape(28.dp)
     Box(
         modifier = modifier
