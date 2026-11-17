@@ -2912,4 +2912,7 @@
     <string name="bug_report_cancel">Cancel</string>
     <string name="bug_report_saved">Saved %1$s to Downloads. Attach it on the GitHub page.</string>
     <string name="l10n_app_changelog_a_workouts_tab_bug_reports_from_0c56120f">A Workouts tab, bug reports from Settings, and sync and widget fixes</string>
+    <string name="nav_tab_today">Today</string>
+    <string name="nav_tab_trends">Trends</string>
+    <string name="nav_tab_coach">Coach</string>
 </resources>

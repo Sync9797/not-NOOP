@@ -1217,12 +1217,15 @@ private fun MoreRow(dest: Destination, onClick: () -> Unit) {
 /** A single bottom-bar nav slot: the destination it switches to, plus the bar-specific icon/label. */
 internal data class BarTab(val dest: Destination, val icon: ImageVector, @StringRes val labelRes: Int)
 
+// Not-Noop: tab labels come from nav_tab_* rather than the screen titles (nav_*). The bar's slots are one line,
+// and at six slots on a 360dp phone several translations were cut off ("Tendencias", "Aujourd'hui",
+// "ИИ-тренер"); the screen titles keep the full words. The screenshot tour renders the bar in every locale.
 /** The nav slots: Today · Trends · Sleep · Workouts · Coach · More (iOS has no Workouts tab).
  *  More is special-cased (it opens the sheet rather than a route), so it is appended at the call site. */
 internal val barLeadingTabs = listOf(
-    BarTab(Destination.Today, Icons.Outlined.GridView, R.string.nav_today),
+    BarTab(Destination.Today, Icons.Outlined.GridView, R.string.nav_tab_today),
     // chart.line.uptrend.xyaxis on iOS — the rising-trend glyph, not a flat bar chart.
-    BarTab(Destination.Trends, Icons.AutoMirrored.Filled.TrendingUp, R.string.nav_trends),
+    BarTab(Destination.Trends, Icons.AutoMirrored.Filled.TrendingUp, R.string.nav_tab_trends),
 )
 /**
  * The trailing tabs, as shipped. [barTrailingTabsFor] is what the bar actually draws: Coach is
@@ -1239,7 +1242,7 @@ internal val barTrailingTabs = listOf(
     // the More list while the comment above claimed the two bars matched. AutoAwesome is the sparkles
     // glyph iOS uses, and the same one the More row already shows, so the entry a wearer has learned
     // keeps its face when it moves up.
-    BarTab(Destination.Coach, Icons.Filled.AutoAwesome, R.string.nav_coach),
+    BarTab(Destination.Coach, Icons.Filled.AutoAwesome, R.string.nav_tab_coach),
 )
 
 /**

@@ -2851,4 +2851,7 @@
     <string name="bug_report_cancel">Annulla</string>
     <string name="bug_report_saved">%1$s salvato in Download. Allegalo nella pagina di GitHub.</string>
     <string name="l10n_app_changelog_a_workouts_tab_bug_reports_from_0c56120f">Una scheda Sport, segnalazioni di bug dalle Impostazioni e correzioni a sincronizzazione e widget</string>
+    <string name="nav_tab_today">Oggi</string>
+    <string name="nav_tab_trends">Trend</string>
+    <string name="nav_tab_coach">Coach</string>
 </resources>

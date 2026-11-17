@@ -2853,4 +2853,7 @@
     <string name="bug_report_cancel">取消</string>
     <string name="bug_report_saved">已将 %1$s 保存到“下载”。请在 GitHub 页面上附加它。</string>
     <string name="l10n_app_changelog_a_workouts_tab_bug_reports_from_0c56120f">新增运动标签页、可从设置报告问题，并修复同步和小组件问题</string>
+    <string name="nav_tab_today">今日</string>
+    <string name="nav_tab_trends">趋势</string>
+    <string name="nav_tab_coach">AI教练</string>
 </resources>

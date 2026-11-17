@@ -85,6 +85,20 @@ class ScreenshotTour {
         shoot("phone-bar") { GlassBottomBar(current = Destination.Workouts, onTabSelected = {}) }
     @Test @Config(qualifiers = "es-w360dp-h640dp-port-xhdpi") fun phoneBarSpanish() =
         shoot("phone-bar-es") { GlassBottomBar(current = Destination.Workouts, onTabSelected = {}) }
+    @Test @Config(qualifiers = "de-w360dp-h640dp-port-xhdpi") fun phoneBarGerman() =
+        shoot("phone-bar-de") { GlassBottomBar(current = Destination.Workouts, onTabSelected = {}) }
+    @Test @Config(qualifiers = "fr-w360dp-h640dp-port-xhdpi") fun phoneBarFrench() =
+        shoot("phone-bar-fr") { GlassBottomBar(current = Destination.Workouts, onTabSelected = {}) }
+    @Test @Config(qualifiers = "it-w360dp-h640dp-port-xhdpi") fun phoneBarItalian() =
+        shoot("phone-bar-it") { GlassBottomBar(current = Destination.Workouts, onTabSelected = {}) }
+    @Test @Config(qualifiers = "pl-w360dp-h640dp-port-xhdpi") fun phoneBarPolish() =
+        shoot("phone-bar-pl") { GlassBottomBar(current = Destination.Workouts, onTabSelected = {}) }
+    @Test @Config(qualifiers = "pt-rPT-w360dp-h640dp-port-xhdpi") fun phoneBarPortuguese() =
+        shoot("phone-bar-pt-rPT") { GlassBottomBar(current = Destination.Workouts, onTabSelected = {}) }
+    @Test @Config(qualifiers = "ru-w360dp-h640dp-port-xhdpi") fun phoneBarRussian() =
+        shoot("phone-bar-ru") { GlassBottomBar(current = Destination.Workouts, onTabSelected = {}) }
+    @Test @Config(qualifiers = "zh-w360dp-h640dp-port-xhdpi") fun phoneBarChinese() =
+        shoot("phone-bar-zh") { GlassBottomBar(current = Destination.Workouts, onTabSelected = {}) }
 
     // The tablet / unfolded rail: icons only, the current tab in an accent circle.
     @Test @Config(qualifiers = TABLET) fun tabletRail() =

@@ -2875,4 +2875,7 @@
     <string name="bug_report_cancel">Cancelar</string>
     <string name="bug_report_saved">%1$s guardado em Transferências. Anexe-o na página do GitHub.</string>
     <string name="l10n_app_changelog_a_workouts_tab_bug_reports_from_0c56120f">Um separador de Treinos, relatórios de erros a partir das Definições e correções de sincronização e widgets</string>
+    <string name="nav_tab_today">Hoje</string>
+    <string name="nav_tab_trends">Evolução</string>
+    <string name="nav_tab_coach">Treinador</string>
 </resources>
