@@ -4722,21 +4722,6 @@ class WhoopBleClient(
     }
 
     /**
-     * The incoming-call "Ring" (Not-Noop). On a WHOOP 4.0: preset 1, one loop, acknowledged, the strap's
-     * long ringing run (felt as sets of about 15, 9 and 7 buzzes; mapped with the Test Centre preset
-     * experiment on firmware 41.17.6.0, where GET_ALL_HAPTICS_PATTERN reported presets 0-2 and 3-15 were
-     * refused). A 5/MG has no such preset, so it gets the [buzz] equivalent of the Long call pattern.
-     */
-    fun buzzCallRing() {
-        if (connectedFamily == DeviceFamily.WHOOP4) {
-            send(CommandNumber.RUN_HAPTICS_PATTERN, byteArrayOf(1, 1, 0, 0, 0), withResponse = true)
-            log("Buzz: call ring (WHOOP 4.0 preset 1, one loop)")
-        } else {
-            buzz(5)
-        }
-    }
-
-    /**
      * Not-Noop haptic preset experiment (Test Centre only; WHOOP 4.0 only). See docs/PROTOCOL_ALARMS.md
      * "Haptic preset experiment".
      *

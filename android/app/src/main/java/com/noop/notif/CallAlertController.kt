@@ -83,15 +83,9 @@ internal object CallAlertController {
         }
 
         val ble = (context.applicationContext as? NoopApplication)?.ble ?: return
-        if (NotifPrefs.callPattern(context) == com.noop.ui.BuzzPattern.Ring) {
-            // The ringing run plays once per call: it is long, and a WHOOP 4.0 cannot stop it early, so a
-            // repeat would keep buzzing after the call is answered. No further repeats are scheduled.
-            ble.buzzCallRing()
-            buzzCount = policy.maxBuzzes
-            lastBuzzAtMs = now
-            return
-        }
-        ble.buzz(NotifPrefs.callLoops(context))
+        val loops = NotifPrefs.callLoops(context)
+        ble.externalLog("Call buzz: ${buzzCount + 1}/${policy.maxBuzzes}, loops=$loops")
+        ble.buzz(loops)
         buzzCount += 1
         lastBuzzAtMs = now
         scheduleNext()

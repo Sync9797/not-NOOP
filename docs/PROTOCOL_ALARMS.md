@@ -82,8 +82,17 @@ lets a wearer find out:
 So the 80 reply reads as a bitmask of available presets, and this strap has exactly three. STOP_HAPTICS
 is refused on this firmware, so a running pattern cannot be cut short on a WHOOP 4 (this also makes the
 Breathe stop a no-op there). The Test Centre now offers only presets 0-2 and no Stop button. Product
-use: incoming calls default to preset 1 ("Ring"), played once per call because it cannot be stopped;
-every other cue keeps preset 2.
+use: every cue keeps preset 2. Incoming calls briefly used preset 1 ("Ring", 12.4.2) and felt wrong on
+a real call, so that was reverted in the next release.
+
+**Why WHOOP 4 cues felt jumbled (found from the same log).** One preset-2 loop is already two pairs of
+short buzzes, and it plays for well over a second. Two things sent new patterns before the last one
+had finished:
+- the notification listener buzzed on every post AND update of a notification, so one message often
+  sent two or three commands a second apart (fixed with NotificationBuzzGate: one buzz per
+  notification, a 4 s gap across apps);
+- multi-pulse cues (Live Session push / ease-off, and the Breathe and Intervals cues) send one command
+  per pulse a few hundred milliseconds apart, written as if each command were one short pulse.
 
 **Gating.** Every request is sent only on a tap, never automatically, and only to a connected WHOOP 4.
 The section is hidden for a 5/MG, whose command 79 is remapped to a different body.
@@ -91,10 +100,8 @@ The section is hidden for a 5/MG, whose command 79 is remapped to a different bo
 **Evidence.** While the experiment is in use on a link, every reply to 79 and 80 is logged with its
 result byte and full frame. A `SUCCESS` or `UNSUPPORTED` result for a preset id is itself evidence
 of which ids exist. What the wearer felt is recorded as `Haptic preset test: preset n felt: …` in
-the strap log, which Report a bug attaches. Only the call alert has moved off preset 2, on one
-strap's results and at its wearer's request, as a user-selectable call pattern ("Ring") that falls
-back to the old Long buzz on a 5/MG. Results from more straps and firmware should confirm the map
-before any other cue changes.
+the strap log, which Report a bug attaches. Results from more straps and firmware should confirm the
+map before any cue moves off preset 2.
 
 Event 60 (`HAPTICS_FIRED`) and event 100 (`HAPTICS_TERMINATED`) exist in the legacy
 event vocabulary. Absence of either event is not proof that the motor did not move.

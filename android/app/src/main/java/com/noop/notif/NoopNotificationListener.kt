@@ -27,6 +27,9 @@ class NoopNotificationListener : NotificationListenerService() {
     // and forget it on removal, so a re-ring buzzes again but an updating notification can't storm the strap.
     private val buzzedAlarmKeys = java.util.Collections.synchronizedSet(mutableSetOf<String>())
 
+    // Not-Noop: one wrist buzz per notification, however many times the app re-posts it (see the class).
+    private val buzzGate = NotificationBuzzGate()
+
     override fun onNotificationPosted(sbn: StatusBarNotification) {
         val ctx = applicationContext
         val n = sbn.notification ?: return
@@ -89,8 +92,24 @@ class NoopNotificationListener : NotificationListenerService() {
         // Only-when-worn (default on): don't buzz an empty strap on the desk.
         if (NotifPrefs.getBool(ctx, NotifPrefs.WORN, true) && !ble.state.value.worn) return
 
-        // Buzz with the app's chosen pattern. send() is a safe no-op if the strap isn't connected.
-        ble.buzz(NotifPrefs.appLoops(ctx, sbn.packageName))
+        // One buzz per notification, not per post/update (NotificationBuzzGate). Every decision is logged
+        // without the app or its content, so a strap log shows why a buzz did or did not fire.
+        val loops = NotifPrefs.appLoops(ctx, sbn.packageName)
+        val onlyAlertOnce = (n.flags and Notification.FLAG_ONLY_ALERT_ONCE) != 0
+        when (buzzGate.decide(sbn.key, onlyAlertOnce, System.currentTimeMillis())) {
+            NotificationBuzzGate.Decision.BUZZ -> {
+                ble.externalLog("Notification buzz: app alert, loops=$loops")
+                // Buzz with the app's chosen pattern. send() is a safe no-op if the strap isn't connected.
+                ble.buzz(loops)
+            }
+            NotificationBuzzGate.Decision.SKIP_QUIET_UPDATE ->
+                ble.externalLog("Notification buzz skipped: quiet update of an alert that already buzzed")
+            NotificationBuzzGate.Decision.SKIP_SAME_NOTIFICATION ->
+                ble.externalLog("Notification buzz skipped: update of an alert that buzzed moments ago")
+            NotificationBuzzGate.Decision.SKIP_BURST ->
+                ble.externalLog("Notification buzz skipped: another alert buzzed under " +
+                    "${NotificationBuzzGate.BURST_WINDOW_MS / 1000}s ago")
+        }
     }
 
     override fun onNotificationRemoved(sbn: StatusBarNotification) {
@@ -100,5 +119,6 @@ class NoopNotificationListener : NotificationListenerService() {
         // #1115: the alarm/timer is dismissed → forget its key so a genuinely new alarm with a re-used key
         // (some clock apps reuse ids) buzzes again. Cheap no-op for any non-alarm key.
         buzzedAlarmKeys.remove(sbn.key)
+        buzzGate.forget(sbn.key)
     }
 }
