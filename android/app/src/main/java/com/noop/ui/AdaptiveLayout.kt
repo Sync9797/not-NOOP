@@ -175,6 +175,25 @@ private tailrec fun Context.findHostActivity(): Activity? = when (this) {
 }
 
 /**
+ * Pure (book posture, Not-Noop): whether the screen stack must move off Today, because Today is already
+ * pinned in its own pane and a second copy beside it would waste the half. The stack opens on Sleep.
+ */
+internal fun bookStackShowsPinnedScreen(inBook: Boolean, stackRoute: String?, pinnedRoute: String): Boolean =
+    inBook && stackRoute == pinnedRoute
+
+/**
+ * Pure (book posture): whether Back should leave the app. Back from a screen whose only predecessor is the
+ * hidden, pinned Today would pop to Today and be redirected straight back by
+ * [bookStackShowsPinnedScreen], trapping the user, so it leaves the app instead, as Back from Today does.
+ */
+internal fun bookBackLeavesApp(
+    inBook: Boolean,
+    stackRoute: String?,
+    previousRoute: String?,
+    pinnedRoute: String,
+): Boolean = inBook && stackRoute != pinnedRoute && previousRoute == pinnedRoute
+
+/**
  * Pure: the side margin that keeps content at most [maxContent] wide, centred, and never less than
  * [minimum]. On a phone this is just [minimum] (the standard 28dp screen padding), so the phone layout
  * is identical; on a tablet the margins grow instead of every card stretching edge to edge.

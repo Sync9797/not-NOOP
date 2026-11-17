@@ -2886,4 +2886,5 @@
     <string name="nav_tab_trends">Suivi</string>
     <string name="nav_tab_coach">Coach</string>
     <string name="l10n_app_changelog_a_cleaner_sidebar_and_tab_names_27ab65b2">Une barre latérale épurée et des noms d\'onglets qui tiennent</string>
+    <string name="book_swap_sides">Inverser les côtés</string>
 </resources>

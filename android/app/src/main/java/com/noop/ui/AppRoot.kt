@@ -48,6 +48,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.CompareArrows
 import androidx.compose.material.icons.automirrored.filled.TrendingUp
+import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material.icons.filled.Air
 import androidx.compose.material.icons.filled.Alarm
 import androidx.compose.material.icons.filled.AutoAwesome
@@ -95,6 +96,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import com.noop.R
 import com.noop.analytics.FusionSource
@@ -619,6 +621,74 @@ fun AppRoot(viewModel: AppViewModel = viewModel()) {
     val shellNav = shellNavigationFor(widthClass, hinge, bookHinge)
     // Screens pad their content for the bar only while it floats over them (the phone layout).
     SideEffect { BottomBarStyleStore.barOverlaysContent = shellNav == ShellNavigation.BOTTOM_BAR }
+    // Today, with its links, built once: the screen stack hosts it, and in book posture the left pane hosts its
+    // own copy. Its links always go to `nav`, which in book posture is the RIGHT pane, so tapping Charge or a
+    // metric on the left opens its detail beside Today instead of replacing it.
+    val todayScreen: @Composable () -> Unit = {
+        TodayScreen(
+            viewModel = viewModel,
+            // The quick-action "+" lives in the Today header's top-right now (off the
+            // bottom bar) — it opens the same quick-action sheet the bar used to.
+            onQuickActions = { showQuickActions = true },
+            // The Updates "ringer" — the bell sits before the +, and opens the inbox
+            // sheet AppRoot presents (it owns the nav for deep-links).
+            updateStore = updateStore,
+            onOpenUpdates = { showUpdatesInbox = true },
+            // The leading profile avatar opens Settings (where the photo is set/changed),
+            // mirroring iOS's avatar-leading Today header. The drawer hamburger is unchanged.
+            onOpenSettings = { nav.navigateTopLevel(Destination.Settings.route) },
+            // The opt-in Hydration card (only shown when Hydration tracking is on) pushes its
+            // detail. A normal push so the back-stack returns to Today.
+            onOpenHydration = { nav.navigate(Destination.Hydration.route) },
+            // #706/#684: the dashboard cards draw a tappable chevron; wire each to its detail,
+            // matching iOS. Stress + the vitals are pushes; Sleep is a top-level tab switch.
+            onOpenStress = { nav.navigate(Destination.Stress.route) },
+            onOpenHealth = { nav.navigate(Destination.Health.route) },
+            // Every metric/vital card opens its OWN focused detail trend (vital_detail/<key>),
+            // not the shared Health hub (2026-07-03). Mirrors the iOS liquidCard metricDetail.
+            onOpenMetric = { key -> nav.navigate("vital_detail/$key") },
+            // A blank, uncalibrated WHOOP 4.0 Steps tile opens the same calibration screen as
+            // Settings. A normal push returns Back to Today (#1515).
+            onOpenStepsCalibration = { nav.navigate(Destination.StepsCalibration.route) },
+            onOpenSleep = { nav.navigateTopLevel(Destination.Sleep.route) },
+            // Optional Coupled view card (task #43): a normal push so back returns to Today.
+            onOpenCoupled = { nav.navigate(Destination.CoupledView.route) },
+            // #1862: the Coach launcher hands off here. Without this the sheet's buttons
+            // would fall back to the parameter's no-op default and silently do nothing.
+            onOpenCoach = { nav.navigateTopLevel(Destination.Coach.route) },
+            // The "workout in progress" indicator: raise the one-shot the Live screen consumes to
+            // re-open the in-exercise overlay, then route to Live. One tap from Today (iOS parity).
+            onOpenActiveWorkout = {
+                viewModel.openActiveWorkout()
+                nav.navigate(Destination.Live.route)
+            },
+            // The liquid header's strap battery ring taps through to Devices (iOS parity: the
+            // battery ring → router.openDevices()).
+            onOpenDevices = { nav.navigateTopLevel(Destination.Devices.route) },
+            // #627: the journal-reminder card opens the journal (hosted in Insights), same
+            // destination the Sleep screen's morning sheet uses.
+            onOpenJournal = { nav.navigateTopLevel(Destination.Insights.route) },
+        )
+    }
+    // Book posture: which half holds Today (survives rotation and process death).
+    var bookSwapped by rememberSaveable { mutableStateOf(false) }
+    val inBook = shellNav == ShellNavigation.BOOK && bookHinge != null
+    // Today is already pinned in its own pane, so the stack never shows it a second time: it opens on Sleep
+    // (last night) instead. This also covers the Today tab, a pop back to the start, and entering book
+    // posture while on Today. Leaving book posture keeps whatever the stack shows as the single screen.
+    LaunchedEffect(inBook, currentRoute) {
+        if (bookStackShowsPinnedScreen(inBook, currentRoute, Destination.Today.route)) {
+            nav.navigateTopLevel(Destination.Sleep.route)
+        }
+    }
+    // ...and Back from a top-level tab there must leave the app, as Back from Today does, rather than pop to
+    // the hidden Today and be redirected straight back.
+    val activity = context as? android.app.Activity
+    androidx.activity.compose.BackHandler(
+        enabled = bookBackLeavesApp(
+            inBook, currentRoute, nav.previousBackStackEntry?.destination?.route, Destination.Today.route,
+        ),
+    ) { activity?.finish() }
     val onShellTabSelected: (Destination) -> Unit = { dest ->
         if (dest.route != currentRoute) nav.navigateTopLevel(dest.route)
     }
@@ -641,280 +711,255 @@ fun AppRoot(viewModel: AppViewModel = viewModel()) {
         // it on entry.
         if (shellNav != ShellNavigation.BOTTOM_BAR) ShellBackdrop(refreshKey = currentRoute)
         Row(Modifier.fillMaxSize()) {
-            Column(
-                // Book posture: the screens fill only the half before the hinge.
-                if (shellNav == ShellNavigation.BOOK && bookHinge != null) {
-                    Modifier.width(with(density) { bookHinge.startWidthPx.toDp() }).fillMaxHeight()
-                } else {
-                    Modifier.weight(1f).fillMaxHeight()
-                },
-            ) {
-                Box(
-                    if (shellNav == ShellNavigation.TABLETOP && hinge != null) {
-                        Modifier.fillMaxWidth().height(with(density) { hinge.topPx.toDp() })
-                    } else {
-                        Modifier.fillMaxWidth().weight(1f)
-                    },
-                ) {
-                    Scaffold(
-                        // The rail owns the end inset; the tabletop top half ends at the hinge, not a system bar.
-                        contentWindowInsets = shellContentInsets(shellNav),
-                        containerColor = Palette.surfaceBase,
-                        bottomBar = {
-                            // One unified "glass" bar: four evenly-spaced tabs — Today · Trends · Sleep · More
-                            // (matches the iOS FloatingTabBar). The quick-action "+" lives in the Today header's
-                            // top-right (balancing the avatar), so the bar is clean tabs only. "More" navigates to
-                            // its own page (mirroring the iOS More tab) that reaches every grouped destination, so no
-                            // destination is lost without the drawer.
-                            // DEFAULT path: the shipped reserved slot, unchanged. Empty only when the overlay is
-                            // on, where the bar is drawn below as a sibling and the slot must reserve nothing.
-                            if (shellNav == ShellNavigation.BOTTOM_BAR && !BottomBarStyleStore.overlay) {
-                                GlassBottomBar(
-                                    current = current,
-                                    onTabSelected = { dest ->
-                                        if (dest.route != currentRoute) nav.navigateTopLevel(dest.route)
-                                    },
-                                )
-                            }
+            // The screen stack (Scaffold + NavHost, plus the tabletop pad below the hinge). One pane in every
+            // layout; in book posture it is the pane the rail drives, beside the pinned Today.
+            val stackPane: @Composable (Modifier) -> Unit = { paneModifier ->
+                Column(paneModifier) {
+                    Box(
+                        if (shellNav == ShellNavigation.TABLETOP && hinge != null) {
+                            Modifier.fillMaxWidth().height(with(density) { hinge.topPx.toDp() })
+                        } else {
+                            Modifier.fillMaxWidth().weight(1f)
                         },
-                    ) { inner ->
-                        NavHost(
-                            navController = nav,
-                            startDestination = Destination.Today.route,
-                            // The empty slot reserves nothing, so the bar's height is added here — the one place the
-                            // inset used to come from. A scrollable that later wants content to pass UNDER the glass
-                            // adds this measured height to its own contentPadding instead; no shared modifier can.
-                            // Slot layout: the Scaffold measured the bar into `inner`, so use it as-is.
-                            // Overlay layout: the slot reserves nothing, so the bottom comes from the measured bar.
-                            // With a rail or the tabletop split no bar overlays the screens, so use the measured insets.
-                            modifier = if (!BottomBarStyleStore.overlay || shellNav != ShellNavigation.BOTTOM_BAR) {
-                                Modifier.padding(inner)
-                            } else Modifier.padding(
-                                // Take the top and sides from the Scaffold, but REPLACE its bottom rather than adding
-                                // to it. Scaffold's default contentWindowInsets is WindowInsets.systemBars, so
-                                // `inner.bottom` already carries the navigation-bar inset — and the bar's measured
-                                // height carries it too, via its own navigationBarsPadding(). Adding both counted that
-                                // inset twice and left roughly a nav-bar's worth of dead space above the bar, widest
-                                // on 3-button navigation. The bar owns that inset; content just clears the bar.
-                                top = inner.calculateTopPadding(),
-                                start = inner.calculateStartPadding(LocalLayoutDirection.current),
-                                end = inner.calculateEndPadding(LocalLayoutDirection.current),
-                                // Bottom is ZERO on purpose: the screen must reach the bottom edge so its own backdrop
-                                // paints behind the glass. ScreenScaffold clears the bar from the scrolling CONTENT
-                                // instead, using BottomBarStyleStore.barHeight. Insetting here is what made the first
-                                // version of this change invisible — the bar moved, the backdrop did not follow.
-                                bottom = 0.dp,
-                            ),
-                            // README motion: top-level destinations crossfade (~240ms) on the calm,
-                            // decelerating global easing — nothing slides or bounces between tabs. The
-                            // same fade is used for back (pop) so the bar never feels jerky. Drill-ins
-                            // (e.g. vital_detail) are pushed by the same NavHost, so they inherit the
-                            // same restrained crossfade rather than a hard cut.
-                            enterTransition = { fadeIn(navFadeSpec) },
-                            exitTransition = { fadeOut(navFadeSpec) },
-                            popEnterTransition = { fadeIn(navFadeSpec) },
-                            popExitTransition = { fadeOut(navFadeSpec) },
-                        ) {
-                            // --- Live, working screens (existing waves) ---
-                            composable(Destination.Today.route) {
-                                TodayScreen(
-                                    viewModel = viewModel,
-                                    // The quick-action "+" lives in the Today header's top-right now (off the
-                                    // bottom bar) — it opens the same quick-action sheet the bar used to.
-                                    onQuickActions = { showQuickActions = true },
-                                    // The Updates "ringer" — the bell sits before the +, and opens the inbox
-                                    // sheet AppRoot presents (it owns the nav for deep-links).
-                                    updateStore = updateStore,
-                                    onOpenUpdates = { showUpdatesInbox = true },
-                                    // The leading profile avatar opens Settings (where the photo is set/changed),
-                                    // mirroring iOS's avatar-leading Today header. The drawer hamburger is unchanged.
-                                    onOpenSettings = { nav.navigateTopLevel(Destination.Settings.route) },
-                                    // The opt-in Hydration card (only shown when Hydration tracking is on) pushes its
-                                    // detail. A normal push so the back-stack returns to Today.
-                                    onOpenHydration = { nav.navigate(Destination.Hydration.route) },
-                                    // #706/#684: the dashboard cards draw a tappable chevron; wire each to its detail,
-                                    // matching iOS. Stress + the vitals are pushes; Sleep is a top-level tab switch.
-                                    onOpenStress = { nav.navigate(Destination.Stress.route) },
-                                    onOpenHealth = { nav.navigate(Destination.Health.route) },
-                                    // Every metric/vital card opens its OWN focused detail trend (vital_detail/<key>),
-                                    // not the shared Health hub (2026-07-03). Mirrors the iOS liquidCard metricDetail.
-                                    onOpenMetric = { key -> nav.navigate("vital_detail/$key") },
-                                    // A blank, uncalibrated WHOOP 4.0 Steps tile opens the same calibration screen as
-                                    // Settings. A normal push returns Back to Today (#1515).
-                                    onOpenStepsCalibration = { nav.navigate(Destination.StepsCalibration.route) },
-                                    onOpenSleep = { nav.navigateTopLevel(Destination.Sleep.route) },
-                                    // Optional Coupled view card (task #43): a normal push so back returns to Today.
-                                    onOpenCoupled = { nav.navigate(Destination.CoupledView.route) },
-                                    // #1862: the Coach launcher hands off here. Without this the sheet's buttons
-                                    // would fall back to the parameter's no-op default and silently do nothing.
-                                    onOpenCoach = { nav.navigateTopLevel(Destination.Coach.route) },
-                                    // The "workout in progress" indicator: raise the one-shot the Live screen consumes to
-                                    // re-open the in-exercise overlay, then route to Live. One tap from Today (iOS parity).
-                                    onOpenActiveWorkout = {
-                                        viewModel.openActiveWorkout()
-                                        nav.navigate(Destination.Live.route)
-                                    },
-                                    // The liquid header's strap battery ring taps through to Devices (iOS parity: the
-                                    // battery ring → router.openDevices()).
-                                    onOpenDevices = { nav.navigateTopLevel(Destination.Devices.route) },
-                                    // #627: the journal-reminder card opens the journal (hosted in Insights), same
-                                    // destination the Sleep screen's morning sheet uses.
-                                    onOpenJournal = { nav.navigateTopLevel(Destination.Insights.route) },
-                                )
-                            }
-                            composable(Destination.Live.route) {
-                                LiveScreen(
-                                    viewModel = viewModel,
-                                    onManageDevices = { nav.navigateTopLevel(Destination.Devices.route) },
-                                )
-                            }
-                            composable(Destination.Sleep.route) {
-                                SleepScreen(
-                                    vm = viewModel,
-                                    onOpenJournal = { nav.navigateTopLevel(Destination.Insights.route) },
-                                    onOpenAlarms = { nav.navigate(Destination.SmartAlarm.route) },
-                                )
-                            }
-                            composable(Destination.CoupledView.route) {
-                                CoupledScreen(
-                                    vm = viewModel,
-                                    // Tapping Sleep in the coupled read opens the full Sleep screen (iOS parity).
-                                    onOpenSleep = { nav.navigateTopLevel(Destination.Sleep.route) },
-                                )
-                            }
-                            composable(Destination.Intervals.route) { IntervalsScreen(viewModel) }
-                            composable(Destination.Breathe.route) { BreatheScreen(viewModel) }
-                            composable(Destination.Coach.route) {
-                                // A normal push, so Back returns to the conversation (#2243).
-                                CoachScreen(onOpenSettings = { nav.navigate(Destination.CoachSettings.route) })
-                            }
-                            composable(Destination.CoachSettings.route) {
-                                // The SAME CoachViewModel the conversation is using, not a fresh one.
-                                // `viewModel()` resolves against LocalViewModelStoreOwner, which under
-                                // Navigation Compose is the NavBackStackEntry, so the default would hand this
-                                // destination its own instance. CoachViewModel keeps consent in memory
-                                // (`_consent`, seeded once at construction) and `send` passes that value to
-                                // `chatStream`, so a revoke made against a second instance would persist to
-                                // storage and still leave the conversation sending on the old one until its
-                                // entry was destroyed. Coach is always below this on the back stack: this
-                                // destination is reachable only from the strip on that screen.
-                                val coachEntry = remember(it) { nav.getBackStackEntry(Destination.Coach.route) }
-                                CoachSettingsScreen(vm = viewModel(coachEntry))
-                            }
-                            composable(Destination.Explore.route) { TrendsExploreScreen(viewModel) }
-                            composable(Destination.Automations.route) { AutomationsScreen(viewModel) }
-                            composable(Destination.SmartAlarm.route) { SmartAlarmScreen(viewModel) }
-                            composable(Destination.Workouts.route) { WorkoutsScreen(viewModel) }
-                            composable(Destination.Intelligence.route) { IntelligenceScreen(viewModel) }
+                    ) {
+                        Scaffold(
+                            // The rail owns the end inset; the tabletop top half ends at the hinge, not a system bar.
+                            contentWindowInsets = shellContentInsets(shellNav),
+                            containerColor = Palette.surfaceBase,
+                            bottomBar = {
+                                // One unified "glass" bar: four evenly-spaced tabs — Today · Trends · Sleep · More
+                                // (matches the iOS FloatingTabBar). The quick-action "+" lives in the Today header's
+                                // top-right (balancing the avatar), so the bar is clean tabs only. "More" navigates to
+                                // its own page (mirroring the iOS More tab) that reaches every grouped destination, so no
+                                // destination is lost without the drawer.
+                                // DEFAULT path: the shipped reserved slot, unchanged. Empty only when the overlay is
+                                // on, where the bar is drawn below as a sibling and the slot must reserve nothing.
+                                if (shellNav == ShellNavigation.BOTTOM_BAR && !BottomBarStyleStore.overlay) {
+                                    GlassBottomBar(
+                                        current = current,
+                                        onTabSelected = { dest ->
+                                            if (dest.route != currentRoute) nav.navigateTopLevel(dest.route)
+                                        },
+                                    )
+                                }
+                            },
+                        ) { inner ->
+                            NavHost(
+                                navController = nav,
+                                startDestination = Destination.Today.route,
+                                // The empty slot reserves nothing, so the bar's height is added here — the one place the
+                                // inset used to come from. A scrollable that later wants content to pass UNDER the glass
+                                // adds this measured height to its own contentPadding instead; no shared modifier can.
+                                // Slot layout: the Scaffold measured the bar into `inner`, so use it as-is.
+                                // Overlay layout: the slot reserves nothing, so the bottom comes from the measured bar.
+                                // With a rail or the tabletop split no bar overlays the screens, so use the measured insets.
+                                modifier = if (!BottomBarStyleStore.overlay || shellNav != ShellNavigation.BOTTOM_BAR) {
+                                    Modifier.padding(inner)
+                                } else Modifier.padding(
+                                    // Take the top and sides from the Scaffold, but REPLACE its bottom rather than adding
+                                    // to it. Scaffold's default contentWindowInsets is WindowInsets.systemBars, so
+                                    // `inner.bottom` already carries the navigation-bar inset — and the bar's measured
+                                    // height carries it too, via its own navigationBarsPadding(). Adding both counted that
+                                    // inset twice and left roughly a nav-bar's worth of dead space above the bar, widest
+                                    // on 3-button navigation. The bar owns that inset; content just clears the bar.
+                                    top = inner.calculateTopPadding(),
+                                    start = inner.calculateStartPadding(LocalLayoutDirection.current),
+                                    end = inner.calculateEndPadding(LocalLayoutDirection.current),
+                                    // Bottom is ZERO on purpose: the screen must reach the bottom edge so its own backdrop
+                                    // paints behind the glass. ScreenScaffold clears the bar from the scrolling CONTENT
+                                    // instead, using BottomBarStyleStore.barHeight. Insetting here is what made the first
+                                    // version of this change invisible — the bar moved, the backdrop did not follow.
+                                    bottom = 0.dp,
+                                ),
+                                // README motion: top-level destinations crossfade (~240ms) on the calm,
+                                // decelerating global easing — nothing slides or bounces between tabs. The
+                                // same fade is used for back (pop) so the bar never feels jerky. Drill-ins
+                                // (e.g. vital_detail) are pushed by the same NavHost, so they inherit the
+                                // same restrained crossfade rather than a hard cut.
+                                enterTransition = { fadeIn(navFadeSpec) },
+                                exitTransition = { fadeOut(navFadeSpec) },
+                                popEnterTransition = { fadeIn(navFadeSpec) },
+                                popExitTransition = { fadeOut(navFadeSpec) },
+                            ) {
+                                // --- Live, working screens (existing waves) ---
+                                composable(Destination.Today.route) { todayScreen() }
+                                composable(Destination.Live.route) {
+                                    LiveScreen(
+                                        viewModel = viewModel,
+                                        onManageDevices = { nav.navigateTopLevel(Destination.Devices.route) },
+                                    )
+                                }
+                                composable(Destination.Sleep.route) {
+                                    SleepScreen(
+                                        vm = viewModel,
+                                        onOpenJournal = { nav.navigateTopLevel(Destination.Insights.route) },
+                                        onOpenAlarms = { nav.navigate(Destination.SmartAlarm.route) },
+                                    )
+                                }
+                                composable(Destination.CoupledView.route) {
+                                    CoupledScreen(
+                                        vm = viewModel,
+                                        // Tapping Sleep in the coupled read opens the full Sleep screen (iOS parity).
+                                        onOpenSleep = { nav.navigateTopLevel(Destination.Sleep.route) },
+                                    )
+                                }
+                                composable(Destination.Intervals.route) { IntervalsScreen(viewModel) }
+                                composable(Destination.Breathe.route) { BreatheScreen(viewModel) }
+                                composable(Destination.Coach.route) {
+                                    // A normal push, so Back returns to the conversation (#2243).
+                                    CoachScreen(onOpenSettings = { nav.navigate(Destination.CoachSettings.route) })
+                                }
+                                composable(Destination.CoachSettings.route) {
+                                    // The SAME CoachViewModel the conversation is using, not a fresh one.
+                                    // `viewModel()` resolves against LocalViewModelStoreOwner, which under
+                                    // Navigation Compose is the NavBackStackEntry, so the default would hand this
+                                    // destination its own instance. CoachViewModel keeps consent in memory
+                                    // (`_consent`, seeded once at construction) and `send` passes that value to
+                                    // `chatStream`, so a revoke made against a second instance would persist to
+                                    // storage and still leave the conversation sending on the old one until its
+                                    // entry was destroyed. Coach is always below this on the back stack: this
+                                    // destination is reachable only from the strip on that screen.
+                                    val coachEntry = remember(it) { nav.getBackStackEntry(Destination.Coach.route) }
+                                    CoachSettingsScreen(vm = viewModel(coachEntry))
+                                }
+                                composable(Destination.Explore.route) { TrendsExploreScreen(viewModel) }
+                                composable(Destination.Automations.route) { AutomationsScreen(viewModel) }
+                                composable(Destination.SmartAlarm.route) { SmartAlarmScreen(viewModel) }
+                                composable(Destination.Workouts.route) { WorkoutsScreen(viewModel) }
+                                composable(Destination.Intelligence.route) { IntelligenceScreen(viewModel) }
 
-                            // --- Placeholder routes (later waves fill these in) ---
-                            composable(Destination.Stress.route) {
-                                StressScreen(
-                                    vm = viewModel,
-                                    onBreathe = { nav.navigateTopLevel(Destination.Breathe.route) },
-                                )
-                            }
-                            composable(Destination.Trends.route) { TrendsScreen(viewModel) }
-                            composable(Destination.Insights.route) { InsightsScreen(viewModel, onOpenInsightsHub = { nav.navigateTopLevel(Destination.InsightsHub.route) }) }
-                            composable(Destination.Compare.route) { CompareScreen(viewModel) }
-                            composable(Destination.Health.route) {
-                                HealthScreen(
-                                    vm = viewModel,
-                                    onVitalClick = { nav.navigate("vital_detail/$it") },
-                                    onOpenLabBook = { nav.navigateTopLevel(Destination.LabBook.route) },
-                                    onOpenFusedRecord = { nav.navigateTopLevel(Destination.FusedRecord.route) },
-                                    onOpenSettings = { nav.navigateTopLevel(Destination.Settings.route) },
-                                )
-                            }
-                            composable(Destination.Hydration.route) { HydrationScreen(viewModel) }
-                            composable(Destination.VitalSigns.route) {
-                                VitalSignsScreen(
-                                    vm = viewModel,
-                                    onVitalClick = { nav.navigate("vital_detail/$it") },
-                                )
-                            }
-                            composable(Destination.VitalSignsDetail.route) { backStackEntry ->
-                                VitalDetailScreen(
-                                    vm = viewModel,
-                                    key = backStackEntry.arguments?.getString("key").orEmpty(),
-                                )
-                            }
-                            // --- v5 pillar screens (Wave 3 wiring) ---
-                            composable(Destination.InsightsHub.route) { InsightsHubScreen(viewModel) }
-                            composable(Destination.LabBook.route) { LabBookScreen(viewModel) }
-                            composable(Destination.Rhythm.route) {
-                                RhythmRoute(viewModel)
-                            }
-                            composable(Destination.FusedRecord.route) { FusedRecordRoute(viewModel) }
-                            composable(Destination.AppleHealth.route) { AppleHealthScreen(viewModel) }
-                            composable(Destination.Devices.route) {
-                                DevicesScreen(
-                                    viewModel,
-                                    onUseFileImport = { nav.navigateTopLevel(Destination.DataSources.route) },
-                                )
-                            }
-                            composable(Destination.DataSources.route) { DataSourcesScreen(viewModel) }
-                            composable(Destination.NoopLimitations.route) { NoopLimitationsScreen() }
-                            composable(Destination.BackupSync.route) { BackupSyncScreen() }
-                            composable(Destination.Notifications.route) { NotificationsSettingsScreen(viewModel) }
-                            composable(Destination.PowerSaving.route) { PowerSavingScreen(viewModel) }
-                            composable(Destination.Settings.route) {
-                                SettingsScreen(
-                                    viewModel,
-                                    onOpenTestCentre = { nav.navigate(Destination.TestCentre.route) },
-                                    onOpenBackupSync = { nav.navigate(Destination.BackupSync.route) },
-                                    onOpenSelfHostedPush = { nav.navigate(Destination.SelfHostedPush.route) },
-                                    onOpenStepsCalibration = { nav.navigate(Destination.StepsCalibration.route) },
-                                )
-                            }
-                            composable(Destination.StepsCalibration.route) {
-                                val profile = remember(context) { ProfileStore.from(context) }
-                                var revision by remember { mutableStateOf(0) }
-                                // ProfileStore wraps SharedPreferences rather than snapshot state. Reading this counter
-                                // makes manual coefficient changes repaint the canonical screen immediately.
-                                @Suppress("UNUSED_VARIABLE") val tick = revision
-                                StepsCalibrationScreen(
-                                    vm = viewModel,
-                                    profile = profile,
-                                    onProfileChanged = { revision++ },
-                                    onClose = { nav.popBackStack() },
-                                )
-                            }
-                            composable(Destination.SelfHostedPush.route) { SelfHostedPushScreen() }
-                            composable(Destination.TestCentre.route) {
-                                TestCentreScreen(viewModel, onOpenGroundTruthCollector = {
-                                    nav.navigate(Destination.GroundTruthCollector.route)
-                                })
-                            }
-                            composable(Destination.GroundTruthCollector.route) { GroundTruthCollectorScreen(viewModel) }
-                            // The "More" page — the iOS More tab's twin: a navigated ScreenScaffold page hosting the
-                            // full grouped destination list (was a pull-up sheet). A row pushes its destination so
-                            // Android Back returns to More instead of skipping straight to Today.
-                            composable(Destination.More.route) {
-                                MoreScreen(onNavigate = { nav.navigate(it) })
+                                // --- Placeholder routes (later waves fill these in) ---
+                                composable(Destination.Stress.route) {
+                                    StressScreen(
+                                        vm = viewModel,
+                                        onBreathe = { nav.navigateTopLevel(Destination.Breathe.route) },
+                                    )
+                                }
+                                composable(Destination.Trends.route) { TrendsScreen(viewModel) }
+                                composable(Destination.Insights.route) { InsightsScreen(viewModel, onOpenInsightsHub = { nav.navigateTopLevel(Destination.InsightsHub.route) }) }
+                                composable(Destination.Compare.route) { CompareScreen(viewModel) }
+                                composable(Destination.Health.route) {
+                                    HealthScreen(
+                                        vm = viewModel,
+                                        onVitalClick = { nav.navigate("vital_detail/$it") },
+                                        onOpenLabBook = { nav.navigateTopLevel(Destination.LabBook.route) },
+                                        onOpenFusedRecord = { nav.navigateTopLevel(Destination.FusedRecord.route) },
+                                        onOpenSettings = { nav.navigateTopLevel(Destination.Settings.route) },
+                                    )
+                                }
+                                composable(Destination.Hydration.route) { HydrationScreen(viewModel) }
+                                composable(Destination.VitalSigns.route) {
+                                    VitalSignsScreen(
+                                        vm = viewModel,
+                                        onVitalClick = { nav.navigate("vital_detail/$it") },
+                                    )
+                                }
+                                composable(Destination.VitalSignsDetail.route) { backStackEntry ->
+                                    VitalDetailScreen(
+                                        vm = viewModel,
+                                        key = backStackEntry.arguments?.getString("key").orEmpty(),
+                                    )
+                                }
+                                // --- v5 pillar screens (Wave 3 wiring) ---
+                                composable(Destination.InsightsHub.route) { InsightsHubScreen(viewModel) }
+                                composable(Destination.LabBook.route) { LabBookScreen(viewModel) }
+                                composable(Destination.Rhythm.route) {
+                                    RhythmRoute(viewModel)
+                                }
+                                composable(Destination.FusedRecord.route) { FusedRecordRoute(viewModel) }
+                                composable(Destination.AppleHealth.route) { AppleHealthScreen(viewModel) }
+                                composable(Destination.Devices.route) {
+                                    DevicesScreen(
+                                        viewModel,
+                                        onUseFileImport = { nav.navigateTopLevel(Destination.DataSources.route) },
+                                    )
+                                }
+                                composable(Destination.DataSources.route) { DataSourcesScreen(viewModel) }
+                                composable(Destination.NoopLimitations.route) { NoopLimitationsScreen() }
+                                composable(Destination.BackupSync.route) { BackupSyncScreen() }
+                                composable(Destination.Notifications.route) { NotificationsSettingsScreen(viewModel) }
+                                composable(Destination.PowerSaving.route) { PowerSavingScreen(viewModel) }
+                                composable(Destination.Settings.route) {
+                                    SettingsScreen(
+                                        viewModel,
+                                        onOpenTestCentre = { nav.navigate(Destination.TestCentre.route) },
+                                        onOpenBackupSync = { nav.navigate(Destination.BackupSync.route) },
+                                        onOpenSelfHostedPush = { nav.navigate(Destination.SelfHostedPush.route) },
+                                        onOpenStepsCalibration = { nav.navigate(Destination.StepsCalibration.route) },
+                                    )
+                                }
+                                composable(Destination.StepsCalibration.route) {
+                                    val profile = remember(context) { ProfileStore.from(context) }
+                                    var revision by remember { mutableStateOf(0) }
+                                    // ProfileStore wraps SharedPreferences rather than snapshot state. Reading this counter
+                                    // makes manual coefficient changes repaint the canonical screen immediately.
+                                    @Suppress("UNUSED_VARIABLE") val tick = revision
+                                    StepsCalibrationScreen(
+                                        vm = viewModel,
+                                        profile = profile,
+                                        onProfileChanged = { revision++ },
+                                        onClose = { nav.popBackStack() },
+                                    )
+                                }
+                                composable(Destination.SelfHostedPush.route) { SelfHostedPushScreen() }
+                                composable(Destination.TestCentre.route) {
+                                    TestCentreScreen(viewModel, onOpenGroundTruthCollector = {
+                                        nav.navigate(Destination.GroundTruthCollector.route)
+                                    })
+                                }
+                                composable(Destination.GroundTruthCollector.route) { GroundTruthCollectorScreen(viewModel) }
+                                // The "More" page — the iOS More tab's twin: a navigated ScreenScaffold page hosting the
+                                // full grouped destination list (was a pull-up sheet). A row pushes its destination so
+                                // Android Back returns to More instead of skipping straight to Today.
+                                composable(Destination.More.route) {
+                                    MoreScreen(onNavigate = { nav.navigate(it) })
+                                }
                             }
                         }
                     }
-                }
-                if (shellNav == ShellNavigation.TABLETOP && hinge != null) {
-                    // The hinge itself (zero-height on most foldables), then the bar centred in the bottom half,
-                    // where a thumb rests while the device stands on its hinge.
-                    Spacer(Modifier.height(with(density) { (hinge.bottomPx - hinge.topPx).toDp() }))
-                    Box(Modifier.fillMaxWidth().weight(1f), contentAlignment = Alignment.Center) {
-                        TabletopNavPad(current = current, onTabSelected = onShellTabSelected)
+                    if (shellNav == ShellNavigation.TABLETOP && hinge != null) {
+                        // The hinge itself (zero-height on most foldables), then the bar centred in the bottom half,
+                        // where a thumb rests while the device stands on its hinge.
+                        Spacer(Modifier.height(with(density) { (hinge.bottomPx - hinge.topPx).toDp() }))
+                        Box(Modifier.fillMaxWidth().weight(1f), contentAlignment = Alignment.Center) {
+                            TabletopNavPad(current = current, onTabSelected = onShellTabSelected)
+                        }
                     }
                 }
             }
-            // The rail sits on the END edge (right in left-to-right languages), under a right thumb, like the
-            // iPad dock. Mirrors automatically in right-to-left layouts.
-            if (shellNav == ShellNavigation.RAIL) GlassNavRail(current = current, onTabSelected = onShellTabSelected)
             if (shellNav == ShellNavigation.BOOK && bookHinge != null) {
-                // Past the hinge: the wallpaper, with the rail at the far edge under the hand holding that
-                // half. Using this half for a second screen would need two-pane layouts, which NOOP's
-                // screens do not have yet.
-                Spacer(Modifier.width(with(density) { bookHinge.hingeWidthPx.toDp() }))
-                Spacer(Modifier.weight(1f))
-                GlassNavRail(current = current, onTabSelected = onShellTabSelected)
+                // Book posture (Not-Noop): Today pinned in one half, the rail-driven stack in the other, so a
+                // half-open foldable shows two screens instead of one screen and empty wallpaper. Swap sides
+                // flips which half holds which; the start half keeps its measured width either way.
+                val startWidth = with(density) { bookHinge.startWidthPx.toDp() }
+                val hingeWidth = with(density) { bookHinge.hingeWidthPx.toDp() }
+                val todayPane: @Composable (Modifier) -> Unit = { paneModifier ->
+                    Box(
+                        paneModifier.windowInsetsPadding(
+                            WindowInsets.systemBars.union(WindowInsets.displayCutout)
+                                .only(WindowInsetsSides.Top + WindowInsetsSides.Bottom + WindowInsetsSides.Start),
+                        ),
+                    ) { todayScreen() }
+                }
+                if (!bookSwapped) {
+                    todayPane(Modifier.width(startWidth).fillMaxHeight())
+                    Spacer(Modifier.width(hingeWidth))
+                    stackPane(Modifier.weight(1f).fillMaxHeight())
+                } else {
+                    stackPane(Modifier.width(startWidth).fillMaxHeight())
+                    Spacer(Modifier.width(hingeWidth))
+                    todayPane(Modifier.weight(1f).fillMaxHeight())
+                }
+                GlassNavRail(
+                    current = current,
+                    onTabSelected = onShellTabSelected,
+                    onSwapSides = { bookSwapped = !bookSwapped },
+                )
+            } else {
+                stackPane(Modifier.weight(1f).fillMaxHeight())
+                // The rail sits on the END edge (right in left-to-right languages), under a right thumb, like the
+                // iPad dock. Mirrors automatically in right-to-left layouts.
+                if (shellNav == ShellNavigation.RAIL) GlassNavRail(current = current, onTabSelected = onShellTabSelected)
             }
         }
 
@@ -1403,6 +1448,8 @@ internal fun GlassNavRail(
     current: Destination,
     onTabSelected: (Destination) -> Unit,
     modifier: Modifier = Modifier,
+    // Book posture only: swap which half holds Today. Null hides the control.
+    onSwapSides: (() -> Unit)? = null,
 ) {
     val tabs = shellTabsFor(BottomBarStyleStore.coachEnabled)
     val railShape = RoundedCornerShape(28.dp)
@@ -1443,6 +1490,22 @@ internal fun GlassNavRail(
                         label = stringResource(tab.labelRes),
                         active = isShellTabActive(tab, current, tabs),
                         onClick = { onTabSelected(tab.dest) },
+                    )
+                }
+                if (onSwapSides != null) {
+                    // Set apart from the tabs: it rearranges the halves rather than going anywhere.
+                    Box(
+                        Modifier
+                            .padding(vertical = Metrics.space4)
+                            .width(28.dp)
+                            .height(1.dp)
+                            .background(Palette.hairline),
+                    )
+                    RailIconSlot(
+                        icon = Icons.Filled.SwapHoriz,
+                        label = stringResource(R.string.book_swap_sides),
+                        active = false,
+                        onClick = onSwapSides,
                     )
                 }
             }

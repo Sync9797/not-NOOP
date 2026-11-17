@@ -2,6 +2,8 @@ package com.noop.ui
 
 import androidx.compose.ui.unit.dp
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Test
 
@@ -88,6 +90,22 @@ class AdaptiveLayoutTest {
         assertNull(bookHinge(true, true, 900, 900, shellLeftInWindowPx = 800, shellWidthPx = 1000, minHalfPx = 400))
         assertNull(bookHinge(true, true, 900, 900, shellLeftInWindowPx = 0, shellWidthPx = 1000, minHalfPx = 400))
         assertNull(bookHinge(true, true, 900, 900, shellLeftInWindowPx = 0, shellWidthPx = 0, minHalfPx = 400))
+    }
+
+    @Test fun inBookTheStackNeverShowsASecondToday() {
+        assertTrue(bookStackShowsPinnedScreen(true, "today", "today"))
+        assertFalse(bookStackShowsPinnedScreen(true, "sleep", "today"))
+        // Outside book posture Today is an ordinary screen of the stack.
+        assertFalse(bookStackShowsPinnedScreen(false, "today", "today"))
+    }
+
+    @Test fun inBookBackFromATabLeavesInsteadOfLooping() {
+        // Today -> Sleep: popping would land on the hidden Today and bounce back to Sleep.
+        assertTrue(bookBackLeavesApp(true, "sleep", "today", "today"))
+        // Sleep -> a detail: Back returns to Sleep as usual.
+        assertFalse(bookBackLeavesApp(true, "vital_detail/{key}", "sleep", "today"))
+        assertFalse(bookBackLeavesApp(false, "sleep", "today", "today"))
+        assertFalse(bookBackLeavesApp(true, "today", null, "today"))
     }
 
     @Test fun phonesKeepThe28dpInset() {
