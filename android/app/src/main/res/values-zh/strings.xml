@@ -2862,7 +2862,6 @@
     <string name="haptic_lab_title">振动模式（WHOOP 4.0）</string>
     <string name="haptic_lab_blurb">NOOP 的每次振动都使用同一个模式，所以感觉都一样。逐个试试其他模式，并记下每个的感觉。只会让马达振动，手环上的任何设置都不会改变。</string>
     <string name="haptic_lab_read_list">读取模式列表</string>
-    <string name="haptic_lab_stop">停止振动</string>
     <string name="haptic_lab_try_heading">点按一个模式感受一次：</string>
     <string name="haptic_lab_what_felt">模式 %1$d 感觉如何？</string>
     <string name="haptic_lab_feel_nothing">没有感觉</string>

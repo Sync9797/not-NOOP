@@ -2884,7 +2884,6 @@
     <string name="haptic_lab_title">Padrões de vibração (WHOOP 4.0)</string>
     <string name="haptic_lab_blurb">Todas as vibrações do NOOP usam o mesmo padrão, por isso parecem iguais. Experimente os outros um a um e anote como sente cada um. Só mexe o motor; nada muda na pulseira.</string>
     <string name="haptic_lab_read_list">Ler lista de padrões</string>
-    <string name="haptic_lab_stop">Parar vibração</string>
     <string name="haptic_lab_try_heading">Toque num padrão para o sentir uma vez:</string>
     <string name="haptic_lab_what_felt">Como foi o padrão %1$d?</string>
     <string name="haptic_lab_feel_nothing">Nada</string>

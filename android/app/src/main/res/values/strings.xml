@@ -2921,7 +2921,6 @@
     <string name="haptic_lab_title">Vibration presets (WHOOP 4.0)</string>
     <string name="haptic_lab_blurb">Every NOOP buzz uses the same preset, which is why they all feel alike. Try the others one at a time and note what each feels like. Only moves the motor; nothing on the strap changes.</string>
     <string name="haptic_lab_read_list">Read pattern list</string>
-    <string name="haptic_lab_stop">Stop buzz</string>
     <string name="haptic_lab_try_heading">Tap a preset to feel it once:</string>
     <string name="haptic_lab_what_felt">What did preset %1$d feel like?</string>
     <string name="haptic_lab_feel_nothing">Nothing</string>

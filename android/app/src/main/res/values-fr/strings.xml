@@ -2891,7 +2891,6 @@
     <string name="haptic_lab_title">Motifs de vibration (WHOOP 4.0)</string>
     <string name="haptic_lab_blurb">Toutes les vibrations de NOOP utilisent le même motif, d\'où la même sensation. Essayez les autres un par un et notez ce que chacun donne. Seul le moteur bouge ; rien ne change sur le bracelet.</string>
     <string name="haptic_lab_read_list">Lire la liste des motifs</string>
-    <string name="haptic_lab_stop">Arrêter la vibration</string>
     <string name="haptic_lab_try_heading">Touchez un motif pour le ressentir une fois :</string>
     <string name="haptic_lab_what_felt">Qu\'avez-vous ressenti avec le motif %1$d ?</string>
     <string name="haptic_lab_feel_nothing">Rien</string>

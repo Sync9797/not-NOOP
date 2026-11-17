@@ -15,16 +15,16 @@ class HapticPresetLabTest {
     @Test fun recordedFeelsAreSummarisedInIdOrder() {
         val ctx = RuntimeEnvironment.getApplication()
         assertEquals("", HapticPresetLab.summary(ctx))
-        HapticPresetLab.saveFeel(ctx, 5, "nothing")
-        HapticPresetLab.saveFeel(ctx, 1, "two")
-        HapticPresetLab.saveFeel(ctx, 1, "one short")   // a re-test replaces, never duplicates
-        assertEquals("1: one short, 5: nothing", HapticPresetLab.summary(ctx))
-        assertNull(HapticPresetLab.savedFeel(ctx, 2))
+        HapticPresetLab.saveFeel(ctx, 2, "two")
+        HapticPresetLab.saveFeel(ctx, 0, "three")
+        HapticPresetLab.saveFeel(ctx, 0, "long")   // a re-test replaces, never duplicates
+        assertEquals("0: long, 2: two", HapticPresetLab.summary(ctx))
+        assertNull(HapticPresetLab.savedFeel(ctx, 1))
     }
 
-    @Test fun theOfferedIdsIncludeTheKnownPresetAndFitInAByte() {
-        assertTrue(2 in HapticPresetLab.PRESET_IDS)
-        assertTrue(HapticPresetLab.PRESET_IDS.all { it in 0..255 })
+    @Test fun theOfferedIdsAreTheThreeAWhoop4Has() {
+        // Firmware 41.17.6.0: GET_ALL_HAPTICS_PATTERN reported 0x07 and 3-15 were refused.
+        assertEquals(listOf(0, 1, 2), HapticPresetLab.PRESET_IDS)
     }
 
     @Test fun logKeysAreDistinct() {

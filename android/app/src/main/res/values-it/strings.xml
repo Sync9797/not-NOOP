@@ -2860,7 +2860,6 @@
     <string name="haptic_lab_title">Schemi di vibrazione (WHOOP 4.0)</string>
     <string name="haptic_lab_blurb">Ogni vibrazione di NOOP usa lo stesso schema, per questo sembrano tutte uguali. Prova gli altri uno alla volta e annota come li senti. Muove solo il motore; sul bracciale non cambia nulla.</string>
     <string name="haptic_lab_read_list">Leggi elenco schemi</string>
-    <string name="haptic_lab_stop">Ferma vibrazione</string>
     <string name="haptic_lab_try_heading">Tocca uno schema per sentirlo una volta:</string>
     <string name="haptic_lab_what_felt">Com\'era lo schema %1$d?</string>
     <string name="haptic_lab_feel_nothing">Niente</string>

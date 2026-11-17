@@ -2787,7 +2787,6 @@
     <string name="haptic_lab_title">Шаблоны вибрации (WHOOP 4.0)</string>
     <string name="haptic_lab_blurb">Все вибрации NOOP используют один и тот же шаблон, поэтому ощущаются одинаково. Попробуйте остальные по одному и отметьте, как ощущается каждый. Двигается только мотор; на браслете ничего не меняется.</string>
     <string name="haptic_lab_read_list">Прочитать список шаблонов</string>
-    <string name="haptic_lab_stop">Остановить вибрацию</string>
     <string name="haptic_lab_try_heading">Нажмите на шаблон, чтобы почувствовать его один раз:</string>
     <string name="haptic_lab_what_felt">Как ощущался шаблон %1$d?</string>
     <string name="haptic_lab_feel_nothing">Ничего</string>

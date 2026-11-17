@@ -2908,7 +2908,6 @@
     <string name="haptic_lab_title">Wzorce wibracji (WHOOP 4.0)</string>
     <string name="haptic_lab_blurb">Każda wibracja NOOP używa tego samego wzorca, dlatego wszystkie są takie same. Wypróbuj pozostałe po kolei i zanotuj, jak każdy się czuje. Porusza tylko silniczek; na opasce nic się nie zmienia.</string>
     <string name="haptic_lab_read_list">Odczytaj listę wzorców</string>
-    <string name="haptic_lab_stop">Zatrzymaj wibrację</string>
     <string name="haptic_lab_try_heading">Dotknij wzorca, aby poczuć go raz:</string>
     <string name="haptic_lab_what_felt">Jak było przy wzorcu %1$d?</string>
     <string name="haptic_lab_feel_nothing">Nic</string>

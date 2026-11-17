@@ -2892,7 +2892,6 @@
     <string name="haptic_lab_title">Patrones de vibración (WHOOP 4.0)</string>
     <string name="haptic_lab_blurb">Todas las vibraciones de NOOP usan el mismo patrón, por eso se sienten iguales. Prueba los demás uno a uno y anota cómo se siente cada uno. Solo mueve el motor; no cambia nada en la pulsera.</string>
     <string name="haptic_lab_read_list">Leer lista de patrones</string>
-    <string name="haptic_lab_stop">Detener vibración</string>
     <string name="haptic_lab_try_heading">Toca un patrón para sentirlo una vez:</string>
     <string name="haptic_lab_what_felt">¿Cómo se sintió el patrón %1$d?</string>
     <string name="haptic_lab_feel_nothing">Nada</string>

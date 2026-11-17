@@ -85,12 +85,26 @@ import java.util.Calendar
 
 // MARK: - Domain model (mirrors NotificationSettingsStore.swift)
 
-/** Haptic pattern fired on the strap; only the repeat count varies. */
+/**
+ * Haptic pattern fired on the strap. Single to Long repeat the standard buzz (WHOOP 4.0 preset 2, felt
+ * as two pairs of short buzzes per loop); only the repeat count varies.
+ *
+ * [Ring] is calls-only (Not-Noop): on a WHOOP 4.0 it plays preset 1, the strap's long ringing run (sets
+ * of about 15, 9 and 7 buzzes), mapped with the Test Centre preset experiment. It plays ONCE per call:
+ * the run is long, and a 4.0 refuses STOP_HAPTICS, so a repeat could not be cut short when the call is
+ * answered. A 5/MG has no such preset, so there it falls back to [Long]. See WhoopBleClient.buzzCallRing.
+ */
 internal enum class BuzzPattern(val label: String, val loops: Int) {
     Single("Single", 1),
     Double("Double", 2),
     Triple("Triple", 3),
     Long("Long", 5),
+    Ring("Ring", 5);
+
+    companion object {
+        /** What an app's menu offers: Ring is for calls only. */
+        val forApps: List<BuzzPattern> = entries.filter { it != Ring }
+    }
 }
 
 /**
@@ -195,7 +209,7 @@ internal object NotifPrefs {
 
     fun appPattern(ctx: Context, app: NotifApp): BuzzPattern {
         val name = prefs(ctx).getString("app.${app.id}.pattern", null)
-        return BuzzPattern.entries.firstOrNull { it.name == name } ?: app.category.defaultPattern
+        return BuzzPattern.forApps.firstOrNull { it.name == name } ?: app.category.defaultPattern
     }
 
     fun setAppPattern(ctx: Context, id: String, pattern: BuzzPattern) =
@@ -205,13 +219,14 @@ internal object NotifPrefs {
      *  Single if no per-app pattern was chosen (this also covers the "all other apps" catch-all). */
     fun appLoops(ctx: Context, pkg: String): Int {
         val name = prefs(ctx).getString("app.$pkg.pattern", null)
-        return BuzzPattern.entries.firstOrNull { it.name == name }?.loops ?: BuzzPattern.Single.loops
+        return BuzzPattern.forApps.firstOrNull { it.name == name }?.loops ?: BuzzPattern.Single.loops
     }
 
     fun callPattern(ctx: Context): BuzzPattern {
         val name = prefs(ctx).getString(CALLS_PATTERN, null)
-        // Calls default to Long, so a ringing call is distinct from a single-buzz notification.
-        return BuzzPattern.entries.firstOrNull { it.name == name } ?: BuzzPattern.Long
+        // Calls default to Ring (the WHOOP 4.0's own ringing run), so a ringing call is distinct from a
+        // single-buzz notification. An explicit earlier choice is kept.
+        return BuzzPattern.entries.firstOrNull { it.name == name } ?: BuzzPattern.Ring
     }
 
     fun setCallPattern(ctx: Context, pattern: BuzzPattern) =
@@ -365,7 +380,9 @@ fun NotificationsSettingsScreen(vm: AppViewModel) {
                 callsPattern = it
                 NotifPrefs.setCallPattern(context, it)
             },
-            onTest = { vm.buzz(loops = callsPattern.loops) },
+            onTest = {
+                if (callsPattern == BuzzPattern.Ring) vm.ble.buzzCallRing() else vm.buzz(loops = callsPattern.loops)
+            },
         )
 
         // #1115 follow-up: buzz the strap when the phone's native Clock fires a timer or alarm
@@ -584,7 +601,13 @@ private fun CallsCard(
                     )
                 }
                 if (callsEnabled) {
-                    PatternMenu(pattern = pattern, enabled = masterEnabled, appName = "calls", onSelect = onPattern)
+                    PatternMenu(
+                        pattern = pattern,
+                        enabled = masterEnabled,
+                        appName = "calls",
+                        onSelect = onPattern,
+                        options = BuzzPattern.entries,
+                    )
                     TestIconButton(enabled = masterEnabled && bonded, appName = "calls", onClick = onTest)
                 }
                 NoopSwitch(
@@ -782,6 +805,7 @@ private fun PatternMenu(
     enabled: Boolean,
     appName: String,
     onSelect: (BuzzPattern) -> Unit,
+    options: List<BuzzPattern> = BuzzPattern.forApps,
 ) {
     var expanded by remember { mutableStateOf(false) }
     val shape = RoundedCornerShape(50)
@@ -810,7 +834,7 @@ private fun PatternMenu(
             onDismissRequest = { expanded = false },
             modifier = Modifier.background(Palette.surfaceOverlay),
         ) {
-            BuzzPattern.entries.forEach { p ->
+            options.forEach { p ->
                 DropdownMenuItem(
                     text = {
                         Text(

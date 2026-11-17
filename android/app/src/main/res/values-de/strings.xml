@@ -2905,7 +2905,6 @@
     <string name="haptic_lab_title">Vibrationsmuster (WHOOP 4.0)</string>
     <string name="haptic_lab_blurb">Jede NOOP-Vibration nutzt dasselbe Muster, deshalb fühlen sich alle gleich an. Probiere die anderen nacheinander aus und notiere, wie sie sich anfühlen. Bewegt nur den Motor; am Armband ändert sich nichts.</string>
     <string name="haptic_lab_read_list">Musterliste lesen</string>
-    <string name="haptic_lab_stop">Vibration stoppen</string>
     <string name="haptic_lab_try_heading">Tippe auf ein Muster, um es einmal zu spüren:</string>
     <string name="haptic_lab_what_felt">Wie hat sich Muster %1$d angefühlt?</string>
     <string name="haptic_lab_feel_nothing">Nichts</string>

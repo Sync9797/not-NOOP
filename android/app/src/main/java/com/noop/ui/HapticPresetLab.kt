@@ -25,8 +25,12 @@ import com.noop.R
  * record what each felt like, and share the results in the strap log. See WhoopBleClient.tryHapticPreset.
  */
 object HapticPresetLab {
-    /** The ids offered. The command takes a byte; 0-15 covers every small id worth a first look. */
-    val PRESET_IDS: List<Int> = (0..15).toList()
+    /**
+     * The ids offered: the three presets a WHOOP 4.0 has. Mapped with this experiment on firmware
+     * 41.17.6.0: GET_ALL_HAPTICS_PATTERN answered 0x07 (bits 0-2), 0-2 were accepted and 3-15 refused
+     * with FAILURE. Felt as 0 = one long buzz, 1 = a long ringing run, 2 = two pairs of short buzzes.
+     */
+    val PRESET_IDS: List<Int> = listOf(0, 1, 2)
 
     /** What a wearer can report, as (log key, label resource). The log key stays English for triage. */
     val FEELS: List<Pair<String, Int>> = listOf(
@@ -70,11 +74,6 @@ internal fun HapticPresetLabContent(vm: AppViewModel) {
                 onClick = {
                     if (!vm.ble.readHapticPatterns()) Toast.makeText(context, notConnected, Toast.LENGTH_LONG).show()
                 },
-            )
-            NoopButton(
-                text = stringResource(R.string.haptic_lab_stop),
-                kind = NoopButtonKind.Secondary,
-                onClick = { vm.ble.stopHaptics() },
             )
         }
         Text(stringResource(R.string.haptic_lab_try_heading), style = NoopType.subhead, color = Palette.textPrimary)

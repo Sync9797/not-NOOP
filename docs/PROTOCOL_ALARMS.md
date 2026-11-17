@@ -66,8 +66,24 @@ lets a wearer find out:
 | Action | Request | Why it is safe |
 |---|---|---|
 | Read pattern list | command 80 `GET_ALL_HAPTICS_PATTERN`, body `00`, acknowledged | A read. The reply is logged in full; its layout is unmapped, and nothing depends on it. |
-| Try preset *n* (0-15) | command 79 `RUN_HAPTICS_PATTERN`, body `n 01 00 00 00` (one loop), acknowledged | The same command every buzz already sends, with a different preset byte. A haptic request only moves the motor: it stores nothing, changes no setting, and ends by itself. The worst case is an unfamiliar buzz or none. |
-| Stop buzz | command 122 `STOP_HAPTICS`, body `00` | Ends a long pattern early (the existing stop). |
+| Try preset *n* (0-2; 0-15 in the first version) | command 79 `RUN_HAPTICS_PATTERN`, body `n 01 00 00 00` (one loop), acknowledged | The same command every buzz already sends, with a different preset byte. A haptic request only moves the motor: it stores nothing, changes no setting, and ends by itself. The worst case is an unfamiliar buzz or none. |
+
+**Results (WHOOP 4, firmware 41.17.6.0, one strap, Not-Noop 12.4.1):**
+
+| Request | Strap reply | Felt |
+|---|---|---|
+| 80, body `00` | `SUCCESS`, data byte `07` on four reads (bits 0-2 set) | — |
+| 79 preset 0 | `PENDING` (runs) | one long buzz |
+| 79 preset 1 | `PENDING` (runs) | a long ringing run: sets of about 15, 9 and 7 buzzes |
+| 79 preset 2 | `PENDING` (runs) | two pairs of short buzzes per loop (the "triple"-feeling buzz every NOOP cue used) |
+| 79 presets 3-15 | `FAILURE`, second status byte `08`, every time | nothing |
+| 122 `STOP_HAPTICS` | `UNSUPPORTED` every time | — |
+
+So the 80 reply reads as a bitmask of available presets, and this strap has exactly three. STOP_HAPTICS
+is refused on this firmware, so a running pattern cannot be cut short on a WHOOP 4 (this also makes the
+Breathe stop a no-op there). The Test Centre now offers only presets 0-2 and no Stop button. Product
+use: incoming calls default to preset 1 ("Ring"), played once per call because it cannot be stopped;
+every other cue keeps preset 2.
 
 **Gating.** Every request is sent only on a tap, never automatically, and only to a connected WHOOP 4.
 The section is hidden for a 5/MG, whose command 79 is remapped to a different body.
@@ -75,8 +91,10 @@ The section is hidden for a 5/MG, whose command 79 is remapped to a different bo
 **Evidence.** While the experiment is in use on a link, every reply to 79 and 80 is logged with its
 result byte and full frame. A `SUCCESS` or `UNSUPPORTED` result for a preset id is itself evidence
 of which ids exist. What the wearer felt is recorded as `Haptic preset test: preset n felt: …` in
-the strap log, which Report a bug attaches. Until results from more than one strap and firmware
-agree, no product cue moves off preset 2.
+the strap log, which Report a bug attaches. Only the call alert has moved off preset 2, on one
+strap's results and at its wearer's request, as a user-selectable call pattern ("Ring") that falls
+back to the old Long buzz on a 5/MG. Results from more straps and firmware should confirm the map
+before any other cue changes.
 
 Event 60 (`HAPTICS_FIRED`) and event 100 (`HAPTICS_TERMINATED`) exist in the legacy
 event vocabulary. Absence of either event is not proof that the motor did not move.
