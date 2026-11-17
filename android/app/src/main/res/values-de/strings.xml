@@ -2917,4 +2917,5 @@
     <string name="haptic_lab_results">Deine Ergebnisse: %1$s</string>
     <string name="haptic_lab_share_hint">Deine Ergebnisse stehen im Armband-Protokoll. Teile sie über Einstellungen › Support › Fehler melden.</string>
     <string name="haptic_lab_needs_whoop4">Verbinde zuerst ein WHOOP 4.0.</string>
+    <string name="l10n_app_changelog_try_your_whoop_4_0_s_a262b7a5">Probiere die anderen Vibrationen deines WHOOP 4.0 aus</string>
 </resources>

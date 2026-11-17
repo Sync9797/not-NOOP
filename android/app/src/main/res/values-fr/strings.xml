@@ -2903,4 +2903,5 @@
     <string name="haptic_lab_results">Vos résultats : %1$s</string>
     <string name="haptic_lab_share_hint">Vos résultats sont écrits dans le journal du bracelet. Partagez-les via Réglages › Assistance › Signaler un bug.</string>
     <string name="haptic_lab_needs_whoop4">Connectez d\'abord un WHOOP 4.0.</string>
+    <string name="l10n_app_changelog_try_your_whoop_4_0_s_a262b7a5">Essayez les autres vibrations de votre WHOOP 4.0</string>
 </resources>

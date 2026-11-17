@@ -26,7 +26,7 @@ object AppChangelog {
      * Bump this when you add a release below. The "What's New" sheet shows automatically when the
      * stored last-seen version is behind this. (Decoupled from the bundle version on purpose.)
      */
-    const val CURRENT_VERSION = "12.4.0"
+    const val CURRENT_VERSION = "12.4.1"
 
     data class Release(
         val version: String,
@@ -37,6 +37,14 @@ object AppChangelog {
 
     /** Newest first. */
     val releases: List<Release> = listOf(
+        Release(
+            version = "12.4.1",
+            title = uiString(R.string.l10n_app_changelog_try_your_whoop_4_0_s_a262b7a5),
+            date = "November 2026",
+            items = listOf(
+                "**Vibration presets experiment (WHOOP 4.0).** Every NOOP buzz uses the same built-in pattern, which is why they all feel like the same triple buzz. Settings › Test Centre › Vibration presets lets you try the strap's other patterns one at a time and note what each feels like.",
+            ),
+        ),
         Release(
             version = "12.4.0",
             title = uiString(R.string.l10n_app_changelog_two_columns_on_a_half_open_596e576f),
