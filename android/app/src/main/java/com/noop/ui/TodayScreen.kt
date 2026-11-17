@@ -3468,16 +3468,18 @@ private fun SynthesisHeroCard(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            // The greeting yields/ellipsises first; the pill keeps its full width (#527).
+            // The greeting yields/ellipsises first; the pill keeps its full width (#527). It takes ALL the
+            // leftover width and pushes the pills to the end itself. It used to share that width half and half
+            // with a weighted Spacer, so on a narrow pane (a book-posture half, a small phone) "Good evening"
+            // was cut to "Good eveni…" while the other half of the gap sat empty. Not-Noop fix.
             Text(
                 greetingWord(),
                 style = NoopType.subhead,
                 color = Palette.textSecondary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(1f, fill = false),
+                modifier = Modifier.weight(1f),
             )
-            Spacer(Modifier.weight(1f))
             // S4 (#205): the one-word readiness read kept on the hero now the full Readiness card folded
             // into the Charge-ring tap. Push / Maintain / Rest; hidden when there isn't enough history.
             // Tapping it opens the Charge breakdown, where the full Readiness card now lives.
