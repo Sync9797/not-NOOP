@@ -26,7 +26,7 @@ object AppChangelog {
      * Bump this when you add a release below. The "What's New" sheet shows automatically when the
      * stored last-seen version is behind this. (Decoupled from the bundle version on purpose.)
      */
-    const val CURRENT_VERSION = "12.4.1"
+    const val CURRENT_VERSION = "12.4.2"
 
     data class Release(
         val version: String,
@@ -37,6 +37,15 @@ object AppChangelog {
 
     /** Newest first. */
     val releases: List<Release> = listOf(
+        Release(
+            version = "12.4.2",
+            title = uiString(R.string.l10n_app_changelog_calls_ring_on_your_whoop_4_4a11b3ee),
+            date = "November 2026",
+            items = listOf(
+                "**Calls use the strap's ringing pattern.** On a WHOOP 4.0, incoming calls now play the strap's own long ringing buzz, so a call feels nothing like a notification. You can switch back under Notifications › Calls.",
+                "**Vibration presets narrowed down.** The Test Centre experiment found a WHOOP 4.0 has three vibration patterns, so it now offers just those.",
+            ),
+        ),
         Release(
             version = "12.4.1",
             title = uiString(R.string.l10n_app_changelog_try_your_whoop_4_0_s_a262b7a5),

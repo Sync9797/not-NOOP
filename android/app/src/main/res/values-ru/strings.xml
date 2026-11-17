@@ -2799,4 +2799,5 @@
     <string name="haptic_lab_share_hint">Результаты записываются в журнал браслета. Поделитесь ими: Настройки › Поддержка › Сообщить об ошибке.</string>
     <string name="haptic_lab_needs_whoop4">Сначала подключите WHOOP 4.0.</string>
     <string name="l10n_app_changelog_try_your_whoop_4_0_s_a262b7a5">Попробуйте другие вибрации WHOOP 4.0</string>
+    <string name="l10n_app_changelog_calls_ring_on_your_whoop_4_4a11b3ee">Звонки звонят на WHOOP 4.0</string>
 </resources>

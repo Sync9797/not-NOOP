@@ -2920,4 +2920,5 @@
     <string name="haptic_lab_share_hint">Wyniki trafiają do dziennika opaski. Udostępnij je przez Ustawienia › Pomoc › Zgłoś błąd.</string>
     <string name="haptic_lab_needs_whoop4">Najpierw połącz WHOOP 4.0.</string>
     <string name="l10n_app_changelog_try_your_whoop_4_0_s_a262b7a5">Wypróbuj inne wibracje WHOOP 4.0</string>
+    <string name="l10n_app_changelog_calls_ring_on_your_whoop_4_4a11b3ee">Połączenia dzwonią na WHOOP 4.0</string>
 </resources>
