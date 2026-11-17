@@ -7,7 +7,7 @@ enum AppChangelog {
 
     /// Bump this when you add a release below. The "What's New" sheet shows automatically when the
     /// stored last-seen version is behind this. (Decoupled from the bundle version on purpose.)
-    static let currentVersion = "12.4.2"
+    static let currentVersion = "12.4.3"
 
     struct Release: Identifiable {
         let version: String
@@ -19,6 +19,16 @@ enum AppChangelog {
 
     /// Newest first.
     static let releases: [Release] = [
+        Release(
+            version: "12.4.3",
+            title: "Steadier vibrations on the WHOOP 4.0",
+            date: "November 2026",
+            items: [
+                "**One buzz per notification.** Many apps update a notification a moment after posting it, and NOOP used to buzz for each update, so one message could buzz two or three times on top of itself. Now each notification buzzes once.",
+                "**Calls are back to the Long buzz.** The ringing pattern tried in 12.4.2 felt wrong on real calls, so it is gone.",
+                "**No Today button in book mode.** On a half-open foldable, Today is always on screen, so the sidebar no longer has a button for it.",
+            ]
+        ),
         Release(
             version: "12.4.2",
             title: "Calls ring on your WHOOP 4.0",

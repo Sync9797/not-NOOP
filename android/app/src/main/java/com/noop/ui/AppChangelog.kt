@@ -26,7 +26,7 @@ object AppChangelog {
      * Bump this when you add a release below. The "What's New" sheet shows automatically when the
      * stored last-seen version is behind this. (Decoupled from the bundle version on purpose.)
      */
-    const val CURRENT_VERSION = "12.4.2"
+    const val CURRENT_VERSION = "12.4.3"
 
     data class Release(
         val version: String,
@@ -37,6 +37,16 @@ object AppChangelog {
 
     /** Newest first. */
     val releases: List<Release> = listOf(
+        Release(
+            version = "12.4.3",
+            title = uiString(R.string.l10n_app_changelog_steadier_vibrations_on_the_whoop_4_99ca13cb),
+            date = "November 2026",
+            items = listOf(
+                "**One buzz per notification.** Many apps update a notification a moment after posting it, and NOOP used to buzz for each update, so one message could buzz two or three times on top of itself. Now each notification buzzes once.",
+                "**Calls are back to the Long buzz.** The ringing pattern tried in 12.4.2 felt wrong on real calls, so it is gone.",
+                "**No Today button in book mode.** On a half-open foldable, Today is always on screen, so the sidebar no longer has a button for it.",
+            ),
+        ),
         Release(
             version = "12.4.2",
             title = uiString(R.string.l10n_app_changelog_calls_ring_on_your_whoop_4_4a11b3ee),
