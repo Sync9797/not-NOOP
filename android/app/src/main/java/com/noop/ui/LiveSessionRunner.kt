@@ -49,6 +49,10 @@ class LiveSessionRunner(
     private val hrSource: String = "whoop",
     /** Injectable clock (epoch seconds) so the tick/accrual/auto-end logic is testable. */
     private val nowEpochSec: () -> Long = { System.currentTimeMillis() / 1000L },
+    /** Not-Noop: whether the strap needs each cue as ONE command (a WHOOP 4.0; see [Whoop4Cues]). */
+    private val oneCommandPerCue: () -> Boolean = { false },
+    /** Play one preset with a loop count — [com.noop.ble.WhoopBleClient.buzzPreset]. */
+    private val buzzPreset: (presetId: Int, loops: Int) -> Unit = { _, loops -> buzz(loops) },
 ) {
 
     /** Everything the session screen renders, published once per tick (and once on end). */
@@ -173,6 +177,13 @@ class LiveSessionRunner(
         when (cue) {
             LiveSessionEngine.Cue.PUSH_NUDGE -> pushCount += 1
             LiveSessionEngine.Cue.EASE_OFF -> easeCount += 1
+        }
+        // A WHOOP 4.0 plays a whole preset per command, so a pulse walk would overlap into one blur:
+        // send the cue as its single mapped command instead (Whoop4Cues).
+        if (oneCommandPerCue()) {
+            val command = Whoop4Cues.liveSession(signal)
+            buzzPreset(command.presetId, command.loops)
+            return
         }
         walkJob = scope.launch {
             for (pulse in LiveSessionHaptics.pulses(signal)) {

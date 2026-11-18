@@ -115,6 +115,8 @@ fun startOrResumeLiveSession(vm: AppViewModel, context: Context): LiveSessionRun
         buzz = { loops -> vm.buzz(loops, HapticPrefs.LIVE_SESSION) },
         persist = { row -> vm.repo.upsertLiveSession(row) },
         realtimeHr = { arm -> if (arm) vm.requestRealtimeHr() else vm.releaseRealtimeHr() },
+        oneCommandPerCue = { vm.ble.oneCommandPerCue },
+        buzzPreset = { preset, loops -> vm.buzzPreset(preset, loops, HapticPrefs.LIVE_SESSION) },
     )
     // begin() is replace-guarded: an in-flight session is returned as-is and the fresh runner (which has
     // no side effects until started) is simply dropped, so a double-tap can never fork two sessions.

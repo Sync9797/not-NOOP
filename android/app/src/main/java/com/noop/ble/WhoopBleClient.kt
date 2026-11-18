@@ -4722,6 +4722,29 @@ class WhoopBleClient(
     }
 
     /**
+     * Whether multi-tap cues should be sent as ONE command (Not-Noop): true for a connected WHOOP 4.0,
+     * where every haptic command plays a whole preset, so a quick series of commands overlaps on the wrist.
+     * See com.noop.ui.Whoop4Cues.
+     */
+    val oneCommandPerCue: Boolean
+        get() = _state.value.connected && connectedFamily == DeviceFamily.WHOOP4
+
+    /**
+     * Play one loop-counted haptic preset (Not-Noop). On a WHOOP 4.0, RUN_HAPTICS_PATTERN with
+     * `[presetId, loops, 0, 0, 0]` for one of the three presets the strap reports (0-2). Anywhere else the
+     * preset ids do not apply, so it falls back to the standard [buzz] with the same loop count.
+     */
+    fun buzzPreset(presetId: Int, loops: Int = 1) {
+        if (connectedFamily != DeviceFamily.WHOOP4 || presetId !in 0..2) {
+            buzz(loops)
+            return
+        }
+        val n = loops.coerceIn(1, 255)
+        send(CommandNumber.RUN_HAPTICS_PATTERN, byteArrayOf(presetId.toByte(), n.toByte(), 0, 0, 0))
+        log("Buzz: preset=$presetId loops=$n")
+    }
+
+    /**
      * Not-Noop haptic preset experiment (Test Centre only; WHOOP 4.0 only). See docs/PROTOCOL_ALARMS.md
      * "Haptic preset experiment".
      *

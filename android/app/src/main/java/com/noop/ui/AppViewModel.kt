@@ -3104,6 +3104,11 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
      *  user-facing "buzz the strap now" action use [buzzStrapOnce] instead (#921). */
     fun buzz(loops: Int = 2) = ble.buzz(loops)
 
+    /** [com.noop.ble.WhoopBleClient.buzzPreset] behind the same per-feature haptics switch as [buzz]. */
+    fun buzzPreset(presetId: Int, loops: Int, gate: String) {
+        if (HapticPrefs.enabled(appContext, gate)) ble.buzzPreset(presetId, loops)
+    }
+
     /** #haptics (#1115 offshoot): an IN-SESSION cue buzz, GATED by its per-event [HapticPrefs] toggle
      *  (default-off / opt-in, migrated-on for existing installs). Each in-session cue site passes its
      *  [gate] key (e.g. [HapticPrefs.BREATHING]) so the enable check lives in ONE place rather than at every

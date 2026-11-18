@@ -91,8 +91,12 @@ had finished:
 - the notification listener buzzed on every post AND update of a notification, so one message often
   sent two or three commands a second apart (fixed with NotificationBuzzGate: one buzz per
   notification, a 4 s gap across apps);
-- multi-pulse cues (Live Session push / ease-off, and the Breathe and Intervals cues) send one command
-  per pulse a few hundred milliseconds apart, written as if each command were one short pulse.
+- multi-pulse cues sent one command per pulse, written as if each command were one short pulse: the
+  Live Session push (two commands 650 ms apart) and ease-off (three about 1 s apart), and the Intervals
+  3-2-1 tick (one a second, the last in the same second as the phase-change cue). Fixed with
+  `Whoop4Cues` on a WHOOP 4 only: push is one round of preset 2, ease-off one long preset 0, and the
+  Intervals countdown tick is dropped while the phase-change cues stay. A 5/MG keeps the pulse walks.
+  Breathe was checked and sends one command per breath phase, seconds apart, so it is unchanged.
 
 **Gating.** Every request is sent only on a tap, never automatically, and only to a connected WHOOP 4.
 The section is hidden for a 5/MG, whose command 79 is remapped to a different body.

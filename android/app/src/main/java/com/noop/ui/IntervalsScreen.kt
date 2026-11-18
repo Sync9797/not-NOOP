@@ -119,8 +119,9 @@ fun IntervalsScreen(vm: AppViewModel) {
             delay(1000)
             if (isFinished) return@LaunchedEffect
 
-            // 3-2-1 tick on the last seconds of the current phase.
-            if (remaining in 1..3) buzz(loops = 1)
+            // 3-2-1 tick on the last seconds of the current phase; not on a WHOOP 4.0, where each tick is a
+            // whole pattern that cannot finish before the next or before the phase-change cue (Whoop4Cues).
+            if (Whoop4Cues.intervalsCountdownTick(remaining, vm.ble.oneCommandPerCue)) buzz(loops = 1)
 
             if (remaining > 1) {
                 remaining -= 1
