@@ -573,9 +573,9 @@ class AiCoach(
 
     /** `yyyy-MM-dd` in the wearer's own zone, matching Swift's `dateString` for the same line. */
     private fun workoutDay(startTs: Long): String =
-        java.time.LocalDate.ofInstant(
-            java.time.Instant.ofEpochSecond(startTs), java.time.ZoneId.systemDefault(),
-        ).toString()
+        // atZone().toLocalDate(), not LocalDate.ofInstant: the latter needs API 34 and threw
+        // NoSuchMethodError on older Android (ryanbr/noop#2789). Same result on every version.
+        java.time.Instant.ofEpochSecond(startTs).atZone(java.time.ZoneId.systemDefault()).toLocalDate().toString()
 
     /**
      * SUMMARY-ONLY on-device signals context (v5): the user's strongest associations (from the same

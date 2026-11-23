@@ -61,6 +61,14 @@ android {
         }
     }
 
+    lint {
+        // Not-Noop (ryanbr/noop#2789): a call that needs a newer Android than minSdk compiles fine and then
+        // throws NoSuchMethodError on older phones (LocalDate.ofInstant is API 34 and crashed Health Connect
+        // sync on Android 11). Making NewApi fatal turns that into a failure of the release build's own
+        // lintVital step, which every release already runs, instead of a crash report.
+        fatal += "NewApi"
+    }
+
     testOptions {
         // Only the screenshot tour needs real resources inside Robolectric (see noopScreenshots above).
         unitTests.isIncludeAndroidResources = noopScreenshots
