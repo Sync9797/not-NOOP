@@ -7,7 +7,7 @@ enum AppChangelog {
 
     /// Bump this when you add a release below. The "What's New" sheet shows automatically when the
     /// stored last-seen version is behind this. (Decoupled from the bundle version on purpose.)
-    static let currentVersion = "12.4.4"
+    static let currentVersion = "12.4.5"
 
     struct Release: Identifiable {
         let version: String
@@ -19,6 +19,16 @@ enum AppChangelog {
 
     /// Newest first.
     static let releases: [Release] = [
+        Release(
+            version: "12.4.5",
+            title: "Skip one alarm, and two fixes",
+            date: "November 2026",
+            items: [
+                "**Skip the next alarm.** The smart alarm and the strap alarm each have a \"Skip next alarm\" button. It passes over one morning and leaves the alarm on, so it comes back by itself the day after. Undo brings the morning back.",
+                "**Health Connect sync works on Android 8 to 13.** Syncing no longer crashes on phones older than Android 14.",
+                "**Back up to a single file.** Storage apps that cannot share a folder, such as Proton Drive, can now hold your automatic backup as one file that is replaced each time.",
+            ]
+        ),
         Release(
             version: "12.4.4",
             title: "Clearer workout cues on the WHOOP 4.0",

@@ -2922,4 +2922,5 @@
     <string name="alarm_skip_active_no_next">%1$s ignoré.</string>
     <string name="alarm_skip_strap_pending">Ton bracelet ne l\'a pas encore reçu et peut encore vibrer le %1$s. Il sera mis à jour à sa prochaine connexion.</string>
     <string name="alarm_skip_undo">Annuler l\'omission</string>
+    <string name="l10n_app_changelog_skip_one_alarm_and_two_fixes_812997bc">Ignorer une alarme, et deux corrections</string>
 </resources>

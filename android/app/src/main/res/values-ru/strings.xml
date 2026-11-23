@@ -2818,4 +2818,5 @@
     <string name="alarm_skip_active_no_next">Пропуск: %1$s.</string>
     <string name="alarm_skip_strap_pending">Браслет ещё не получил это изменение и может всё равно завибрировать %1$s. Он обновится при следующем подключении.</string>
     <string name="alarm_skip_undo">Отменить пропуск</string>
+    <string name="l10n_app_changelog_skip_one_alarm_and_two_fixes_812997bc">Пропуск одного будильника и два исправления</string>
 </resources>

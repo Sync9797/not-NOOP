@@ -2893,4 +2893,5 @@
     <string name="alarm_skip_active_no_next">已跳过 %1$s。</string>
     <string name="alarm_skip_strap_pending">手环尚未收到此更改，%1$s 仍可能振动。下次连接时会更新。</string>
     <string name="alarm_skip_undo">撤销跳过</string>
+    <string name="l10n_app_changelog_skip_one_alarm_and_two_fixes_812997bc">跳过一次闹钟，另有两项修复</string>
 </resources>

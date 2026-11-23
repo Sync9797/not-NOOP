@@ -2952,4 +2952,5 @@
     <string name="alarm_skip_active_no_next">Skipping %1$s.</string>
     <string name="alarm_skip_strap_pending">Your strap hasn\'t received this yet and may still buzz on %1$s. It updates the next time it connects.</string>
     <string name="alarm_skip_undo">Undo skip</string>
+    <string name="l10n_app_changelog_skip_one_alarm_and_two_fixes_812997bc">Skip one alarm, and two fixes</string>
 </resources>

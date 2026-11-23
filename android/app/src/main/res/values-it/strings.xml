@@ -2891,4 +2891,5 @@
     <string name="alarm_skip_active_no_next">%1$s saltato.</string>
     <string name="alarm_skip_strap_pending">La tua fascia non l\'ha ancora ricevuto e potrebbe vibrare comunque il %1$s. Si aggiornerà alla prossima connessione.</string>
     <string name="alarm_skip_undo">Annulla salto</string>
+    <string name="l10n_app_changelog_skip_one_alarm_and_two_fixes_812997bc">Salta una sveglia, e due correzioni</string>
 </resources>

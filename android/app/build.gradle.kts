@@ -32,8 +32,8 @@ android {
         applicationId = "com.not.noop.oop"
         minSdk = 26
         targetSdk = 34
-        versionCode = 569
-        versionName = "12.4.4"
+        versionCode = 570
+        versionName = "12.4.5"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {

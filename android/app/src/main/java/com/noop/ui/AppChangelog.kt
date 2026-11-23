@@ -26,7 +26,7 @@ object AppChangelog {
      * Bump this when you add a release below. The "What's New" sheet shows automatically when the
      * stored last-seen version is behind this. (Decoupled from the bundle version on purpose.)
      */
-    const val CURRENT_VERSION = "12.4.4"
+    const val CURRENT_VERSION = "12.4.5"
 
     data class Release(
         val version: String,
@@ -37,6 +37,16 @@ object AppChangelog {
 
     /** Newest first. */
     val releases: List<Release> = listOf(
+        Release(
+            version = "12.4.5",
+            title = uiString(R.string.l10n_app_changelog_skip_one_alarm_and_two_fixes_812997bc),
+            date = "November 2026",
+            items = listOf(
+                "**Skip the next alarm.** The smart alarm and the strap alarm each have a \"Skip next alarm\" button. It passes over one morning and leaves the alarm on, so it comes back by itself the day after. Undo brings the morning back.",
+                "**Health Connect sync works on Android 8 to 13.** Syncing no longer crashes on phones older than Android 14.",
+                "**Back up to a single file.** Storage apps that cannot share a folder, such as Proton Drive, can now hold your automatic backup as one file that is replaced each time.",
+            ),
+        ),
         Release(
             version = "12.4.4",
             title = uiString(R.string.l10n_app_changelog_clearer_workout_cues_on_the_whoop_b2e1ea51),

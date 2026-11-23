@@ -2939,4 +2939,5 @@
     <string name="alarm_skip_active_no_next">Pominięto %1$s.</string>
     <string name="alarm_skip_strap_pending">Opaska jeszcze tego nie otrzymała i może mimo to zawibrować %1$s. Zaktualizuje się przy następnym połączeniu.</string>
     <string name="alarm_skip_undo">Cofnij pominięcie</string>
+    <string name="l10n_app_changelog_skip_one_alarm_and_two_fixes_812997bc">Pomiń jeden alarm i dwie poprawki</string>
 </resources>
