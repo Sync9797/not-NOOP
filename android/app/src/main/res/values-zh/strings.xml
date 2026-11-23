@@ -2887,4 +2887,10 @@
     <string name="backup_file_unverified">备份已写入你的文件，但无法确认其完整。请在依赖它之前再备份一次，或改为选择文件夹。</string>
     <string name="backup_file_restore_label">你的备份文件</string>
     <string name="backup_file_no_lasting_access">该存储应用不允许 NOOP 保留对文件的访问权限，因此每日备份之后无法写入它。请选择文件夹或其他应用，或使用 设置 › 导出 进行单次备份。</string>
+    <string name="alarm_skip_next">跳过下一次闹钟（%1$s）</string>
+    <string name="alarm_skip_next_help">只跳过那一天早上。闹钟保持开启，第二天照常响起。</string>
+    <string name="alarm_skip_active">已跳过 %1$s。下一次闹钟：%2$s %3$s。</string>
+    <string name="alarm_skip_active_no_next">已跳过 %1$s。</string>
+    <string name="alarm_skip_strap_pending">手环尚未收到此更改，%1$s 仍可能振动。下次连接时会更新。</string>
+    <string name="alarm_skip_undo">撤销跳过</string>
 </resources>

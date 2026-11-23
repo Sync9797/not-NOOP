@@ -2885,4 +2885,10 @@
     <string name="backup_file_unverified">Il backup è stato scritto nel tuo file ma non è stato possibile confermarne la completezza. Ripeti il backup prima di farci affidamento, oppure scegli una cartella.</string>
     <string name="backup_file_restore_label">il tuo file di backup</string>
     <string name="backup_file_no_lasting_access">Quell\'app di archiviazione non permette a NOOP di mantenere l\'accesso al file, quindi il backup giornaliero non potrebbe raggiungerlo in seguito. Scegli una cartella o un\'altra app, oppure usa Impostazioni › Esporta per backup singoli.</string>
+    <string name="alarm_skip_next">Salta la prossima sveglia (%1$s)</string>
+    <string name="alarm_skip_next_help">Salta solo quella mattina. La sveglia resta attiva e riprende il giorno dopo.</string>
+    <string name="alarm_skip_active">%1$s saltato. Prossima sveglia: %2$s alle %3$s.</string>
+    <string name="alarm_skip_active_no_next">%1$s saltato.</string>
+    <string name="alarm_skip_strap_pending">La tua fascia non l\'ha ancora ricevuto e potrebbe vibrare comunque il %1$s. Si aggiornerà alla prossima connessione.</string>
+    <string name="alarm_skip_undo">Annulla salto</string>
 </resources>

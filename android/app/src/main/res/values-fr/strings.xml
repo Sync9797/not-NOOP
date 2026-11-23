@@ -2916,4 +2916,10 @@
     <string name="backup_file_unverified">La sauvegarde a été écrite dans votre fichier mais n\'a pas pu être confirmée comme complète. Sauvegardez à nouveau avant de vous y fier, ou choisissez plutôt un dossier.</string>
     <string name="backup_file_restore_label">votre fichier de sauvegarde</string>
     <string name="backup_file_no_lasting_access">Cette app de stockage ne laisse pas NOOP conserver l\'accès au fichier, donc la sauvegarde quotidienne ne pourrait pas l\'atteindre plus tard. Choisissez un dossier ou une autre app, ou utilisez Réglages › Exporter pour des sauvegardes ponctuelles.</string>
+    <string name="alarm_skip_next">Ignorer la prochaine alarme (%1$s)</string>
+    <string name="alarm_skip_next_help">Ignore seulement ce matin-là. L\'alarme reste activée et reprend le lendemain.</string>
+    <string name="alarm_skip_active">%1$s ignoré. Prochaine alarme : %2$s à %3$s.</string>
+    <string name="alarm_skip_active_no_next">%1$s ignoré.</string>
+    <string name="alarm_skip_strap_pending">Ton bracelet ne l\'a pas encore reçu et peut encore vibrer le %1$s. Il sera mis à jour à sa prochaine connexion.</string>
+    <string name="alarm_skip_undo">Annuler l\'omission</string>
 </resources>

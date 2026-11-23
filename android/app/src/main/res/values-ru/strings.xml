@@ -2812,4 +2812,10 @@
     <string name="backup_file_unverified">Копия записана в ваш файл, но подтвердить её целостность не удалось. Сделайте копию ещё раз, прежде чем полагаться на неё, или выберите папку.</string>
     <string name="backup_file_restore_label">ваш файл копии</string>
     <string name="backup_file_no_lasting_access">Это хранилище не позволяет NOOP сохранить доступ к файлу, поэтому ежедневная копия не сможет до него добраться позже. Выберите папку или другое приложение либо используйте Настройки › Экспорт для разовых копий.</string>
+    <string name="alarm_skip_next">Пропустить следующий будильник (%1$s)</string>
+    <string name="alarm_skip_next_help">Пропускает только это утро. Будильник остаётся включённым и сработает на следующий день.</string>
+    <string name="alarm_skip_active">Пропуск: %1$s. Следующий будильник: %2$s в %3$s.</string>
+    <string name="alarm_skip_active_no_next">Пропуск: %1$s.</string>
+    <string name="alarm_skip_strap_pending">Браслет ещё не получил это изменение и может всё равно завибрировать %1$s. Он обновится при следующем подключении.</string>
+    <string name="alarm_skip_undo">Отменить пропуск</string>
 </resources>

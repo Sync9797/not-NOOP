@@ -2933,4 +2933,10 @@
     <string name="backup_file_unverified">Kopia została zapisana w Twoim pliku, ale nie udało się potwierdzić, że jest kompletna. Wykonaj kopię ponownie, zanim na niej polegniesz, albo wybierz folder.</string>
     <string name="backup_file_restore_label">Twój plik kopii</string>
     <string name="backup_file_no_lasting_access">Ta aplikacja do przechowywania nie pozwala NOOP zachować dostępu do pliku, więc codzienna kopia nie mogłaby do niego później dotrzeć. Wybierz folder lub inną aplikację albo użyj Ustawienia › Eksport do jednorazowych kopii.</string>
+    <string name="alarm_skip_next">Pomiń następny alarm (%1$s)</string>
+    <string name="alarm_skip_next_help">Pomija tylko ten jeden poranek. Alarm pozostaje włączony i wraca następnego dnia.</string>
+    <string name="alarm_skip_active">Pominięto %1$s. Następny alarm: %2$s o %3$s.</string>
+    <string name="alarm_skip_active_no_next">Pominięto %1$s.</string>
+    <string name="alarm_skip_strap_pending">Opaska jeszcze tego nie otrzymała i może mimo to zawibrować %1$s. Zaktualizuje się przy następnym połączeniu.</string>
+    <string name="alarm_skip_undo">Cofnij pominięcie</string>
 </resources>

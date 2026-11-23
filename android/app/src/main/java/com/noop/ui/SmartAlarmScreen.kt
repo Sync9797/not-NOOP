@@ -65,6 +65,7 @@ fun SmartAlarmScreen(vm: AppViewModel) {
     val phoneAlarmWeekdays by vm.phoneAlarmWeekdays.collectAsStateWithLifecycle()
     val phoneAlarmDayOverrides by vm.phoneAlarmDayOverrides.collectAsStateWithLifecycle()
     val buzzWhoop4 by vm.buzzWhoop4Enabled.collectAsStateWithLifecycle()
+    val phoneAlarmSkipDay by vm.phoneAlarmSkipDay.collectAsStateWithLifecycle()
     // #536: the hint adapts to bond state — the strap can only be armed when a WHOOP 4.0 is connected.
     val liveState = vm.live.collectAsStateWithLifecycle().value
     val bonded = liveState.bonded
@@ -107,20 +108,24 @@ fun SmartAlarmScreen(vm: AppViewModel) {
             // countdown already naming tomorrow. Two lines disagreeing about one fact is the whole defect
             // this screen has been fixing.
             val nextTargetMinutes = remember(
-                nowMs, targetMinutes, windowMinutes, phoneAlarmWeekdays, phoneAlarmDayOverrides,
+                nowMs, targetMinutes, windowMinutes, phoneAlarmWeekdays, phoneAlarmDayOverrides, phoneAlarmSkipDay,
             ) {
                 com.noop.alarm.SmartAlarmScheduler.nextWindowStartMinutes(
                     now = java.util.Calendar.getInstance().apply { timeInMillis = nowMs },
                     weekdays = phoneAlarmWeekdays,
                     windowMinutes = windowMinutes,
                     defaultTarget = targetMinutes,
+                    skipDay = phoneAlarmSkipDay,
                 ) { phoneAlarmDayOverrides[it] ?: targetMinutes }
             }
+            // Not-Noop (#1611): the skip goes through the same resolver the scheduler arms from, so a skipped
+            // morning cannot still be counted down to here.
             val countdown = alarmCountdown(
                 nowMs = nowMs,
                 armed = enabled && canSchedule,
                 weekdays = phoneAlarmWeekdays,
                 windowMinutes = windowMinutes,
+                skipDay = phoneAlarmSkipDay,
                 targetForDay = { phoneAlarmDayOverrides[it] ?: targetMinutes },
             )
             WindowCard(
@@ -220,6 +225,24 @@ fun SmartAlarmScreen(vm: AppViewModel) {
                     overrides = phoneAlarmDayOverrides,
                     onSetOverride = { dow, minutes -> vm.setPhoneAlarmDayOverride(dow, minutes) },
                 )
+                // Not-Noop (#1611): skip the next morning without switching the alarm off. Resolved on the
+                // DEADLINE (the morning you are woken), the same day the weekdays and the countdown use.
+                RowDividerLocal()
+                SkipNextAlarmRow(
+                    skipDay = phoneAlarmSkipDay,
+                    resolveNext = { nowMs, skip ->
+                        com.noop.alarm.SmartAlarmScheduler.nextDeadline(
+                            now = java.util.Calendar.getInstance().apply { timeInMillis = nowMs },
+                            weekdays = phoneAlarmWeekdays,
+                            windowMinutes = windowMinutes,
+                            skipDay = skip,
+                        ) { phoneAlarmDayOverrides[it] ?: targetMinutes }?.timeInMillis
+                    },
+                    // Only "Buzz WHOOP 4" puts this alarm on the strap; the phone alarm itself needs no link.
+                    strapPendingUpdate = buzzWhoop4 && !bonded,
+                    onSkip = { vm.skipNextPhoneAlarm() },
+                    onUndo = { vm.undoPhoneAlarmSkip() },
+                )
             }
 
             // #536: companion strap-buzz, always visible so it's discoverable. Arms the strap's own firmware
@@ -267,6 +290,7 @@ private fun StrapAlarmCard(vm: AppViewModel) {
     val alarmMinutes by vm.smartAlarmMinutes.collectAsStateWithLifecycle()
     val alarmWeekdays by vm.smartAlarmWeekdays.collectAsStateWithLifecycle()
     val alarmDayOverrides by vm.smartAlarmDayOverrides.collectAsStateWithLifecycle()
+    val alarmSkipDay by vm.smartAlarmSkipDay.collectAsStateWithLifecycle()
     val live = vm.live.collectAsStateWithLifecycle().value
     // The firmware alarm is EXPERIMENTAL on a WHOOP 5/MG: it only arms when Experimental probes are on,
     // otherwise enabling it silently arms nothing (#111), so the UI says so instead of promising a wake.
@@ -314,6 +338,21 @@ private fun StrapAlarmCard(vm: AppViewModel) {
                     enabledDays = alarmWeekdays,
                     overrides = alarmDayOverrides,
                     onSetOverride = { dow, minutes -> vm.setSmartAlarmDayOverride(dow, minutes) },
+                )
+                // Not-Noop (#1611): skip the next morning without switching the alarm off.
+                RowDividerLocal()
+                SkipNextAlarmRow(
+                    skipDay = alarmSkipDay,
+                    resolveNext = { nowMs, skip ->
+                        nextSmartAlarmEpochSec(
+                            alarmMinutes, alarmWeekdays, nowMs = nowMs, dayOverrides = alarmDayOverrides,
+                            skipDay = skip,
+                        )?.let { it * 1000L }
+                    },
+                    // The strap holds its own copy of the alarm, so it only learns of the skip when connected.
+                    strapPendingUpdate = !live.bonded,
+                    onSkip = { vm.skipNextStrapAlarm() },
+                    onUndo = { vm.undoStrapAlarmSkip() },
                 )
                 RowDividerLocal()
                 if (live.whoop5Detected && !protocolProbesOn) {
@@ -444,6 +483,7 @@ private fun alarmCountdown(
     armed: Boolean,
     weekdays: Set<Int>,
     windowMinutes: Int,
+    skipDay: String? = null,
     targetForDay: (Int) -> Int,
 ): Pair<String, String>? {
     if (!armed) return null
@@ -452,6 +492,7 @@ private fun alarmCountdown(
         now = now,
         weekdays = weekdays,
         windowMinutes = windowMinutes,
+        skipDay = skipDay,
         targetForDay = targetForDay,
     ) ?: return null
 
@@ -589,6 +630,76 @@ private fun RowDividerLocal() {
             .height(1.dp)
             .background(Palette.hairline),
     )
+}
+
+/**
+ * "Skip the next alarm" (Not-Noop, ryanbr/noop#1611 item 1), shared by the phone and strap alarm cards.
+ *
+ * [resolveNext] is the card's own next-occurrence resolver (the one its alarm is armed from), called with
+ * and without [skipDay], so this row cannot disagree with what actually rings. A skip shows only while it
+ * names the occurrence that would ring next ([com.noop.alarm.AlarmSkip.isActive]); a stale key reads as
+ * no skip. Ticks once a minute so it moves on by itself once the skipped morning has passed.
+ */
+@Composable
+private fun SkipNextAlarmRow(
+    skipDay: String?,
+    resolveNext: (nowMs: Long, skipDay: String?) -> Long?,
+    strapPendingUpdate: Boolean,
+    onSkip: () -> Unit,
+    onUndo: () -> Unit,
+) {
+    val nowMs by produceState(initialValue = System.currentTimeMillis()) {
+        while (true) {
+            value = System.currentTimeMillis()
+            kotlinx.coroutines.delay(60_000L)
+        }
+    }
+    val unskipped = resolveNext(nowMs, null) ?: return
+    val active = com.noop.alarm.AlarmSkip.isActive(skipDay, unskipped)
+    val dayFormat = java.text.SimpleDateFormat("EEE d MMM", java.util.Locale.getDefault())
+    val skippedLabel = dayFormat.format(java.util.Date(unskipped))
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        if (!active) {
+            NoopButton(
+                text = uiString(R.string.alarm_skip_next, skippedLabel),
+                kind = NoopButtonKind.Secondary,
+                fullWidth = true,
+                onClick = onSkip,
+            )
+            Text(
+                uiString(R.string.alarm_skip_next_help),
+                style = NoopType.footnote, color = Palette.textTertiary,
+            )
+        } else {
+            val after = resolveNext(nowMs, skipDay)
+            Text(
+                if (after != null) {
+                    val cal = java.util.Calendar.getInstance().apply { timeInMillis = after }
+                    uiString(
+                        R.string.alarm_skip_active,
+                        skippedLabel,
+                        dayFormat.format(java.util.Date(after)),
+                        hhmm(cal.get(java.util.Calendar.HOUR_OF_DAY) * 60 + cal.get(java.util.Calendar.MINUTE)),
+                    )
+                } else {
+                    uiString(R.string.alarm_skip_active_no_next, skippedLabel)
+                },
+                style = NoopType.body, color = Palette.textPrimary,
+            )
+            if (strapPendingUpdate) {
+                Text(
+                    uiString(R.string.alarm_skip_strap_pending, skippedLabel),
+                    style = NoopType.footnote, color = Palette.statusWarning,
+                )
+            }
+            NoopButton(
+                text = uiString(R.string.alarm_skip_undo),
+                kind = NoopButtonKind.Secondary,
+                fullWidth = true,
+                onClick = onUndo,
+            )
+        }
+    }
 }
 
 // MARK: - Helpers

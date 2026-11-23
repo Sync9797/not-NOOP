@@ -982,6 +982,18 @@ object NoopPrefs {
         of(context).edit().putStringSet(KEY_SMART_ALARM_OVERRIDES, clean).apply()
     }
 
+    /** Not-Noop (#1611): the local date (`yyyy-MM-dd`) of a skipped STRAP-alarm occurrence, or null. See
+     *  [com.noop.alarm.AlarmSkip]: expires by itself once that date passes, and never turns the alarm off. */
+    const val KEY_SMART_ALARM_SKIP_DAY = "noop.smartAlarmSkipDay"
+
+    fun smartAlarmSkipDay(context: Context): String? = of(context).getString(KEY_SMART_ALARM_SKIP_DAY, null)
+
+    fun setSmartAlarmSkipDay(context: Context, day: String?) {
+        of(context).edit().apply {
+            if (day == null) remove(KEY_SMART_ALARM_SKIP_DAY) else putString(KEY_SMART_ALARM_SKIP_DAY, day)
+        }.apply()
+    }
+
     /** HR-zone haptic coaching: buzz the strap on entering the top zone (ease off) and, when the
      *  recovery buzz is on, on dropping back to Zone 1. Zone-based off the profile's HR-max; mirrors
      *  macOS. Coaching default off; recovery buzz default on (matches macOS's always-both behaviour).

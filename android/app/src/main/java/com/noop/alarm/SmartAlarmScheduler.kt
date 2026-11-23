@@ -59,6 +59,7 @@ object SmartAlarmScheduler {
             weekdays = weekdays,
             windowMinutes = store.windowMinutes,
             afterFire = afterFire,
+            skipDay = store.skipDay,
         ) { store.targetFor(it) } ?: run {
             // No day is reachable, so there IS no next wake — clear the persisted edges rather than
             // leaving the previous ones behind. The watcher reads exactly those two fields to decide it is
@@ -173,9 +174,10 @@ object SmartAlarmScheduler {
         weekdays: Set<Int>,
         windowMinutes: Int,
         defaultTarget: Int,
+        skipDay: String? = null,
         targetForDay: (Int) -> Int,
     ): Int {
-        val deadline = nextDeadline(now, weekdays, windowMinutes, afterFire = false, targetForDay)
+        val deadline = nextDeadline(now, weekdays, windowMinutes, afterFire = false, skipDay, targetForDay)
             ?: return defaultTarget
         val deadlineMin = deadline.get(Calendar.HOUR_OF_DAY) * 60 + deadline.get(Calendar.MINUTE)
         return (deadlineMin - windowMinutes + SmartAlarmStore.MINUTES_PER_DAY) %
@@ -213,15 +215,22 @@ object SmartAlarmScheduler {
         weekdays: Set<Int>,
         windowMinutes: Int,
         afterFire: Boolean = false,
+        skipDay: String? = null,
         targetForDay: (Int) -> Int,
     ): Calendar? {
-        for (offset in 0..7) {
+        // 0..14, not 0..7. Unskipped, the next occurrence is at most 7 days out (a one-day-a-week alarm
+        // whose time has passed today), so the first match still lands by offset 7 and nothing changes. A
+        // skip of that occurrence puts the next one 7 days later still, so up to offset 14.
+        for (offset in 0..14) {
             if (afterFire && offset == 0) continue
             val candidate = (now.clone() as Calendar).apply {
                 add(Calendar.DAY_OF_YEAR, offset)
             }
             val dow = candidate.get(Calendar.DAY_OF_WEEK)
             if (weekdays.isNotEmpty() && dow !in weekdays) continue
+            // Not-Noop (#1611): the skipped morning. The key is the day the DEADLINE lands on, the morning
+            // the user is woken, the same day [weekdays] is tested against. See [AlarmSkip].
+            if (skipDay != null && AlarmSkip.dayKey(candidate) == skipDay) continue
             val deadlineMin =
                 (targetForDay(dow) + windowMinutes) % SmartAlarmStore.MINUTES_PER_DAY
             candidate.set(Calendar.HOUR_OF_DAY, deadlineMin / 60)

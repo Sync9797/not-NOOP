@@ -96,6 +96,12 @@ class SmartAlarmStore(private val prefs: SharedPreferences) {
     /** The earliest-wake minute for [dayOfWeek] — its override, else the single [targetMinutes]. */
     fun targetFor(dayOfWeek: Int): Int = targetOverrides[dayOfWeek] ?: targetMinutes
 
+    /** Not-Noop (#1611): the local date (`yyyy-MM-dd`) of a skipped occurrence, or null. See [AlarmSkip];
+     *  keyed on the day the hard deadline lands on, like [weekdays]. */
+    var skipDay: String?
+        get() = prefs.getString(KEY_SKIP_DAY, null)
+        set(v) = prefs.edit().apply { if (v == null) remove(KEY_SKIP_DAY) else putString(KEY_SKIP_DAY, v) }.apply()
+
     /** The wall-clock epoch (ms) of the currently-scheduled HARD deadline, or 0 if none. Persisted so
      *  the boot receiver can re-arm the exact alarm after a restart without recomputing intent. */
     var scheduledDeadlineMs: Long
@@ -116,6 +122,7 @@ class SmartAlarmStore(private val prefs: SharedPreferences) {
         private const val KEY_TARGET_OVERRIDES = "alarm.targetOverrides"
         private const val KEY_DEADLINE_MS = "alarm.scheduledDeadlineMs"
         private const val KEY_WINDOW_START_MS = "alarm.scheduledWindowStartMs"
+        private const val KEY_SKIP_DAY = "alarm.skipDay"
 
         const val MINUTES_PER_DAY = 24 * 60
         const val DEFAULT_TARGET = 6 * 60 + 30   // 06:30

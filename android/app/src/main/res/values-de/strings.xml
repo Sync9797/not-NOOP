@@ -2930,4 +2930,10 @@
     <string name="backup_file_unverified">Das Backup wurde in deine Datei geschrieben, konnte aber nicht als vollständig bestätigt werden. Sichere erneut, bevor du dich darauf verlässt, oder wähle stattdessen einen Ordner.</string>
     <string name="backup_file_restore_label">deine Backup-Datei</string>
     <string name="backup_file_no_lasting_access">Diese Speicher-App lässt NOOP den Zugriff auf die Datei nicht behalten, daher könnte das tägliche Backup sie später nicht erreichen. Wähle einen Ordner oder eine andere App, oder nutze Einstellungen › Export für einzelne Backups.</string>
+    <string name="alarm_skip_next">Nächsten Wecker überspringen (%1$s)</string>
+    <string name="alarm_skip_next_help">Überspringt nur diesen Morgen. Der Wecker bleibt an und meldet sich am Tag danach wieder.</string>
+    <string name="alarm_skip_active">%1$s wird übersprungen. Nächster Wecker: %2$s um %3$s.</string>
+    <string name="alarm_skip_active_no_next">%1$s wird übersprungen.</string>
+    <string name="alarm_skip_strap_pending">Dein Band hat das noch nicht erhalten und vibriert am %1$s eventuell trotzdem. Es wird bei der nächsten Verbindung aktualisiert.</string>
+    <string name="alarm_skip_undo">Überspringen rückgängig</string>
 </resources>

@@ -2909,4 +2909,10 @@
     <string name="backup_file_unverified">A cópia foi escrita no seu ficheiro mas não foi possível confirmar que está completa. Faça outra cópia antes de confiar nela, ou escolha uma pasta.</string>
     <string name="backup_file_restore_label">o seu ficheiro de cópia</string>
     <string name="backup_file_no_lasting_access">Essa app de armazenamento não deixa o NOOP manter o acesso ao ficheiro, por isso a cópia diária não lhe poderia chegar mais tarde. Escolha uma pasta ou outra app, ou use Definições › Exportar para cópias pontuais.</string>
+    <string name="alarm_skip_next">Saltar o próximo alarme (%1$s)</string>
+    <string name="alarm_skip_next_help">Salta apenas essa manhã. O alarme continua ligado e volta no dia seguinte.</string>
+    <string name="alarm_skip_active">A saltar %1$s. Próximo alarme: %2$s às %3$s.</string>
+    <string name="alarm_skip_active_no_next">A saltar %1$s.</string>
+    <string name="alarm_skip_strap_pending">A tua pulseira ainda não recebeu isto e pode vibrar na mesma em %1$s. Atualiza na próxima vez que se ligar.</string>
+    <string name="alarm_skip_undo">Anular salto</string>
 </resources>

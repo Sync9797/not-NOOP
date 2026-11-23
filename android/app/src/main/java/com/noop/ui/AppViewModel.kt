@@ -643,6 +643,10 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     // the default time. Declared above init for the same #84 reason. Empty = no overrides (pre-#554).
     private val _smartAlarmDayOverrides = MutableStateFlow(NoopPrefs.smartAlarmDayOverrides(appContext))
     val smartAlarmDayOverrides: StateFlow<Map<Int, Int>> = _smartAlarmDayOverrides.asStateFlow()
+    // Not-Noop (#1611): the skipped strap-alarm occurrence's local date, or null. Declared above init with
+    // the rest, because reconcileStrapAlarm() reads it from the init bond collector (#84).
+    private val _smartAlarmSkipDay = MutableStateFlow(NoopPrefs.smartAlarmSkipDay(appContext))
+    val smartAlarmSkipDay: StateFlow<String?> = _smartAlarmSkipDay.asStateFlow()
 
     // HR-zone haptic coaching (persisted; zone-based, mirrors macOS AppModel.coachZone). Buzzes when you
     // climb into the top zone (ease off) and — if the recovery buzz is on — when you drop back to Zone 1.
@@ -700,6 +704,9 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     /** Days the phone alarm fires on (Calendar.DAY_OF_WEEK). EMPTY = every day — see
      *  [SmartAlarmStore.weekdays]; same encoding as the strap alarm's `smartAlarmWeekdays`. */
     val phoneAlarmWeekdays: StateFlow<Set<Int>> = _phoneAlarmWeekdays.asStateFlow()
+    // Not-Noop (#1611): the skipped phone-alarm occurrence's local date, or null (SmartAlarmStore.skipDay).
+    private val _phoneAlarmSkipDay = MutableStateFlow(phoneAlarmStore.skipDay)
+    val phoneAlarmSkipDay: StateFlow<String?> = _phoneAlarmSkipDay.asStateFlow()
     // "Buzz WHOOP 4" companion (#536): arm the strap's firmware alarm at the phone alarm's EARLIEST wake
     // time, so the strap buzzes first and the OS alarm fires at the hard deadline as backup. Declared here
     // with the phone-alarm flows (BEFORE init) so the init bond collector can read it. Default OFF.
@@ -2759,12 +2766,14 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     fun setSmartAlarmEnabled(enabled: Boolean) {
         _smartAlarmEnabled.value = enabled
         NoopPrefs.setSmartAlarmEnabled(appContext, enabled)
+        dropStrapAlarmSkip()
         reconcileStrapAlarm()
     }
 
     fun setSmartAlarmMinutes(minutes: Int) {
         _smartAlarmMinutes.value = minutes.coerceIn(0, 24 * 60 - 1)
         NoopPrefs.setSmartAlarmMinutes(appContext, _smartAlarmMinutes.value)
+        dropStrapAlarmSkip()
         reconcileStrapAlarm()
     }
 
@@ -2774,6 +2783,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         val clean = days.filter { it in 1..7 }.toSet()
         _smartAlarmWeekdays.value = clean
         NoopPrefs.setSmartAlarmWeekdays(appContext, clean)
+        dropStrapAlarmSkip()
         reconcileStrapAlarm()
     }
 
@@ -2786,6 +2796,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         if (minutes == null) next.remove(dow) else next[dow] = minutes.coerceIn(0, 24 * 60 - 1)
         _smartAlarmDayOverrides.value = next
         NoopPrefs.setSmartAlarmDayOverrides(appContext, next)
+        dropStrapAlarmSkip()
         reconcileStrapAlarm()
     }
 
@@ -2803,8 +2814,11 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         if (enabled && !SmartAlarmScheduler.canScheduleExact(appContext)) return false
         phoneAlarmStore.enabled = enabled
         _phoneAlarmEnabled.value = enabled
+        val skipCleared = dropPhoneAlarmSkip()
         if (enabled) SmartAlarmScheduler.arm(appContext, phoneAlarmStore)
         else SmartAlarmScheduler.cancel(appContext, phoneAlarmStore)
+        // "Buzz WHOOP 4" followed the cleared skip, so it has to move back with it.
+        if (skipCleared) reconcileStrapAlarm()
         return true
     }
 
@@ -2813,6 +2827,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     fun setPhoneAlarmTargetMinutes(minutes: Int) {
         phoneAlarmStore.targetMinutes = minutes
         _phoneAlarmTargetMinutes.value = phoneAlarmStore.targetMinutes
+        dropPhoneAlarmSkip()
         if (phoneAlarmStore.enabled) SmartAlarmScheduler.arm(appContext, phoneAlarmStore)
         // The wind-down nudge is derived from the wake time, so keep it in step.
         if (windDownStore.enabled) WindDownScheduler.schedule(
@@ -2836,6 +2851,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         if (minutes == null) next.remove(dayOfWeek) else next[dayOfWeek] = minutes
         phoneAlarmStore.targetOverrides = next
         _phoneAlarmDayOverrides.value = phoneAlarmStore.targetOverrides
+        dropPhoneAlarmSkip()
         if (phoneAlarmStore.enabled) SmartAlarmScheduler.arm(appContext, phoneAlarmStore)
         // The strap-buzz companion derives its buzz time FROM the phone alarm, so an override that moves a
         // wake time has to move the buzz with it. `setPhoneAlarmWeekdays` already reconciles for exactly
@@ -2860,6 +2876,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     fun setPhoneAlarmWeekdays(days: Set<Int>) {
         phoneAlarmStore.weekdays = days
         _phoneAlarmWeekdays.value = phoneAlarmStore.weekdays
+        dropPhoneAlarmSkip()
         if (phoneAlarmStore.enabled) SmartAlarmScheduler.arm(appContext, phoneAlarmStore)
         reconcileStrapAlarm()
     }
@@ -2879,7 +2896,79 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     fun setPhoneAlarmWindowMinutes(minutes: Int) {
         phoneAlarmStore.windowMinutes = minutes
         _phoneAlarmWindowMinutes.value = phoneAlarmStore.windowMinutes
+        val skipCleared = dropPhoneAlarmSkip()
         if (phoneAlarmStore.enabled) SmartAlarmScheduler.arm(appContext, phoneAlarmStore)
+        if (skipCleared) reconcileStrapAlarm()
+    }
+
+    // --- Skip the next alarm (Not-Noop, ryanbr/noop#1611 item 1). See com.noop.alarm.AlarmSkip. A skip names
+    // the date of the occurrence that is next right now, expires by itself, and never switches the alarm
+    // off. Each one is logged in plain words, so a skipped morning cannot read like the open "alarm did not
+    // buzz" / "stuck at Alarm disarmed" reports in a strap log.
+
+    /** Skip the strap alarm's next occurrence. The strap holds one absolute alarm time, so this re-arms it
+     *  for the occurrence after (needs the strap connected; the bond-edge reconcile retries otherwise). */
+    fun skipNextStrapAlarm() {
+        if (!_smartAlarmEnabled.value) return
+        val next = nextSmartAlarmEpochSec(
+            _smartAlarmMinutes.value, _smartAlarmWeekdays.value, dayOverrides = _smartAlarmDayOverrides.value,
+        ) ?: return
+        val day = com.noop.alarm.AlarmSkip.dayKey(next * 1000L)
+        NoopPrefs.setSmartAlarmSkipDay(appContext, day)
+        _smartAlarmSkipDay.value = day
+        ble.externalLog("Alarm skip: strap alarm skips $day (the alarm stays on; re-arming for the next day)")
+        reconcileStrapAlarm()
+    }
+
+    /** Undo [skipNextStrapAlarm]: the skipped occurrence rings again. */
+    fun undoStrapAlarmSkip() {
+        if (_smartAlarmSkipDay.value == null) return
+        ble.externalLog("Alarm skip: strap alarm skip of ${_smartAlarmSkipDay.value} undone")
+        dropStrapAlarmSkip()
+        reconcileStrapAlarm()
+    }
+
+    /** Skip the phone alarm's next occurrence: re-arms the guaranteed OS alarm for the one after, and moves
+     *  the "Buzz WHOOP 4" companion with it. */
+    fun skipNextPhoneAlarm() {
+        if (!phoneAlarmStore.enabled) return
+        val next = SmartAlarmScheduler.nextDeadline(
+            now = java.util.Calendar.getInstance(),
+            weekdays = phoneAlarmStore.weekdays,
+            windowMinutes = phoneAlarmStore.windowMinutes,
+        ) { phoneAlarmStore.targetFor(it) } ?: return
+        val day = com.noop.alarm.AlarmSkip.dayKey(next)
+        phoneAlarmStore.skipDay = day
+        _phoneAlarmSkipDay.value = day
+        ble.externalLog("Alarm skip: phone alarm skips $day (the alarm stays on; re-armed for the next day)")
+        SmartAlarmScheduler.arm(appContext, phoneAlarmStore)
+        reconcileStrapAlarm()
+    }
+
+    /** Undo [skipNextPhoneAlarm]. */
+    fun undoPhoneAlarmSkip() {
+        if (phoneAlarmStore.skipDay == null) return
+        ble.externalLog("Alarm skip: phone alarm skip of ${phoneAlarmStore.skipDay} undone")
+        dropPhoneAlarmSkip()
+        if (phoneAlarmStore.enabled) SmartAlarmScheduler.arm(appContext, phoneAlarmStore)
+        reconcileStrapAlarm()
+    }
+
+    /** A settings change (or an undo) clears the strap alarm's skip, so a skip always names the occurrence
+     *  that was next when it was set. Callers re-arm afterwards. */
+    private fun dropStrapAlarmSkip() {
+        if (_smartAlarmSkipDay.value == null && NoopPrefs.smartAlarmSkipDay(appContext) == null) return
+        NoopPrefs.setSmartAlarmSkipDay(appContext, null)
+        _smartAlarmSkipDay.value = null
+    }
+
+    /** The phone alarm's twin of [dropStrapAlarmSkip]. Returns whether a skip was cleared, so a setter that
+     *  does not otherwise touch the strap can re-arm the "Buzz WHOOP 4" companion that followed it. */
+    private fun dropPhoneAlarmSkip(): Boolean {
+        if (phoneAlarmStore.skipDay == null && _phoneAlarmSkipDay.value == null) return false
+        phoneAlarmStore.skipDay = null
+        _phoneAlarmSkipDay.value = null
+        return true
     }
 
     /** Whether the OS will honour an exact alarm right now (API 31+ gates it behind a permission). */
@@ -3070,6 +3159,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 _smartAlarmMinutes.value,
                 _smartAlarmWeekdays.value,
                 dayOverrides = _smartAlarmDayOverrides.value,
+                skipDay = _smartAlarmSkipDay.value,
             )
         } else null
         // Buzz-WHOOP-4 companion's requested time: the phone alarm's EARLIEST wake time, next occurrence
@@ -3087,6 +3177,10 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 phoneAlarmStore.targetMinutes,
                 phoneAlarmStore.weekdays,
                 dayOverrides = phoneAlarmStore.targetOverrides,
+                // The companion buzzes at the PHONE alarm's time, so the phone alarm's skip moves it too. Keyed
+                // on that alarm's deadline day (target + window), the day its weekdays and skip name.
+                skipDay = phoneAlarmStore.skipDay,
+                skipDayOffsetMinutes = phoneAlarmStore.windowMinutes,
             )
         } else null
 
@@ -3340,8 +3434,9 @@ internal fun zoneCoachBuzzLoops(previousZone: Int, zone: Int, recoveryEnabled: B
  *    Numbers outside 1…7 are ignored.
  *  - [nowMs]/[calendarFactory]: injected for tests; default to the real clock + local calendar.
  *
- * Scans today through +7 days for the next strictly-future occurrence on an enabled weekday. Returns
- * null only when no valid weekday falls in that range (i.e. the set held nothing in 1…7).
+ * Scans today through +14 days for the next strictly-future occurrence on an enabled weekday that is not
+ * [skipDay] (the extra week covers skipping a once-a-week alarm). Returns null only when no valid weekday
+ * falls in that range (i.e. the set held nothing in 1…7).
  */
 internal fun nextSmartAlarmEpochSec(
     minuteOfDay: Int,
@@ -3349,6 +3444,12 @@ internal fun nextSmartAlarmEpochSec(
     nowMs: Long = System.currentTimeMillis(),
     calendarFactory: () -> java.util.Calendar = { java.util.Calendar.getInstance() },
     dayOverrides: Map<Int, Int> = emptyMap(),
+    /** Not-Noop (#1611): the local date of a skipped occurrence, see [com.noop.alarm.AlarmSkip]. */
+    skipDay: String? = null,
+    /** Which day [skipDay] is compared against: the fire time shifted by this many minutes. 0 for the strap
+     *  alarm. The "Buzz WHOOP 4" companion passes the phone alarm's window, because the phone alarm keys its
+     *  days (and its skip) on the DEADLINE (target + window), which can fall on the next date. */
+    skipDayOffsetMinutes: Int = 0,
 ): Long? {
     val valid = weekdays.filter { it in 1..7 }.toSet()
     // An EMPTY input means "every day" (backward compatible). A non-empty selection that filters to
@@ -3357,7 +3458,10 @@ internal fun nextSmartAlarmEpochSec(
     // Per-weekday OVERRIDES (#554): only valid (day 1…7, minute in-range) entries count; a day without an
     // override uses the default [minuteOfDay]. When the map is empty this is byte-for-byte the old path.
     val cleanOverrides = dayOverrides.filterKeys { it in 1..7 }.filterValues { it in 0 until 24 * 60 }
-    for (offset in 0..7) {
+    // 0..14, not 0..7. Unskipped, the next occurrence is at most 7 days out (a one-day-a-week alarm
+    // whose time has passed today), so the first match still lands by offset 7 and nothing changes. A
+    // skip of that occurrence puts the next one 7 days later still, so up to offset 14.
+    for (offset in 0..14) {
         // Resolve this calendar day's weekday first, so the per-day override time is applied BEFORE the
         // strictly-future check (a later override time can make today's occurrence still pending).
         val probe = calendarFactory().apply {
@@ -3377,6 +3481,14 @@ internal fun nextSmartAlarmEpochSec(
             set(java.util.Calendar.MILLISECOND, 0)
         }
         if (cal.timeInMillis <= nowMs) continue
+        // Not-Noop (#1611): the skipped morning. Tested in the calendar's own zone, on the fire time shifted
+        // by [skipDayOffsetMinutes]. See com.noop.alarm.AlarmSkip.
+        if (skipDay != null) {
+            val keyed = (cal.clone() as java.util.Calendar).apply {
+                add(java.util.Calendar.MINUTE, skipDayOffsetMinutes)
+            }
+            if (com.noop.alarm.AlarmSkip.dayKey(keyed) == skipDay) continue
+        }
         return cal.timeInMillis / 1000
     }
     return null

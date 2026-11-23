@@ -2946,4 +2946,10 @@
     <string name="backup_file_unverified">The backup was written to your file but could not be confirmed as complete. Back up again before you rely on it, or choose a folder instead.</string>
     <string name="backup_file_restore_label">your backup file</string>
     <string name="backup_file_no_lasting_access">That storage app would not let NOOP keep access to the file, so the daily backup could not reach it later. Choose a folder or a different app, or use Settings › Export for one-off backups.</string>
+    <string name="alarm_skip_next">Skip next alarm (%1$s)</string>
+    <string name="alarm_skip_next_help">Skips just that morning. The alarm stays on and comes back the day after.</string>
+    <string name="alarm_skip_active">Skipping %1$s. Next alarm: %2$s at %3$s.</string>
+    <string name="alarm_skip_active_no_next">Skipping %1$s.</string>
+    <string name="alarm_skip_strap_pending">Your strap hasn\'t received this yet and may still buzz on %1$s. It updates the next time it connects.</string>
+    <string name="alarm_skip_undo">Undo skip</string>
 </resources>
