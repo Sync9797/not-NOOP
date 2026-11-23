@@ -2923,4 +2923,14 @@
     <string name="l10n_app_changelog_calls_ring_on_your_whoop_4_4a11b3ee">Połączenia dzwonią na WHOOP 4.0</string>
     <string name="l10n_app_changelog_steadier_vibrations_on_the_whoop_4_99ca13cb">Spokojniejsze wibracje na WHOOP 4.0</string>
     <string name="l10n_app_changelog_clearer_workout_cues_on_the_whoop_b2e1ea51">Wyraźniejsze sygnały treningowe na WHOOP 4.0</string>
+    <string name="backup_file_explainer">Twojej aplikacji do przechowywania nie ma powyżej, np. Proton Drive? Wybierz tam jeden plik. Każda kopia zastępuje ten plik, więc masz jedną kopię zamiast kilku.</string>
+    <string name="backup_file_choose">Kopia do jednego pliku</string>
+    <string name="backup_file_change">Zmień plik</string>
+    <string name="backup_file_saving_to">Zapis do pliku: %1$s</string>
+    <string name="backup_file_chosen_file">wybrany plik</string>
+    <string name="backup_file_done">Zapisano kopię w Twoim pliku.</string>
+    <string name="backup_file_failed">Kopia nie powiodła się, Twój plik pozostał bez zmian. Wybierz plik ponownie i spróbuj jeszcze raz.</string>
+    <string name="backup_file_unverified">Kopia została zapisana w Twoim pliku, ale nie udało się potwierdzić, że jest kompletna. Wykonaj kopię ponownie, zanim na niej polegniesz, albo wybierz folder.</string>
+    <string name="backup_file_restore_label">Twój plik kopii</string>
+    <string name="backup_file_no_lasting_access">Ta aplikacja do przechowywania nie pozwala NOOP zachować dostępu do pliku, więc codzienna kopia nie mogłaby do niego później dotrzeć. Wybierz folder lub inną aplikację albo użyj Ustawienia › Eksport do jednorazowych kopii.</string>
 </resources>

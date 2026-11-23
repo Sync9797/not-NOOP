@@ -2936,4 +2936,14 @@
     <string name="l10n_app_changelog_calls_ring_on_your_whoop_4_4a11b3ee">Calls ring on your WHOOP 4.0</string>
     <string name="l10n_app_changelog_steadier_vibrations_on_the_whoop_4_99ca13cb">Steadier vibrations on the WHOOP 4.0</string>
     <string name="l10n_app_changelog_clearer_workout_cues_on_the_whoop_b2e1ea51">Clearer workout cues on the WHOOP 4.0</string>
+    <string name="backup_file_explainer">Storage app not listed above, like Proton Drive? Choose one file there instead. Each backup replaces that file, so you keep one copy rather than several.</string>
+    <string name="backup_file_choose">Back up to one file instead</string>
+    <string name="backup_file_change">Change file</string>
+    <string name="backup_file_saving_to">Saving to the file: %1$s</string>
+    <string name="backup_file_chosen_file">the chosen file</string>
+    <string name="backup_file_done">Backed up to your file.</string>
+    <string name="backup_file_failed">Backup failed and your file was left as it was. Re-pick the file and try again.</string>
+    <string name="backup_file_unverified">The backup was written to your file but could not be confirmed as complete. Back up again before you rely on it, or choose a folder instead.</string>
+    <string name="backup_file_restore_label">your backup file</string>
+    <string name="backup_file_no_lasting_access">That storage app would not let NOOP keep access to the file, so the daily backup could not reach it later. Choose a folder or a different app, or use Settings › Export for one-off backups.</string>
 </resources>

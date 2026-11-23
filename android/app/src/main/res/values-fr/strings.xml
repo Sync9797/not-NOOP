@@ -2906,4 +2906,14 @@
     <string name="l10n_app_changelog_calls_ring_on_your_whoop_4_4a11b3ee">Les appels sonnent sur votre WHOOP 4.0</string>
     <string name="l10n_app_changelog_steadier_vibrations_on_the_whoop_4_99ca13cb">Des vibrations plus nettes sur le WHOOP 4.0</string>
     <string name="l10n_app_changelog_clearer_workout_cues_on_the_whoop_b2e1ea51">Des signaux d\'entraînement plus clairs sur le WHOOP 4.0</string>
+    <string name="backup_file_explainer">Votre app de stockage n\'apparaît pas ci-dessus, comme Proton Drive ? Choisissez-y plutôt un fichier. Chaque sauvegarde remplace ce fichier : vous gardez une copie au lieu de plusieurs.</string>
+    <string name="backup_file_choose">Sauvegarder dans un seul fichier</string>
+    <string name="backup_file_change">Changer de fichier</string>
+    <string name="backup_file_saving_to">Enregistrement dans le fichier : %1$s</string>
+    <string name="backup_file_chosen_file">le fichier choisi</string>
+    <string name="backup_file_done">Sauvegardé dans votre fichier.</string>
+    <string name="backup_file_failed">La sauvegarde a échoué et votre fichier est resté tel quel. Choisissez à nouveau le fichier et réessayez.</string>
+    <string name="backup_file_unverified">La sauvegarde a été écrite dans votre fichier mais n\'a pas pu être confirmée comme complète. Sauvegardez à nouveau avant de vous y fier, ou choisissez plutôt un dossier.</string>
+    <string name="backup_file_restore_label">votre fichier de sauvegarde</string>
+    <string name="backup_file_no_lasting_access">Cette app de stockage ne laisse pas NOOP conserver l\'accès au fichier, donc la sauvegarde quotidienne ne pourrait pas l\'atteindre plus tard. Choisissez un dossier ou une autre app, ou utilisez Réglages › Exporter pour des sauvegardes ponctuelles.</string>
 </resources>

@@ -2899,4 +2899,14 @@
     <string name="l10n_app_changelog_calls_ring_on_your_whoop_4_4a11b3ee">As chamadas tocam no seu WHOOP 4.0</string>
     <string name="l10n_app_changelog_steadier_vibrations_on_the_whoop_4_99ca13cb">Vibrações mais estáveis no WHOOP 4.0</string>
     <string name="l10n_app_changelog_clearer_workout_cues_on_the_whoop_b2e1ea51">Sinais de treino mais claros no WHOOP 4.0</string>
+    <string name="backup_file_explainer">A sua app de armazenamento não aparece acima, como o Proton Drive? Escolha aí um ficheiro. Cada cópia substitui esse ficheiro, por isso guarda uma cópia em vez de várias.</string>
+    <string name="backup_file_choose">Fazer cópia para um só ficheiro</string>
+    <string name="backup_file_change">Mudar ficheiro</string>
+    <string name="backup_file_saving_to">A guardar no ficheiro: %1$s</string>
+    <string name="backup_file_chosen_file">o ficheiro escolhido</string>
+    <string name="backup_file_done">Cópia guardada no seu ficheiro.</string>
+    <string name="backup_file_failed">A cópia falhou e o seu ficheiro ficou como estava. Escolha o ficheiro de novo e tente outra vez.</string>
+    <string name="backup_file_unverified">A cópia foi escrita no seu ficheiro mas não foi possível confirmar que está completa. Faça outra cópia antes de confiar nela, ou escolha uma pasta.</string>
+    <string name="backup_file_restore_label">o seu ficheiro de cópia</string>
+    <string name="backup_file_no_lasting_access">Essa app de armazenamento não deixa o NOOP manter o acesso ao ficheiro, por isso a cópia diária não lhe poderia chegar mais tarde. Escolha uma pasta ou outra app, ou use Definições › Exportar para cópias pontuais.</string>
 </resources>

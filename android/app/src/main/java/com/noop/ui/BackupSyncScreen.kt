@@ -68,6 +68,15 @@ fun BackupSyncScreen() {
     val scope = rememberCoroutineScope()
 
     var treeUri by remember { mutableStateOf(BackupSyncPrefs.treeUri(context)) }
+    // Not-Noop (ryanbr/noop#2868): the single-file destination, for storage apps the folder picker cannot
+    // show. At most one of treeUri / fileUri is set.
+    var fileUri by remember { mutableStateOf(BackupSyncPrefs.fileUri(context)) }
+    val hasDestination = treeUri != null || fileUri != null
+    // The chosen file's display name, read off the main thread (a cloud provider can be slow to answer).
+    val fileName by androidx.compose.runtime.produceState<String?>(initialValue = null, fileUri) {
+        val uri = fileUri
+        value = if (uri == null) null else withContext(Dispatchers.IO) { displayName(context, uri) }
+    }
     var auto by remember { mutableStateOf(BackupSyncPrefs.autoEnabled(context)) }
     var lastMs by remember { mutableStateOf(BackupSyncPrefs.lastBackupMs(context)) }
     var busy by remember { mutableStateOf(false) }
@@ -146,7 +155,37 @@ fun BackupSyncScreen() {
             )
         }
         BackupSyncPrefs.setTreeUri(context, uri)
+        BackupSyncPrefs.setFileUri(context, null)
         treeUri = uri
+        fileUri = null
+        runCatching { BackupSync.reschedule(context) }
+    }
+
+    // Not-Noop (ryanbr/noop#2868): one file, chosen with the system "save" picker, which lists every
+    // storage app that accepts files (Proton Drive among them) and not only those that hand over a folder.
+    val pickFile = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument(BackupSync.MIME),
+    ) { uri ->
+        if (uri == null) return@rememberLauncherForActivityResult
+        runCatching {
+            context.contentResolver.takePersistableUriPermission(
+                uri,
+                Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION,
+            )
+        }
+        // The daily backup runs with NOOP closed, so it needs access that survives a restart. A provider
+        // that will not grant it would let the file be chosen and then fail every night in silence.
+        val lasting = context.contentResolver.persistedUriPermissions.any {
+            it.uri == uri && it.isWritePermission && it.isReadPermission
+        }
+        if (!lasting) {
+            backupFailure = uiString(R.string.backup_file_no_lasting_access)
+            return@rememberLauncherForActivityResult
+        }
+        BackupSyncPrefs.setFileUri(context, uri)
+        BackupSyncPrefs.setTreeUri(context, null)
+        fileUri = uri
+        treeUri = null
         runCatching { BackupSync.reschedule(context) }
     }
 
@@ -171,8 +210,14 @@ fun BackupSyncScreen() {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text(uiString(R.string.l10n_backup_sync_screen_backup_folder_2a33df93), style = NoopType.headline, color = Palette.textPrimary)
                     Text(
-                        treeUri?.let { "Saving to: ${folderLabel(it)}" }
-                            ?: "No folder chosen yet. Pick one your cloud app already syncs, or any local folder.",
+                        when {
+                            treeUri != null -> "Saving to: ${folderLabel(treeUri!!)}"
+                            fileUri != null -> uiString(
+                                R.string.backup_file_saving_to,
+                                fileName ?: uiString(R.string.backup_file_chosen_file),
+                            )
+                            else -> "No folder chosen yet. Pick one your cloud app already syncs, or any local folder."
+                        },
                         style = NoopType.footnote, color = Palette.textTertiary,
                     )
                     Text(
@@ -201,13 +246,27 @@ fun BackupSyncScreen() {
                         enabled = !busy,
                         onClick = { pickFolder.launch(null) },
                     )
+                    // The single-file alternative, for storage apps the folder picker does not list.
+                    Text(
+                        uiString(R.string.backup_file_explainer),
+                        style = NoopType.caption, color = Palette.textTertiary,
+                    )
+                    NoopButton(
+                        text = uiString(
+                            if (fileUri == null) R.string.backup_file_choose else R.string.backup_file_change,
+                        ),
+                        leadingIcon = Icons.Filled.CloudUpload,
+                        kind = NoopButtonKind.Secondary,
+                        enabled = !busy,
+                        onClick = { pickFile.launch(BACKUP_FILE_DEFAULT_NAME) },
+                    )
                 }
             }
         }
 
         // 2 · Auto-backup + back up now
         item {
-            NoopCard(padding = 20.dp, tint = if (auto && treeUri != null) Palette.accent else null) {
+            NoopCard(padding = 20.dp, tint = if (auto && hasDestination) Palette.accent else null) {
                 Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Column(
@@ -223,7 +282,7 @@ fun BackupSyncScreen() {
                         Spacer(Modifier.width(16.dp))
                         Switch(
                             checked = auto,
-                            enabled = treeUri != null && !busy,
+                            enabled = hasDestination && !busy,
                             onCheckedChange = {
                                 auto = it
                                 BackupSyncPrefs.setAutoEnabled(context, it)
@@ -318,7 +377,7 @@ fun BackupSyncScreen() {
                     // (a lost folder grant, or the app hasn't been opened in a while). backupNow only stamps
                     // lastMs on success, so this surfaces a silently-failing auto-backup instead of it being
                     // discovered only at restore.
-                    if (auto && treeUri != null && lastMs > 0L &&
+                    if (auto && hasDestination && lastMs > 0L &&
                         BackupSync.isBackupStale(lastMs, System.currentTimeMillis())
                     ) {
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -341,7 +400,7 @@ fun BackupSyncScreen() {
                         text = if (busy) "Working…" else "Back up now",
                         leadingIcon = Icons.Filled.CloudUpload,
                         fullWidth = true,
-                        enabled = treeUri != null && !busy,
+                        enabled = hasDestination && !busy,
                         onClick = {
                             busy = true
                             scope.launch {
@@ -349,17 +408,29 @@ fun BackupSyncScreen() {
                                 // `BackupSyncView.backupNow`. The flag now clears after the toast rather than before it,
                                 // which is the point: the screen stays disabled until the work is genuinely finished.
                                 try {
-                                    val ok = withContext(Dispatchers.IO) { BackupSync.backupNow(context) }
+                                    val toFile = treeUri == null && fileUri != null
+                                    val result = withContext(Dispatchers.IO) { BackupSync.backupNowResult(context) }
                                     lastMs = BackupSyncPrefs.lastBackupMs(context)
-                                    Toast.makeText(
-                                        context,
-                                        if (ok) {
-                                            "Backed up to your folder."
-                                        } else {
-                                            "Backup failed - re-pick the folder and try again."
-                                        },
-                                        Toast.LENGTH_LONG,
-                                    ).show()
+                                    when (result) {
+                                        BackupSync.BackupResult.OK -> Toast.makeText(
+                                            context,
+                                            if (toFile) uiString(R.string.backup_file_done) else "Backed up to your folder.",
+                                            Toast.LENGTH_LONG,
+                                        ).show()
+                                        BackupSync.BackupResult.FAILED -> Toast.makeText(
+                                            context,
+                                            if (toFile) {
+                                                uiString(R.string.backup_file_failed)
+                                            } else {
+                                                "Backup failed - re-pick the folder and try again."
+                                            },
+                                            Toast.LENGTH_LONG,
+                                        ).show()
+                                        // The user's only copy was overwritten and not confirmed: a dialog, so the
+                                        // next step is not lost in a Toast.
+                                        BackupSync.BackupResult.FILE_UNVERIFIED ->
+                                            backupFailure = uiString(R.string.backup_file_unverified)
+                                    }
                                 } finally {
                                     busy = false
                                 }
@@ -386,7 +457,11 @@ fun BackupSyncScreen() {
                         enabled = !busy,
                         onClick = {
                             val tree = treeUri
-                            if (tree == null) {
+                            val file = fileUri
+                            if (tree == null && file != null) {
+                                // Single-file destination: restore that file, behind the same confirm dialog.
+                                pendingRestore = uiString(R.string.backup_file_restore_label) to file
+                            } else if (tree == null) {
                                 // No folder set: fall back to the tightened file picker.
                                 pickRestoreFile.launch(RESTORE_MIME_TYPES)
                             } else {
@@ -512,6 +587,15 @@ private val RESTORE_MIME_TYPES = arrayOf(
     "application/zip",
     "application/x-sqlite3",
 )
+
+/** Suggested name for a new single-file backup; the user can rename it in the picker. */
+private const val BACKUP_FILE_DEFAULT_NAME = "noop-backup.noopbak"
+
+/** The display name a document provider reports for [uri], or null when it will not say. */
+private fun displayName(context: android.content.Context, uri: Uri): String? = runCatching {
+    context.contentResolver.query(uri, arrayOf(android.provider.OpenableColumns.DISPLAY_NAME), null, null, null)
+        ?.use { c -> if (c.moveToFirst() && !c.isNull(0)) c.getString(0) else null }
+}.getOrNull()
 
 /** A short, human label for a SAF tree Uri (the part after the volume colon). */
 private fun folderLabel(treeUri: Uri): String {

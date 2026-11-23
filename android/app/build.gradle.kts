@@ -256,6 +256,11 @@ tasks.withType<Test>().configureEach {
     dependsOn(syncRoomSchemaSnapshot)
     systemProperty("room.schemaLocation", roomSchemaSnapshotDir.get().asFile.absolutePath)
     inputs.dir(roomSchemaSnapshotDir).withPropertyName("roomSchemas").optional()
+    // Robolectric's ParcelFileDescriptor reads FileDescriptor.fd by reflection, which JDK 17's module
+    // system refuses unless java.io is opened. Without it a test that writes through ContentResolver
+    // (the single-file backup test, BackupSyncSingleFileTest) cannot open a file at all. Reflection access
+    // only; it changes nothing about what other tests do.
+    jvmArgs("--add-opens=java.base/java.io=ALL-UNNAMED")
     if (noopScreenshots) {
         systemProperty("noop.screenshots.dir", noopScreenshotDir.get().asFile.absolutePath)
         outputs.upToDateWhen { false } // a tour is always re-rendered

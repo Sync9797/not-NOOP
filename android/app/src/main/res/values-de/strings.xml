@@ -2920,4 +2920,14 @@
     <string name="l10n_app_changelog_calls_ring_on_your_whoop_4_4a11b3ee">Anrufe klingeln auf deinem WHOOP 4.0</string>
     <string name="l10n_app_changelog_steadier_vibrations_on_the_whoop_4_99ca13cb">Ruhigere Vibrationen auf dem WHOOP 4.0</string>
     <string name="l10n_app_changelog_clearer_workout_cues_on_the_whoop_b2e1ea51">Klarere Trainingssignale auf dem WHOOP 4.0</string>
+    <string name="backup_file_explainer">Deine Speicher-App fehlt oben, etwa Proton Drive? Wähle dort stattdessen eine Datei. Jedes Backup ersetzt diese Datei, du behältst also eine Kopie statt mehrerer.</string>
+    <string name="backup_file_choose">Stattdessen in eine Datei sichern</string>
+    <string name="backup_file_change">Datei ändern</string>
+    <string name="backup_file_saving_to">Speichern in die Datei: %1$s</string>
+    <string name="backup_file_chosen_file">die gewählte Datei</string>
+    <string name="backup_file_done">In deine Datei gesichert.</string>
+    <string name="backup_file_failed">Backup fehlgeschlagen, deine Datei blieb unverändert. Wähle die Datei erneut und versuche es noch einmal.</string>
+    <string name="backup_file_unverified">Das Backup wurde in deine Datei geschrieben, konnte aber nicht als vollständig bestätigt werden. Sichere erneut, bevor du dich darauf verlässt, oder wähle stattdessen einen Ordner.</string>
+    <string name="backup_file_restore_label">deine Backup-Datei</string>
+    <string name="backup_file_no_lasting_access">Diese Speicher-App lässt NOOP den Zugriff auf die Datei nicht behalten, daher könnte das tägliche Backup sie später nicht erreichen. Wähle einen Ordner oder eine andere App, oder nutze Einstellungen › Export für einzelne Backups.</string>
 </resources>

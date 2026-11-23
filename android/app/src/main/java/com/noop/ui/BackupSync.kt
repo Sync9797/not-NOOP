@@ -208,13 +208,135 @@ object BackupSync {
         }
     }
 
-    /** Run one backup into the persisted folder, prune to [BackupSyncPrefs.keepCount], stamp last-backup. */
-    fun backupNow(context: Context): Boolean {
-        val treeUri = BackupSyncPrefs.treeUri(context) ?: return false
-        writeSnapshot(context, treeUri) ?: return false
-        BackupSyncPrefs.setLastBackupMs(context, System.currentTimeMillis())
-        prune(context, treeUri)
-        return true
+    /**
+     * Run one backup into the chosen destination and stamp last-backup. A folder gets a fresh dated
+     * snapshot and is pruned to [BackupSyncPrefs.keepCount]; a single file (Not-Noop, ryanbr/noop#2868)
+     * is replaced in place by [writeToFile].
+     */
+    fun backupNow(context: Context): Boolean = backupNowResult(context) == BackupResult.OK
+
+    /** What [backupNowResult] did, with the one distinction the screen must report differently. */
+    enum class BackupResult {
+        OK,
+
+        /** Nothing usable was written (no destination, a failed folder snapshot, or the file left as it was). */
+        FAILED,
+
+        /** The single file was overwritten but does not read back as complete: say so, never "failed". */
+        FILE_UNVERIFIED,
+    }
+
+    /** [backupNow] with its outcome. Only [BackupResult.OK] stamps last-backup. */
+    fun backupNowResult(context: Context): BackupResult {
+        val treeUri = BackupSyncPrefs.treeUri(context)
+        if (treeUri != null) {
+            writeSnapshot(context, treeUri) ?: return BackupResult.FAILED
+            BackupSyncPrefs.setLastBackupMs(context, System.currentTimeMillis())
+            prune(context, treeUri)
+            return BackupResult.OK
+        }
+        val fileUri = BackupSyncPrefs.fileUri(context) ?: return BackupResult.FAILED
+        return when (writeToFile(context, fileUri)) {
+            FileWriteResult.OK -> {
+                BackupSyncPrefs.setLastBackupMs(context, System.currentTimeMillis())
+                BackupResult.OK
+            }
+            FileWriteResult.NOT_WRITTEN -> BackupResult.FAILED
+            FileWriteResult.WRITTEN_UNVERIFIED -> BackupResult.FILE_UNVERIFIED
+        }
+    }
+
+    // ── Single-file destination (Not-Noop, ryanbr/noop#2868) ──
+    //
+    // Android only lists a storage app in the FOLDER picker (OpenDocumentTree) when it lets other apps
+    // manage a whole folder. Proton Drive and many others accept single files only (CreateDocument), so
+    // they never appeared as a backup location. The single-file destination is the one file the user
+    // chose there, replaced by each backup: one rolling copy, no history.
+
+    private enum class CopyOutcome { NOT_OPENED, FAILED, DONE }
+
+    /** How a single-file backup went. */
+    enum class FileWriteResult {
+        /** The new backup is in the file and reads back as complete. */
+        OK,
+
+        /** Nothing was written: the backup could not be built, or the provider would not open the file for
+         *  writing. The user's file is exactly as it was. */
+        NOT_WRITTEN,
+
+        /** The file was overwritten but does not read back as complete (or could not be read back). */
+        WRITTEN_UNVERIFIED,
+    }
+
+    /**
+     * Pure: whether a copy landed in full. [destSize] is the size the provider reports afterwards, null
+     * when it will not say. After a truncating ("wt") write the content check ([verdictIntact]) is enough
+     * when the size is unknown. After a plain "w" write ([truncated] false) the size MUST be known and
+     * match: "w" may leave the old file's tail behind a smaller new backup, and only an exact size rules
+     * that out.
+     */
+    internal fun fileCopyComplete(
+        sourceSize: Long,
+        destSize: Long?,
+        verdictIntact: Boolean,
+        truncated: Boolean,
+    ): Boolean = verdictIntact && if (destSize == null) truncated else destSize == sourceSize
+
+    /**
+     * Replace the backup in [fileUri] with a fresh one, without ever destroying it on a guess.
+     *
+     * Unlike a dated snapshot in a folder, this file is the user's ONLY copy, so the folder path's rules do
+     * not carry over: [DataBackup.exportTo] deletes a torn result, which here would delete the user's file
+     * and NOOP's permission to it. So the backup is first built AND verified in NOOP's private cache, and
+     * only a verified archive is copied over the user's file. The copy opens in "wt" (truncate) mode: plain
+     * "w" does not shorten an existing document on every provider, which would leave the old tail behind a
+     * smaller new backup. The result is then checked by size and by content. Nothing here deletes the file.
+     */
+    fun writeToFile(context: Context, fileUri: Uri): FileWriteResult {
+        val app = context.applicationContext
+        val staging = java.io.File(app.cacheDir, "backup-sync-staging.noopbak")
+        try {
+            staging.delete()
+            // Builds + verifies the archive (throws on any failure). Writing to our own cache file means a
+            // failure here never reaches the user's document.
+            runCatching { DataBackup.exportTo(app, Uri.fromFile(staging)) }
+                .onFailure { return FileWriteResult.NOT_WRITTEN }
+            if (!staging.exists() || staging.length() <= 0L) return FileWriteResult.NOT_WRITTEN
+            val resolver = app.contentResolver
+            // NOT_OPENED: the provider refused the mode, so the file was not touched. FAILED: it opened and
+            // the copy broke partway, so the file HAS been touched. The difference decides what to report.
+            fun copyWithMode(mode: String): CopyOutcome {
+                val out = runCatching { resolver.openOutputStream(fileUri, mode) }.getOrNull()
+                    ?: return CopyOutcome.NOT_OPENED
+                return runCatching {
+                    out.use { o -> staging.inputStream().use { it.copyTo(o) } }
+                    CopyOutcome.DONE
+                }.getOrDefault(CopyOutcome.FAILED)
+            }
+            // "wt" first. Only if it does not complete fall back to "w", whose result is then accepted only
+            // with an exact size match.
+            val first = copyWithMode("wt")
+            val truncated = first == CopyOutcome.DONE
+            val second = if (truncated) CopyOutcome.DONE else copyWithMode("w")
+            if (second != CopyOutcome.DONE) {
+                return if (first == CopyOutcome.NOT_OPENED && second == CopyOutcome.NOT_OPENED) {
+                    FileWriteResult.NOT_WRITTEN
+                } else {
+                    FileWriteResult.WRITTEN_UNVERIFIED
+                }
+            }
+            val destSize = runCatching {
+                resolver.openFileDescriptor(fileUri, "r")?.use { it.statSize.takeIf { s -> s >= 0L } }
+            }.getOrNull()
+            val intact = DataBackup.verifyWrittenBackup(app, fileUri) == DataBackup.BackupWriteVerdict.INTACT
+            return if (fileCopyComplete(staging.length(), destSize, intact, truncated)) {
+                FileWriteResult.OK
+            } else {
+                FileWriteResult.WRITTEN_UNVERIFIED
+            }
+        } finally {
+            staging.delete()
+        }
     }
 
     /** Best-effort retention: delete snapshots beyond keepCount. Listing failures are ignored. */
@@ -285,7 +407,7 @@ object BackupSync {
      */
     fun reschedule(context: Context) {
         val wm = WorkManager.getInstance(context.applicationContext)
-        if (!BackupSyncPrefs.autoEnabled(context) || BackupSyncPrefs.treeUri(context) == null) {
+        if (!BackupSyncPrefs.autoEnabled(context) || !BackupSyncPrefs.hasDestination(context)) {
             wm.cancelUniqueWork(WORK)
             return
         }
@@ -315,7 +437,7 @@ object BackupSync {
      */
     fun catchUpIfDue(context: Context, nowMs: Long = System.currentTimeMillis()): Boolean {
         if (!BackupSyncPrefs.autoEnabled(context)) return false
-        if (BackupSyncPrefs.treeUri(context) == null) return false
+        if (!BackupSyncPrefs.hasDestination(context)) return false
         if (!isCatchUpDue(BackupSyncPrefs.lastBackupMs(context), nowMs)) return false
         return backupNow(context)
     }
@@ -335,7 +457,7 @@ class BackupSyncWorker(appContext: Context, params: WorkerParameters) :
 }
 
 /**
- * Small SharedPreferences-backed store for the folder destination + schedule state. Mirrors the Apple
+ * Small SharedPreferences-backed store for the destination (a folder, or one file) + schedule state. Mirrors the Apple
  * `FolderBackup` UserDefaults keys: a persisted SAF tree uri, the auto toggle (default OFF), the last
  * backup instant, and the keep-N (default [BackupSync.DEFAULT_KEEP]). Single-user, on-device.
  */
@@ -347,6 +469,16 @@ object BackupSyncPrefs {
     fun setTreeUri(c: Context, uri: Uri?) = p(c).edit().apply {
         if (uri == null) remove("tree_uri") else putString("tree_uri", uri.toString())
     }.apply()
+
+    /** The single-file destination (Not-Noop, ryanbr/noop#2868); null when a folder (or nothing) is chosen.
+     *  At most one of [treeUri] and this is set: choosing one clears the other. */
+    fun fileUri(c: Context): Uri? = p(c).getString("file_uri", null)?.let(Uri::parse)
+    fun setFileUri(c: Context, uri: Uri?) = p(c).edit().apply {
+        if (uri == null) remove("file_uri") else putString("file_uri", uri.toString())
+    }.apply()
+
+    /** Whether any backup destination, folder or file, is chosen. */
+    fun hasDestination(c: Context): Boolean = treeUri(c) != null || fileUri(c) != null
 
     /** Master enable for the daily auto-backup. Default OFF (every NOOP automation is opt-in). */
     fun autoEnabled(c: Context): Boolean = p(c).getBoolean("auto", false)

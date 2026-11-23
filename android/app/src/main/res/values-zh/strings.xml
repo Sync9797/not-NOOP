@@ -2877,4 +2877,14 @@
     <string name="l10n_app_changelog_calls_ring_on_your_whoop_4_4a11b3ee">来电时 WHOOP 4.0 会响铃振动</string>
     <string name="l10n_app_changelog_steadier_vibrations_on_the_whoop_4_99ca13cb">WHOOP 4.0 振动更稳定</string>
     <string name="l10n_app_changelog_clearer_workout_cues_on_the_whoop_b2e1ea51">WHOOP 4.0 上的训练提示更清晰</string>
+    <string name="backup_file_explainer">上面没有列出你的存储应用（例如 Proton Drive）？请改为在那里选择一个文件。每次备份都会替换该文件，因此你只保留一份副本，而不是多份。</string>
+    <string name="backup_file_choose">改为备份到单个文件</string>
+    <string name="backup_file_change">更换文件</string>
+    <string name="backup_file_saving_to">正在保存到文件：%1$s</string>
+    <string name="backup_file_chosen_file">所选文件</string>
+    <string name="backup_file_done">已备份到你的文件。</string>
+    <string name="backup_file_failed">备份失败，你的文件保持原样。请重新选择文件后再试。</string>
+    <string name="backup_file_unverified">备份已写入你的文件，但无法确认其完整。请在依赖它之前再备份一次，或改为选择文件夹。</string>
+    <string name="backup_file_restore_label">你的备份文件</string>
+    <string name="backup_file_no_lasting_access">该存储应用不允许 NOOP 保留对文件的访问权限，因此每日备份之后无法写入它。请选择文件夹或其他应用，或使用 设置 › 导出 进行单次备份。</string>
 </resources>

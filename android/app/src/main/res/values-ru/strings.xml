@@ -2802,4 +2802,14 @@
     <string name="l10n_app_changelog_calls_ring_on_your_whoop_4_4a11b3ee">Звонки звонят на WHOOP 4.0</string>
     <string name="l10n_app_changelog_steadier_vibrations_on_the_whoop_4_99ca13cb">Более ровная вибрация на WHOOP 4.0</string>
     <string name="l10n_app_changelog_clearer_workout_cues_on_the_whoop_b2e1ea51">Более чёткие сигналы тренировки на WHOOP 4.0</string>
+    <string name="backup_file_explainer">Вашего хранилища нет в списке выше, например Proton Drive? Выберите там один файл. Каждая копия заменяет этот файл, поэтому у вас будет одна копия, а не несколько.</string>
+    <string name="backup_file_choose">Сохранять в один файл</string>
+    <string name="backup_file_change">Сменить файл</string>
+    <string name="backup_file_saving_to">Сохранение в файл: %1$s</string>
+    <string name="backup_file_chosen_file">выбранный файл</string>
+    <string name="backup_file_done">Копия сохранена в ваш файл.</string>
+    <string name="backup_file_failed">Не удалось создать копию, ваш файл не изменён. Выберите файл заново и попробуйте ещё раз.</string>
+    <string name="backup_file_unverified">Копия записана в ваш файл, но подтвердить её целостность не удалось. Сделайте копию ещё раз, прежде чем полагаться на неё, или выберите папку.</string>
+    <string name="backup_file_restore_label">ваш файл копии</string>
+    <string name="backup_file_no_lasting_access">Это хранилище не позволяет NOOP сохранить доступ к файлу, поэтому ежедневная копия не сможет до него добраться позже. Выберите папку или другое приложение либо используйте Настройки › Экспорт для разовых копий.</string>
 </resources>
